@@ -1,8 +1,8 @@
+
 package perondi.BeSuffle.controller;
 
-import org.springframework.beans.factory.annotation.Value;
+
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,21 +18,11 @@ public class AlbumController {
 
     private final AuthSpotifyClient authSpotifyClient;
     private final AlbumSpotifyClient albumSpotifyClient;
-    private final String clientId;
-    private final String clientSecret;
 
-    public AlbumController(
-            AuthSpotifyClient authSpotifyClient,
-            AlbumSpotifyClient albumSpotifyClient,
-            @Value("${spotify.client-id}") String clientId,
-            @Value("${spotify.client-secret}") String clientSecret
-    ) {
+    public AlbumController(AuthSpotifyClient authSpotifyClient,
+                           AlbumSpotifyClient albumSpotifyClient) {
         this.authSpotifyClient = authSpotifyClient;
         this.albumSpotifyClient = albumSpotifyClient;
-        Assert.hasText(clientId, "spotify.client-id must be configured");
-        Assert.hasText(clientSecret, "spotify.client-secret must be configured");
-        this.clientId = clientId;
-        this.clientSecret = clientSecret;
     }
 
     @GetMapping("/albums")
@@ -40,8 +30,8 @@ public class AlbumController {
 
         var request = new LoginRequest(
                 "client_credentials",
-                clientId,
-                clientSecret
+                "13ad5a1231574ce49226682d2303b947",
+                "b43ce3f49b1841d89b1ddaa75670bbc5"
         );
         var token = authSpotifyClient.login(request).getAccessToken();
 
