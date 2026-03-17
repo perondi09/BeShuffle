@@ -20,12 +20,6 @@ public class AlbumController {
     private final AuthSpotifyClient authSpotifyClient;
     private final AlbumSpotifyClient albumSpotifyClient;
 
-    @Value("${api.client.id}")
-    private String clientId;
-
-    @Value("${api.client.secret}")
-    private String clientSecret;
-
     public AlbumController(AuthSpotifyClient authSpotifyClient,
                            AlbumSpotifyClient albumSpotifyClient) {
         this.authSpotifyClient = authSpotifyClient;
@@ -37,8 +31,8 @@ public class AlbumController {
 
         var request = new LoginRequest(
                 "client_credentials",
-                clientId,
-                clientSecret
+                "13ad5a1231574ce49226682d2303b947",
+                "b43ce3f49b1841d89b1ddaa75670bbc5"
         );
         var token = authSpotifyClient.login(request).getAccessToken();
 
