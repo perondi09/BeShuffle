@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BeShuffle - Seu Álbum do Dia</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1DB954;
+            --dark: #0f0f0f;
+            --light: #ffffff;
+            --gray-light: #f5f5f5;
+            --gray-dark: #1e1e1e;
+            --accent: #1ed760;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--dark) 0%, #1a1a2e 100%);
+            color: var(--light);
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                    radial-gradient(circle at 20% 50%, rgba(29, 185, 84, 0.1) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 80%, rgba(29, 185, 84, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .card-container {
+            background: rgba(30, 30, 30, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(29, 185, 84, 0.2);
+            border-radius: 24px;
+            padding: 60px 50px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: slideUp 0.8s ease-out;
+            position: relative;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 48px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 300;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .album-section {
+            margin-bottom: 50px;
+            animation: fadeIn 0.8s ease-out 0.3s both;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .album-image {
+            width: 100%;
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, rgba(29, 185, 84, 0.2), rgba(29, 185, 84, 0.05));
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(29, 185, 84, 0.15);
+        }
+
+        .album-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            animation: imageLoad 0.6s ease-out;
+        }
+
+        @keyframes imageLoad {
+            from {
+                opacity: 0;
+                transform: scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .album-image.loading {
+            background: linear-gradient(90deg, rgba(29, 185, 84, 0.1) 25%, rgba(29, 185, 84, 0.2) 50%, rgba(29, 185, 84, 0.1) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .album-info {
+            animation: slideInText 0.8s ease-out 0.5s both;
+        }
+
+        @keyframes slideInText {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .album-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            line-height: 1.2;
+        }
+
+        .album-artist {
+            font-size: 16px;
+            color: var(--primary);
+            font-weight: 500;
+            margin-bottom: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        .album-date {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.5);
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 40px;
+            animation: buttonSlide 0.8s ease-out 0.7s both;
+        }
+
+        @keyframes buttonSlide {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .btn {
+            flex: 1;
+            padding: 16px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%);
+            color: var(--dark);
+            box-shadow: 0 8px 24px rgba(29, 185, 84, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(29, 185, 84, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--light);
+            border: 1.5px solid var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(29, 185, 84, 0.2);
+            transform: translateY(-3px);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        .btn.loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid currentColor;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 60px 20px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .loading-state h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .error-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #ff6b6b;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .error-state h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            font-family: 'Playfair Display', serif;
+            color: #ff6b6b;
+        }
+
+        .retry-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 24px;
+            background: rgba(255, 107, 107, 0.2);
+            border: 1.5px solid #ff6b6b;
+            border-radius: 8px;
+            color: #ff6b6b;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .retry-btn:hover {
+            background: rgba(255, 107, 107, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .card-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(29, 185, 84, 0.05) 0%, transparent 100%);
+            border-radius: 24px;
+            pointer-events: none;
+        }
+
+        /* Responsivo */
+        @media (max-width: 600px) {
+            .card-container {
+                padding: 40px 25px;
+            }
+
+            .logo {
+                font-size: 36px;
+            }
+
+            .album-title {
+                font-size: 24px;
+            }
+
+            .btn {
+                padding: 14px 20px;
+                font-size: 13px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card-container">
+        <div class="header">
+            <div class="logo">♪ BeShuffle</div>
+            <p class="subtitle">Seu Álbum do Dia</p>
+        </div>
+
+        <div id="content">
+            <div class="loading-state">
+                <h2><span class="spinner"></span>Carregando seu álbum...</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /**
+     * Formatar data em português
+     */
+    function formatDate(dateString) {
+        const options = {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        };
+        return new Date(dateString).toLocaleDateString('pt-BR', options);
+    }
+
+    /**
+     * Extrair ID do URI do Spotify
+     */
+    function getAlbumIdFromUri(uri) {
+        return uri.split(':')[2];
+    }
+
+    /**
+     * Construir URL do Spotify
+     */
+    function getSpotifyUrl(uri) {
+        const albumId = getAlbumIdFromUri(uri);
+        return `https://open.spotify.com/album/${albumId}`;
+    }
+
+    /**
+     * Exibir o álbum
+     */
+    function displayAlbum(album) {
+        const spotifyUrl = getSpotifyUrl(album.albumUrl);
+        const releaseYear = album.releaseDate.split('-')[0];
+
+        const content = `
+                <div class="album-section">
+                    <div class="album-image">
+                        <img
+                            src="${album.imageUrl}"
+                            alt="${album.albumName}"
+                            onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22400%22%3E%3Crect fill=%22%231e1e1e%22 width=%22400%22 height=%22400%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 font-family=%22Poppins%22 font-size=%2224%22 fill=%22%23666%22%3E🎵%3C/text%3E%3C/svg%3E'"
+                        >
+                    </div>
+
+                    <div class="album-info">
+                        <p class="album-artist">${album.artistName}</p>
+                        <h2 class="album-title">${album.albumName}</h2>
+                        <p class="album-date">Lançado em ${releaseYear}</p>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <a href="${spotifyUrl}" target="_blank" class="btn btn-primary">
+                        🎵 Ouvir
+                    </a>
+                    <button class="btn btn-secondary" onclick="refreshAlbum(event)">
+                        🎲 Novo
+                    </button>
+                </div>
+            `;
+
+        document.getElementById('content').innerHTML = content;
+    }
+
+    /**
+     * Exibir erro
+     */
+    function displayError(message) {
+        const content = `
+                <div class="error-state">
+                    <h2>😔 Oops!</h2>
+                    <p>${message}</p>
+                    <button class="retry-btn" onclick="loadAlbum()">Tentar Novamente</button>
+                </div>
+            `;
+
+        document.getElementById('content').innerHTML = content;
+    }
+
+    /**
+     * Carregar o álbum
+     */
+    async function loadAlbum() {
+        try {
+            const response = await fetch('/api/albums/today');
+
+            // Se não existe álbum de hoje, gera um aleatório
+            if (response.status === 204) {
+                generateRandomAlbum();
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error('Erro ao carregar álbum');
+            }
+
+            const album = await response.json();
+            displayAlbum(album);
+
+        } catch (error) {
+            console.error('Erro:', error);
+            displayError('Erro ao carregar álbum. Tente novamente.');
+        }
+    }
+
+    /**
+     * Gerar álbum aleatório
+     */
+    async function generateRandomAlbum() {
+        try {
+            const response = await fetch('/api/albums/random', { method: 'POST' });
+
+            if (!response.ok) {
+                throw new Error(`Erro: ${response.status}`);
+            }
+
+            const album = await response.json();
+            displayAlbum(album);
+
+        } catch (error) {
+            console.error('Erro:', error);
+            displayError('Erro ao gerar álbum aleatório. Tente novamente!');
+        }
+    }
+
+    /**
+     * Atualizar para novo álbum (ao clicar no botão)
+     */
+    async function refreshAlbum(event) {
+        event.preventDefault();
+
+        const btn = event.target;
+
+        // Mostrar estado de carregamento
+        btn.classList.add('loading');
+        btn.innerHTML = '<span class="spinner"></span>Gerando...';
+        btn.disabled = true;
+
+        try {
+            const response = await fetch('/api/albums/random', { method: 'POST' });
+
+            if (!response.ok) {
+                throw new Error(`Erro: ${response.status}`);
+            }
+
+            const album = await response.json();
+            displayAlbum(album);
+
+        } catch (error) {
+            console.error('Erro:', error);
+            displayError('Erro ao gerar álbum aleatório. Tente novamente!');
+        }
+    }
+
+    /**
+     * Carregar álbum automaticamente quando a página abre
+     */
+    document.addEventListener('DOMContentLoaded', loadAlbum);
+
+    /**
+     * Recarregar a cada hora para atualizar se trocar de dia
+     */
+    setInterval(loadAlbum, 3600000); // 1 hora
+</script>
+</body>
+</html>
