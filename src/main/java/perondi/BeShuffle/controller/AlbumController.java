@@ -4,40 +4,50 @@ package perondi.BeShuffle.controller;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import perondi.BeShuffle.dtos.album.Album;
 import perondi.BeShuffle.client.AlbumSpotifyClient;
 import perondi.BeShuffle.client.AuthSpotifyClient;
 import perondi.BeShuffle.dtos.login.LoginRequest;
+import perondi.BeShuffle.entities.DailyAlbum;
+import perondi.BeShuffle.services.DailyAlbumService;
 
 @RestController
-@RequestMapping("/spotify/api")
+@RequestMapping("/api/albums")
 public class AlbumController {
 
-    private final AuthSpotifyClient authSpotifyClient;
-    private final AlbumSpotifyClient albumSpotifyClient;
+    private final DailyAlbumService dailyAlbumService;
 
-    public AlbumController(AuthSpotifyClient authSpotifyClient,
-                           AlbumSpotifyClient albumSpotifyClient) {
-        this.authSpotifyClient = authSpotifyClient;
-        this.albumSpotifyClient = albumSpotifyClient;
+    public AlbumController(DailyAlbumService dailyAlbumService) {
+        this.dailyAlbumService = dailyAlbumService;
     }
 
-    @GetMapping("/albums")
-    public ResponseEntity<Album> getAlbum(@RequestParam("id") String id) {
+    /**
+     * GET /api/albums/today
+     * Retorna o álbum de hoje (para exibir na homepage)
+     */
+    @GetMapping("/today")
+    public ResponseEntity<DailyAlbum> getTodayAlbum() {
+        DailyAlbum album = dailyAlbumService.getTodayAlbum();
 
-        var request = new LoginRequest(
-                "client_credentials",
-                "13ad5a1231574ce49226682d2303b947",
-                "b43ce3f49b1841d89b1ddaa75670bbc5"
-        );
-        var token = authSpotifyClient.login(request).getAccessToken();
+        if (album == null) {
+            return ResponseEntity.noContent().build();
+        }
 
-        var response = albumSpotifyClient.getAlbum("Bearer " + token, id);
+        return ResponseEntity.ok(album);
+    }
 
-        return ResponseEntity.ok(response);
+    /**
+     * POST /api/albums/set-daily?id=SPOTIFY_ALBUM_ID
+     * Define um novo álbum para o dia de hoje (admin endpoint)
+     */
+    @PostMapping("/set-daily")
+    public ResponseEntity<DailyAlbum> setDailyAlbum(@RequestParam("id") String spotifyAlbumId) {
+        try {
+            DailyAlbum dailyAlbum = dailyAlbumService.setDailyAlbum(spotifyAlbumId);
+            return ResponseEntity.ok(dailyAlbum);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 }
