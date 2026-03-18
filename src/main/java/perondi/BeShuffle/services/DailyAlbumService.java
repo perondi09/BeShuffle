@@ -1,14 +1,18 @@
 package perondi.BeShuffle.services;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import perondi.BeShuffle.dtos.album.Album;
 import perondi.BeShuffle.entities.DailyAlbum;
+import perondi.BeShuffle.exceptions.AlbumAlreadyUsedException;
+import perondi.BeShuffle.exceptions.SpotifyApiException;
+import perondi.BeShuffle.exceptions.ValidationException;
 import perondi.BeShuffle.repositories.DailyAlbumRepository;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
-import java.util.Optional;
 
+@Slf4j
 @Service
 public class DailyAlbumService {
 
@@ -16,45 +20,45 @@ public class DailyAlbumService {
     private final AlbumService albumService;
     private final ObjectMapper objectMapper;
 
-    public DailyAlbumService(
-            DailyAlbumRepository dailyAlbumRepository,
-            AlbumService albumService,
-            ObjectMapper objectMapper
-    ) {
+    public DailyAlbumService(DailyAlbumRepository dailyAlbumRepository, AlbumService albumService, ObjectMapper objectMapper) {
         this.dailyAlbumRepository = dailyAlbumRepository;
         this.albumService = albumService;
         this.objectMapper = objectMapper;
     }
 
-    /**
-     * Retorna o álbum do dia atual, ou null se não existir
-     */
     public DailyAlbum getTodayAlbum() {
-        return dailyAlbumRepository.findByDisplayDate(LocalDate.now())
-                .orElse(null);
+        return dailyAlbumRepository.findByDisplayDate(LocalDate.now()).orElse(null);
     }
 
-    /**
-     * Registra um novo álbum como o álbum do dia
-     */
     public DailyAlbum setDailyAlbum(String spotifyAlbumId) {
-        // Verifica se o álbum já foi exibido
-        Optional<DailyAlbum> existingAlbum =
-                dailyAlbumRepository.findBySpotifyAlbumId(spotifyAlbumId);
-
-        if (existingAlbum.isPresent()) {
-            throw new IllegalArgumentException("Este álbum já foi exibido!");
+        if (spotifyAlbumId == null || spotifyAlbumId.trim().isEmpty()) {
+            throw new ValidationException("Spotify Album ID não pode ser vazio", "spotifyAlbumId");
         }
 
-        // Busca o álbum no Spotify
-        Album spotifyAlbum = albumService.getAlbumById(spotifyAlbumId);
+        var existing = dailyAlbumRepository.findBySpotifyAlbumId(spotifyAlbumId);
+        if (existing.isPresent()) {
+            throw new AlbumAlreadyUsedException(spotifyAlbumId, existing.get().getAlbumName());
+        }
 
-        // Cria e salva o registro
+        Album spotifyAlbum = albumService.getAlbumById(spotifyAlbumId);
+        
+        if (spotifyAlbum == null) {
+            throw new SpotifyApiException("API Spotify retornou dados vazios", 503);
+        }
+
+        if (spotifyAlbum.getArtists() == null || spotifyAlbum.getArtists().isEmpty()) {
+            throw new SpotifyApiException("Álbum não possui informações de artista", 503);
+        }
+
+        if (spotifyAlbum.getImages() == null || spotifyAlbum.getImages().isEmpty()) {
+            throw new SpotifyApiException("Álbum não possui imagem", 503);
+        }
+
         DailyAlbum dailyAlbum = new DailyAlbum();
         dailyAlbum.setSpotifyAlbumId(spotifyAlbum.getId());
         dailyAlbum.setAlbumName(spotifyAlbum.getName());
-        dailyAlbum.setArtistName(spotifyAlbum.getArtists().get(0).getName());
-        dailyAlbum.setImageUrl(spotifyAlbum.getImages().get(0).getUrl()); // Maior imagem
+        dailyAlbum.setArtistName(spotifyAlbum.getArtists().getFirst().getName());
+        dailyAlbum.setImageUrl(spotifyAlbum.getImages().getFirst().getUrl());
         dailyAlbum.setAlbumUrl(spotifyAlbum.getUri());
         dailyAlbum.setReleaseDate(spotifyAlbum.getReleaseDate());
         dailyAlbum.setDisplayDate(LocalDate.now());
@@ -62,9 +66,14 @@ public class DailyAlbumService {
         try {
             dailyAlbum.setFullAlbumJson(objectMapper.writeValueAsString(spotifyAlbum));
         } catch (Exception e) {
-            // Log error if needed
+            log.debug("Erro ao serializar álbum: {}", e.getMessage());
         }
 
-        return dailyAlbumRepository.save(dailyAlbum);
+        try {
+            return dailyAlbumRepository.save(dailyAlbum);
+        } catch (Exception e) {
+            log.error("Erro ao salvar álbum no banco: {}", e.getMessage());
+            throw new SpotifyApiException("Erro ao salvar álbum no banco de dados", 500, e);
+        }
     }
 }
