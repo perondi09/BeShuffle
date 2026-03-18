@@ -3,6 +3,8 @@ package perondi.BeShuffle.components;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import perondi.BeShuffle.exceptions.AlbumAlreadyUsedException;
+import perondi.BeShuffle.exceptions.AlbumException;
 import perondi.BeShuffle.services.DailyAlbumService;
 import perondi.BeShuffle.services.SpotifyRandomAlbumService;
 
@@ -10,71 +12,57 @@ import perondi.BeShuffle.services.SpotifyRandomAlbumService;
 @Component
 public class DailyAlbumScheduler {
 
+    private static final int MAX_ATTEMPTS = 5;
+    private static final int INITIAL_DELAY_MS = 1000;
+    private static final int MAX_DELAY_MS = 10000;
+
     private final DailyAlbumService dailyAlbumService;
     private final SpotifyRandomAlbumService spotifyRandomAlbumService;
 
-    public DailyAlbumScheduler(
-            DailyAlbumService dailyAlbumService,
-            SpotifyRandomAlbumService spotifyRandomAlbumService
-    ) {
+    public DailyAlbumScheduler(DailyAlbumService dailyAlbumService, SpotifyRandomAlbumService spotifyRandomAlbumService) {
         this.dailyAlbumService = dailyAlbumService;
         this.spotifyRandomAlbumService = spotifyRandomAlbumService;
     }
 
-    /**
-     * Executa todo dia à meia-noite (00:00)
-     * Busca um álbum aleatório DIRETO da API do Spotify
-     * Cron: 0 0 0 * * * = 00:00 todo dia
-     */
     @Scheduled(cron = "0 0 0 * * *")
     public void setRandomDailyAlbum() {
-        try {
-            log.info("🎵 ========== Iniciando busca de álbum aleatório ==========");
-
-            // Buscar um ID aleatório DA API DO SPOTIFY
-            String randomAlbumId = spotifyRandomAlbumService.getRandomAlbumIdFromSpotify();
-
-            if (randomAlbumId == null) {
-                log.error("❌ Não foi possível buscar álbum aleatório da API");
-                return;
-            }
-
-            log.info("🎲 Álbum ID obtido: {}", randomAlbumId);
-
-            // Tentar definir como álbum do dia
-            try {
-                dailyAlbumService.setDailyAlbum(randomAlbumId);
-                log.info("✅ Álbum de hoje definido com sucesso!");
-                log.info("🎵 ========== Fim do processo ==========");
-            } catch (IllegalArgumentException e) {
-                log.warn("⚠️ Álbum já foi usado, tentando outro...");
-                retryWithDifferentAlbum();
-            }
-
-        } catch (Exception e) {
-            log.error("❌ Erro ao executar scheduler", e);
+        boolean success = executeWithRetry(1);
+        if (!success) {
+            log.error("Falha ao definir álbum após {} tentativas", MAX_ATTEMPTS);
         }
     }
 
-    /**
-     * Tenta novamente com outro álbum aleatório
-     */
-    private void retryWithDifferentAlbum() {
+    private boolean executeWithRetry(int attemptNumber) {
         try {
-            log.info("🔄 Segunda tentativa com outro álbum...");
-
-            String differentAlbumId = spotifyRandomAlbumService.getRandomAlbumIdFromSpotify();
-
-            if (differentAlbumId == null) {
-                log.error("❌ Não foi possível obter álbum na segunda tentativa");
-                return;
+            String randomAlbumId = spotifyRandomAlbumService.getRandomAlbumIdFromSpotify();
+            if (randomAlbumId == null) {
+                return retryIfPossible(attemptNumber);
             }
 
-            dailyAlbumService.setDailyAlbum(differentAlbumId);
-            log.info("✅ Álbum de hoje definido com sucesso na segunda tentativa!");
-
+            try {
+                dailyAlbumService.setDailyAlbum(randomAlbumId);
+                return true;
+            } catch (AlbumException e) {
+                return retryIfPossible(attemptNumber);
+            }
         } catch (Exception e) {
-            log.error("❌ Erro na segunda tentativa", e);
+            log.error("Erro na tentativa {}: {}", attemptNumber, e.getMessage());
+            return retryIfPossible(attemptNumber);
+        }
+    }
+
+    private boolean retryIfPossible(int attemptNumber) {
+        if (attemptNumber >= MAX_ATTEMPTS) {
+            return false;
+        }
+
+        int delayMs = Math.min(INITIAL_DELAY_MS * (int) Math.pow(2, attemptNumber - 1), MAX_DELAY_MS);
+        try {
+            Thread.sleep(delayMs);
+            return executeWithRetry(attemptNumber + 1);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
         }
     }
 }

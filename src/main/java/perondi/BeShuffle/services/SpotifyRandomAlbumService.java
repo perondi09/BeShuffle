@@ -9,6 +9,9 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import perondi.BeShuffle.exceptions.SpotifyApiException;
+import perondi.BeShuffle.exceptions.SpotifyAuthenticationException;
+
 import java.util.Random;
 
 @Slf4j
@@ -31,15 +34,10 @@ public class SpotifyRandomAlbumService {
         this.random = new Random();
     }
 
-    /**
-     * Busca um álbum TOTALMENTE ALEATÓRIO do Spotify
-     * Filtra para retornar APENAS álbuns, não singles ou compilações
-     */
     public String getRandomAlbumIdFromSpotify() {
         try {
             log.info("🎲 Buscando álbum totalmente aleatório...");
 
-            // Buscar álbum com offset aleatório
             String albumId = searchRandomAlbum();
 
             if (albumId != null) {
@@ -56,25 +54,19 @@ public class SpotifyRandomAlbumService {
         }
     }
 
-    /**
-     * Busca um álbum com offset aleatório
-     * Usa limit=5 que é mais seguro e ainda retorna boas opções
-     */
     private String searchRandomAlbum() {
         try {
             String token = authService.getAccessToken();
 
-            // Query aleatória
             String query = getRandomQuery();
             int offset = random.nextInt(950);  // 0 a 949 (SEGURO)
 
             log.debug("🔍 Query: {}, Offset: {}", query, offset);
 
-            // Construir URL com limit=5 (mais seguro)
             String url = "https://api.spotify.com/v1/search?" +
                     "q=" + query +
                     "&type=album" +
-                    "&limit=5" +      // Reduzido para 5 (mais seguro)
+                    "&limit=5" +
                     "&offset=" + offset;
 
             log.debug("URL: {}", url);
@@ -98,7 +90,6 @@ public class SpotifyRandomAlbumService {
                     JsonNode items = albums.get("items");
 
                     if (items != null && items.isArray() && items.size() > 0) {
-                        // Escolher um álbum aleatório dos resultados
                         int randomIndex = random.nextInt(items.size());
                         JsonNode album = items.get(randomIndex);
 
@@ -108,7 +99,6 @@ public class SpotifyRandomAlbumService {
 
                         log.info("📀 Álbum encontrado: {} (Tipo: {})", albumName, albumType);
 
-                        // Verificar se é realmente um álbum (não single ou compilation)
                         if ("album".equalsIgnoreCase(albumType)) {
                             return albumId;
                         } else {
@@ -126,10 +116,6 @@ public class SpotifyRandomAlbumService {
             return null;
         }
     }
-
-    /**
-     * Tenta novamente com outra query
-     */
     private String retrySearch() {
         try {
             log.info("🔄 Tentando novamente...");
@@ -151,12 +137,7 @@ public class SpotifyRandomAlbumService {
         }
     }
 
-    /**
-     * Gera uma query aleatória para máxima variação
-     * Usa letras aleatórias e números
-     */
     private String getRandomQuery() {
-        // Usar uma letra aleatória (a-z, 0-9)
         char[] chars = "abcdefghijklmnopqrstuvwxyz0123456789".toCharArray();
         char randomChar = chars[random.nextInt(chars.length)];
 

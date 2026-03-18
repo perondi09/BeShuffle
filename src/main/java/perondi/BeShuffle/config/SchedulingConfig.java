@@ -10,19 +10,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @EnableScheduling
 public class SchedulingConfig {
 
-    /**
-     * Cria um bean de ObjectMapper para serialização/deserialização JSON
-     * Necessário para SpotifyRandomAlbumService
-     */
     @Bean
     public ObjectMapper objectMapper() {
         return new ObjectMapper();
     }
 
-    /**
-     * Cria um bean de RestTemplate para fazer requisições HTTP
-     * Necessário para chamar a API do Spotify
-     */
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplate();
