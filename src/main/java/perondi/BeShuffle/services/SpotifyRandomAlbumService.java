@@ -9,8 +9,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
 @Slf4j
@@ -21,14 +19,6 @@ public class SpotifyRandomAlbumService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     private final Random random;
-
-    // Palavras-chave para busca aleatória
-    private static final String[] SEARCH_KEYWORDS = {
-            "rock", "pop", "jazz", "hip", "country", "reggae",
-            "electronic", "indie", "metal", "blues", "classical", "soul",
-            "rb", "folk", "punk", "disco", "funk", "gospel", "latin",
-            "techno", "house", "ambient", "experimental", "grunge", "alternative"
-    };
 
     public SpotifyRandomAlbumService(
             AuthService authService,
@@ -42,28 +32,22 @@ public class SpotifyRandomAlbumService {
     }
 
     /**
-     * Busca um álbum COMPLETAMENTE ALEATÓRIO da API do Spotify
-     * Sem usar nenhuma lista pré-definida
-     * Cada execução pode retornar um álbum diferente
+     * Busca um álbum TOTALMENTE ALEATÓRIO do Spotify
+     * Filtra para retornar APENAS álbuns, não singles ou compilações
      */
     public String getRandomAlbumIdFromSpotify() {
         try {
-            log.info("🎲 Buscando álbum aleatório da API do Spotify...");
+            log.info("🎲 Buscando álbum totalmente aleatório...");
 
-            // 1. Selecionar palavra-chave aleatória
-            String randomKeyword = getRandomKeyword();
-            log.info("🔍 Termo de busca: {}", randomKeyword);
-
-            // 2. Buscar álbuns com essa palavra-chave
-            String albumId = searchRandomAlbum(randomKeyword);
+            // Buscar álbum com offset aleatório
+            String albumId = searchRandomAlbum();
 
             if (albumId != null) {
                 log.info("✅ Álbum aleatório encontrado: {}", albumId);
                 return albumId;
             } else {
-                // Se falhar, tenta outra palavra-chave
-                log.warn("⚠️ Nenhum álbum encontrado, tentando outro termo...");
-                return retryWithDifferentKeyword();
+                log.warn("⚠️ Nenhum álbum encontrado, tentando novamente...");
+                return retrySearch();
             }
 
         } catch (Exception e) {
@@ -73,31 +57,30 @@ public class SpotifyRandomAlbumService {
     }
 
     /**
-     * Busca álbuns usando um termo e retorna um aleatório
+     * Busca um álbum com offset aleatório
+     * Usa limit=5 que é mais seguro e ainda retorna boas opções
      */
-    private String searchRandomAlbum(String keyword) {
+    private String searchRandomAlbum() {
         try {
             String token = authService.getAccessToken();
 
-            // Buscar álbuns com o termo (aleatoriamente pega offset diferente)
-            int offset = random.nextInt(3000);
+            // Query aleatória
+            String query = getRandomQuery();
+            int offset = random.nextInt(950);  // 0 a 949 (SEGURO)
 
-            // Codificar a keyword corretamente
-            String encodedKeyword = URLEncoder.encode(keyword, StandardCharsets.UTF_8);
+            log.debug("🔍 Query: {}, Offset: {}", query, offset);
 
-            // Construir URL simples (sem UriComponentsBuilder)
+            // Construir URL com limit=5 (mais seguro)
             String url = "https://api.spotify.com/v1/search?" +
-                    "q=" + encodedKeyword +
+                    "q=" + query +
                     "&type=album" +
-                    "&limit=10" +
+                    "&limit=5" +      // Reduzido para 5 (mais seguro)
                     "&offset=" + offset;
 
-            log.debug("URL da busca: {}", url);
+            log.debug("URL: {}", url);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(token);
-            headers.set("Content-Type", "application/json");
-
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<String> response = restTemplate.exchange(
@@ -107,8 +90,6 @@ public class SpotifyRandomAlbumService {
                     String.class
             );
 
-            log.debug("Status da resposta: {}", response.getStatusCode());
-
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 JsonNode root = objectMapper.readTree(response.getBody());
                 JsonNode albums = root.get("albums");
@@ -117,64 +98,68 @@ public class SpotifyRandomAlbumService {
                     JsonNode items = albums.get("items");
 
                     if (items != null && items.isArray() && items.size() > 0) {
-                        // Selecionar um álbum aleatório dos resultados
+                        // Escolher um álbum aleatório dos resultados
                         int randomIndex = random.nextInt(items.size());
                         JsonNode album = items.get(randomIndex);
 
                         String albumId = album.get("id").asText();
                         String albumName = album.get("name").asText();
+                        String albumType = album.get("album_type").asText();
 
-                        log.info("📀 Álbum selecionado: {} (ID: {})", albumName, albumId);
-                        return albumId;
-                    } else {
-                        log.warn("⚠️ Items vazio ou não encontrado");
+                        log.info("📀 Álbum encontrado: {} (Tipo: {})", albumName, albumType);
+
+                        // Verificar se é realmente um álbum (não single ou compilation)
+                        if ("album".equalsIgnoreCase(albumType)) {
+                            return albumId;
+                        } else {
+                            log.warn("⚠️ Resultado não é álbum: {}", albumType);
+                            return null;
+                        }
                     }
-                } else {
-                    log.warn("⚠️ Albums não encontrado na resposta");
                 }
-            } else {
-                log.warn("⚠️ Status não 2xx: {}", response.getStatusCode());
             }
 
             return null;
 
         } catch (Exception e) {
-            log.error("❌ Erro ao buscar álbum: {}", e.getMessage());
-            e.printStackTrace();
+            log.error("❌ Erro ao buscar: {}", e.getMessage());
             return null;
         }
     }
 
     /**
-     * Tenta com outra palavra-chave aleatória
+     * Tenta novamente com outra query
      */
-    private String retryWithDifferentKeyword() {
+    private String retrySearch() {
         try {
-            String differentKeyword = getRandomKeyword();
-            log.info("🔄 Segunda tentativa com termo: {}", differentKeyword);
+            log.info("🔄 Tentando novamente...");
 
-            String albumId = searchRandomAlbum(differentKeyword);
-
-            if (albumId != null) {
-                return albumId;
+            // Tenta 5 vezes com queries diferentes
+            for (int i = 0; i < 5; i++) {
+                String albumId = searchRandomAlbum();
+                if (albumId != null) {
+                    return albumId;
+                }
+                log.warn("⚠️ Tentativa {} falhou", i + 1);
             }
 
-            // Tenta uma terceira vez
-            log.warn("⚠️ Segunda tentativa falhou, tentando novamente...");
-            String thirdKeyword = getRandomKeyword();
-            return searchRandomAlbum(thirdKeyword);
+            return null;
 
         } catch (Exception e) {
-            log.error("❌ Erro na tentativa de busca: {}", e.getMessage());
+            log.error("❌ Erro na tentativa: {}", e.getMessage());
             return null;
         }
     }
 
     /**
-     * Retorna uma palavra-chave aleatória
+     * Gera uma query aleatória para máxima variação
+     * Usa letras aleatórias e números
      */
-    private String getRandomKeyword() {
-        int randomIndex = random.nextInt(SEARCH_KEYWORDS.length);
-        return SEARCH_KEYWORDS[randomIndex];
+    private String getRandomQuery() {
+        // Usar uma letra aleatória (a-z, 0-9)
+        char[] chars = "abcdefghijklmnopqrstuvwxyz0123456789".toCharArray();
+        char randomChar = chars[random.nextInt(chars.length)];
+
+        return String.valueOf(randomChar);
     }
 }
