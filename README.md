@@ -35,7 +35,7 @@ cd beshuffle
 ### Registrar Álbum do Dia
 
 ```http
-POST /api/albums/today
+POST /api/albums/random
 ```
 
 Registra ou atualiza o álbum indicado para o dia atual.
