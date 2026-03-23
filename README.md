@@ -1,37 +1,39 @@
 # 📊 BeShuffle
 
-Projeto criado para ajudar pessoas curiosas como eu, BeShuffle é uma aplicação que todo dia irá indicar um álbum novo para conhecer novos artistas e novos estilos musicais.
+Projeto criado para ajudar pessoas curiosas como eu. BeShuffle é uma aplicação que todo dia indica um álbum novo para você conhecer novos artistas e estilos musicais.
 
 ## 🚀 Tecnologias Utilizadas
 
 Este projeto foi desenvolvido utilizando as seguintes tecnologias:
 
-* **Java 21**
-* **Spring Boot 3**
-* **Maven** para gerenciamento de dependências
+- **Java 21**
+- **Spring Boot 3**
+- **Maven** para gerenciamento de dependências
 
 ## ⚙️ Pré-requisitos
 
 Antes de começar, você vai precisar ter as seguintes ferramentas instaladas na sua máquina:
-* [JDK 21+](https://www.oracle.com/java/technologies/javase-downloads.html)
-* [Maven 3.8.1+](https://maven.apache.org/download.cgi)
-* [Git](https://git-scm.com/)
+
+- [JDK 21+](https://www.oracle.com/java/technologies/javase-downloads.html)
+- [Maven 3.8.1+](https://maven.apache.org/download.cgi)
+- [Git](https://git-scm.com/)
 
 ## 🛠️ Configuração e Execução
 
 1. Clone o repositório:
 ```bash
-git clone https://github.com/perondi09/minha-biblioteca.git
+git clone https://github.com/perondi09/beshuffle.git
 ```
 
 2. Acesse a pasta do projeto:
 ```bash
-cd minha-biblioteca
+cd beshuffle
 ```
 
 ## 📍 Endpoints da Aplicação
 
 ### Registrar Álbum do Dia
+
 ```http
 POST /api/albums/today
 ```
@@ -52,20 +54,21 @@ Registra ou atualiza o álbum indicado para o dia atual.
 }
 ```
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `id` | `integer` | Identificador interno do registro |
-| `spotifyAlbumId` | `string` | ID do álbum no Spotify |
-| `albumName` | `string` | Nome do álbum |
-| `artistName` | `string` | Nome do artista |
-| `imageUrl` | `string` | URL da capa do álbum |
-| `albumUrl` | `string` | URI do álbum no Spotify |
-| `releaseDate` | `string` | Data de lançamento original do álbum |
-| `displayDate` | `string` | Data em que o álbum foi exibido no BeShuffle |
+| Campo            | Tipo      | Descrição                                    |
+| :--------------- | :-------- | :------------------------------------------- |
+| `id`             | `Integer` | Identificador interno do registro            |
+| `spotifyAlbumId` | `String`  | ID do álbum no Spotify                       |
+| `albumName`      | `String`  | Nome do álbum                                |
+| `artistName`     | `String`  | Nome do artista                              |
+| `imageUrl`       | `String`  | URL da capa do álbum                         |
+| `albumUrl`       | `String`  | URI do álbum no Spotify                      |
+| `releaseDate`    | `String`  | Data de lançamento original do álbum         |
+| `displayDate`    | `String`  | Data em que o álbum foi exibido no BeShuffle |
 
 ---
 
 ### Buscar Álbum do Dia
+
 ```http
 GET /api/albums/today
 ```
@@ -90,4 +93,4 @@ Retorna o álbum indicado para o dia atual.
 
 ## 👨‍💻 Autor
 
-Desenvolvido por **Guilherme Perondi** - [LinkedIn](https://www.linkedin.com/in/guilherme-perondi/)
+Desenvolvido por **Guilherme Perondi** — [LinkedIn](https://www.linkedin.com/in/guilherme-perondi/)
