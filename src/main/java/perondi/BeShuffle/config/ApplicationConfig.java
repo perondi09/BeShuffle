@@ -2,13 +2,11 @@ package perondi.BeShuffle.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Configuration
-@EnableScheduling
-public class SchedulingConfig {
+public class ApplicationConfig {
 
     @Bean
     public ObjectMapper objectMapper() {

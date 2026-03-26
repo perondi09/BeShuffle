@@ -28,18 +28,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.valueOf(ex.getHttpStatus()));
     }
 
-    @ExceptionHandler(AlbumAlreadyUsedException.class)
-    public ResponseEntity<Map<String, Object>> handleAlbumAlreadyUsed(AlbumAlreadyUsedException ex) {
-        log.warn("Álbum já foi usado: {}", ex.getMessage());
-        
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", 400);
-        body.put("error", "ALBUM_ALREADY_USED");
-        body.put("message", ex.getMessage());
-
-        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
-    }
 
     @ExceptionHandler(SpotifyApiException.class)
     public ResponseEntity<Map<String, Object>> handleSpotifyApiError(SpotifyApiException ex) {
