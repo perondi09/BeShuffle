@@ -1,96 +1,101 @@
-# 📊 BeShuffle
+# BeShuffle
 
-Projeto criado para ajudar pessoas curiosas como eu. BeShuffle é uma aplicação que todo dia indica um álbum novo para você conhecer novos artistas e estilos musicais.
+Aplicacao web para descobrir albuns aleatorios do Spotify.
 
-## 🚀 Tecnologias Utilizadas
+## O que voce precisa
 
-Este projeto foi desenvolvido utilizando as seguintes tecnologias:
+Para rodar localmente (sem Docker):
+- Java 21+
+- Git
 
-- **Java 21**
-- **Spring Boot 3**
-- **Maven** para gerenciamento de dependências
+Para rodar com Docker:
+- Docker Desktop (ou Docker Engine + Compose)
+- Git
 
-## ⚙️ Pré-requisitos
+## 1) Clonar o projeto
 
-Antes de começar, você vai precisar ter as seguintes ferramentas instaladas na sua máquina:
-
-- [JDK 21+](https://www.oracle.com/java/technologies/javase-downloads.html)
-- [Maven 3.8.1+](https://maven.apache.org/download.cgi)
-- [Git](https://git-scm.com/)
-
-## 🛠️ Configuração e Execução
-
-1. Clone o repositório:
 ```bash
 git clone https://github.com/perondi09/beshuffle.git
+cd beshuffle/BeShuffle
 ```
 
-2. Acesse a pasta do projeto:
+## 2) Configurar credenciais do Spotify
+
+Crie o arquivo `.env` na raiz do projeto (ou copie de `.env.example`) e preencha:
+
 ```bash
-cd beshuffle
+cp .env.example .env
 ```
 
-## 📍 Endpoints da Aplicação
+```bash
+SPOTIFY_CLIENT_ID=seu_client_id
+SPOTIFY_CLIENT_SECRET=seu_client_secret
+```
 
-### Registrar Álbum do Dia
+Voce consegue essas credenciais em:
+- https://developer.spotify.com/dashboard
+
+## 3) Rodar a aplicacao
+
+Escolha **uma** das opcoes abaixo.
+
+### Opcao A - Rodar localmente (Maven Wrapper)
+
+```bash
+./mvnw spring-boot:run
+```
+
+### Opcao B - Rodar com Docker Compose
+
+```bash
+docker compose up --build
+```
+
+Se seu ambiente usa o comando antigo, use:
+
+```bash
+docker-compose up --build
+```
+
+## 4) Acessar no navegador
+
+- http://localhost:8080
+
+Ao abrir a pagina:
+- o album eh carregado automaticamente
+- o botao `Novo album` busca outro album
+
+## 5) Parar a aplicacao
+
+Se estiver rodando localmente:
+- `Ctrl + C`
+
+Se estiver rodando com Docker Compose:
+
+```bash
+docker compose down
+```
+
+ou
+
+```bash
+docker-compose down
+```
+
+## Endpoint principal
 
 ```http
 POST /api/albums/random
 ```
 
-Registra ou atualiza o álbum indicado para o dia atual.
+Retorna um album aleatorio do Spotify para exibicao na interface.
 
-**Resposta de sucesso `200 OK`:**
-```json
-{
-    "id": 1,
-    "spotifyAlbumId": "0I8i8NKTztZQJiQCkUSA63",
-    "albumName": "INDUSTRY MACHINE",
-    "artistName": "ODUMODUBLVCK",
-    "imageUrl": "https://i.scdn.co/image/ab67616d0000b273739fcfc70e236250bbe577d1",
-    "albumUrl": "spotify:album:0I8i8NKTztZQJiQCkUSA63",
-    "releaseDate": "2025-10-05",
-    "displayDate": "2026-03-22"
-}
-```
+## Erros comuns
 
-| Campo            | Tipo      | Descrição                                    |
-| :--------------- | :-------- | :------------------------------------------- |
-| `id`             | `Integer` | Identificador interno do registro            |
-| `spotifyAlbumId` | `String`  | ID do álbum no Spotify                       |
-| `albumName`      | `String`  | Nome do álbum                                |
-| `artistName`     | `String`  | Nome do artista                              |
-| `imageUrl`       | `String`  | URL da capa do álbum                         |
-| `albumUrl`       | `String`  | URI do álbum no Spotify                      |
-| `releaseDate`    | `String`  | Data de lançamento original do álbum         |
-| `displayDate`    | `String`  | Data em que o álbum foi exibido no BeShuffle |
+- `invalid_client`: confira `SPOTIFY_CLIENT_ID` e `SPOTIFY_CLIENT_SECRET` no `.env`
+- Porta `8080` ocupada: pare outro processo na porta ou mude o mapeamento no `docker-compose.yml`
 
----
+## Autor
 
-### Buscar Álbum do Dia
-
-```http
-GET /api/albums/today
-```
-
-Retorna o álbum indicado para o dia atual.
-
-**Resposta de sucesso `200 OK`:**
-```json
-{
-    "id": 1,
-    "spotifyAlbumId": "0I8i8NKTztZQJiQCkUSA63",
-    "albumName": "INDUSTRY MACHINE",
-    "artistName": "ODUMODUBLVCK",
-    "imageUrl": "https://i.scdn.co/image/ab67616d0000b273739fcfc70e236250bbe577d1",
-    "albumUrl": "spotify:album:0I8i8NKTztZQJiQCkUSA63",
-    "releaseDate": "2025-10-05",
-    "displayDate": "2026-03-22"
-}
-```
-
----
-
-## 👨‍💻 Autor
-
-Desenvolvido por **Guilherme Perondi** — [LinkedIn](https://www.linkedin.com/in/guilherme-perondi/)
+Desenvolvido por Guilherme Perondi:
+- https://www.linkedin.com/in/guilherme-perondi/
