@@ -1,27 +1,28 @@
 package perondi.BeShuffle.controller;
 
+
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import perondi.BeShuffle.dtos.album.Album;
+import perondi.BeShuffle.entity.Album;
 import perondi.BeShuffle.exceptions.SpotifyApiException;
 import perondi.BeShuffle.services.AlbumService;
+import perondi.BeShuffle.services.DailyAlbumService;
 import perondi.BeShuffle.services.SpotifyRandomAlbumService;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/albums")
 public class AlbumController {
 
     private final AlbumService albumService;
     private final SpotifyRandomAlbumService spotifyRandomAlbumService;
+    private final DailyAlbumService dailyAlbumService;
 
-    public AlbumController(AlbumService albumService, SpotifyRandomAlbumService spotifyRandomAlbumService) {
-        this.albumService = albumService;
-        this.spotifyRandomAlbumService = spotifyRandomAlbumService;
-    }
-
-    @PostMapping("/random")
+    @GetMapping("/random")
     public ResponseEntity<Album> getRandomAlbum() {
         String randomAlbumId = spotifyRandomAlbumService.getRandomAlbumIdFromSpotify();
         if (randomAlbumId == null) {
@@ -29,6 +30,12 @@ public class AlbumController {
         }
 
         Album album = albumService.getAlbumById(randomAlbumId);
+        return ResponseEntity.ok(album);
+    }
+
+    @GetMapping("/daily")
+    public ResponseEntity<Album> getDailyAlbum() {
+        Album album = dailyAlbumService.getAlbumDoDia();
         return ResponseEntity.ok(album);
     }
 }

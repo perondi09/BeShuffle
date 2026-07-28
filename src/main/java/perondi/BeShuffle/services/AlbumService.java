@@ -3,7 +3,7 @@ package perondi.BeShuffle.services;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import perondi.BeShuffle.client.AlbumSpotifyClient;
-import perondi.BeShuffle.dtos.album.Album;
+import perondi.BeShuffle.entity.Album;
 import perondi.BeShuffle.exceptions.SpotifyApiException;
 import perondi.BeShuffle.exceptions.SpotifyAuthenticationException;
 import perondi.BeShuffle.exceptions.ValidationException;
