@@ -1,102 +1,144 @@
 # BeShuffle
 
-Aplicacao web para descobrir albuns aleatorios do Spotify.
+Aplicação web full-stack para descobrir álbuns aleatórios do Spotify e acompanhar o **Álbum do Dia** gerado automaticamente.
 
-## O que voce precisa
+## 📋 O que você precisa
 
-Para rodar localmente (sem Docker):
-- Java 21+
+- Docker Desktop (ou Docker Engine + Docker Compose)
 - Git
 
-Para rodar com Docker:
-- Docker Desktop (ou Docker Engine + Compose)
-- Git
+---
 
-## 1) Clonar o projeto
+## 🚀 1. Clonar o projeto
 
 ```bash
 git clone https://github.com/perondi09/beshuffle.git
-cd beshuffle/BeShuffle
+cd beshuffle
 ```
 
-## 2) Configurar credenciais do Spotify
+---
 
-Crie o arquivo `.env` na raiz do projeto (ou copie de `.env.example`) e preencha:
+## 🔑 2. Configurar credenciais do Spotify e Banco de Dados
 
-```bash
-cp .env.example .env
-```
+Crie um arquivo `.env` dentro da pasta `infra/` contendo as suas credenciais:
 
-```bash
+```env
 SPOTIFY_CLIENT_ID=seu_client_id
 SPOTIFY_CLIENT_SECRET=seu_client_secret
+DB_NAME=beshuffle_db
+DB_USER=postgres
+DB_PASSWORD=sua_senha
 ```
 
-Voce consegue essas credenciais em:
-- https://developer.spotify.com/dashboard
+As credenciais do Spotify podem ser obtidas em:
 
-## 3) Rodar a aplicacao
+👉 https://developer.spotify.com/dashboard
 
-Escolha **uma** das opcoes abaixo.
+---
 
-### Opcao A - Rodar localmente (Maven Wrapper)
+## 🐳 3. Rodar a aplicação com Docker Compose
+
+Acesse a pasta de infraestrutura e inicie os containers (PostgreSQL, Back-end Spring Boot e Front-end React com Nginx):
 
 ```bash
-./mvnw spring-boot:run
+cd infra
+docker compose up -d --build
 ```
 
-### Opcao B - Rodar com Docker Compose
+> **Observação:** Se estiver utilizando a versão antiga do Docker Compose, execute:
 
 ```bash
-docker compose up --build
+docker-compose up -d --build
 ```
 
-Se seu ambiente usa o comando antigo, use:
+---
 
-```bash
-docker-compose up --build
-```
+## 🌐 4. Acessar a aplicação
 
-## 4) Acessar no navegador
+Após a inicialização dos containers, acesse:
 
-- Local: http://localhost:8080
-- Producao (deploy): https://beshuffle.onrender.com/
+- **Front-end:** http://localhost:3000
+- **API (Swagger/Endpoints):** http://localhost:8080
 
-Ao abrir a pagina:
-- o album eh carregado automaticamente
-- o botao `Novo album` busca outro album
+### Funcionalidades
 
-## 5) Parar a aplicacao
+Ao abrir a aplicação:
 
-Se estiver rodando localmente:
-- `Ctrl + C`
+- O **Álbum do Dia** é carregado automaticamente pelo sistema.
+- Na aba **Aleatório**, é possível gerar novos álbuns ilimitadamente clicando no botão **Novo Álbum**.
 
-Se estiver rodando com Docker Compose:
+---
+
+## 🛑 5. Parar a aplicação
+
+Para encerrar todos os containers:
 
 ```bash
 docker compose down
 ```
 
-ou
+---
 
-```bash
-docker-compose down
-```
+# 📡 Endpoints da API
 
-## Endpoint principal
+| Método | Endpoint | Descrição |
+|---------|----------|-----------|
+| `GET` | `/api/albums/daily` | Retorna o Álbum do Dia atual. |
+| `GET` | `/api/albums/random` | Retorna um álbum totalmente aleatório do Spotify. |
 
-```http
-POST /api/albums/random
-```
+---
 
-Retorna um album aleatorio do Spotify para exibicao na interface.
+# 🛠️ Tecnologias Utilizadas
 
-## Erros comuns
+### Front-end
 
-- `invalid_client`: confira `SPOTIFY_CLIENT_ID` e `SPOTIFY_CLIENT_SECRET` no `.env`
-- Porta `8080` ocupada: pare outro processo na porta ou mude o mapeamento no `docker-compose.yml`
+- React
+- React Router
+- CSS Moderno
 
-## Autor
+### Back-end
 
-Desenvolvido por Guilherme Perondi:
-- https://www.linkedin.com/in/guilherme-perondi/
+- Java 21
+- Spring Boot
+- Spring Data JPA
+- Spring Cloud OpenFeign
+- Spring Scheduling
+
+### Banco de Dados
+
+- PostgreSQL 18
+
+### DevOps & Infraestrutura
+
+- Docker
+- Docker Compose
+- Nginx
+
+---
+
+# ❗ Erros comuns
+
+### `invalid_client`
+
+Verifique se as variáveis:
+
+- `SPOTIFY_CLIENT_ID`
+- `SPOTIFY_CLIENT_SECRET`
+
+estão configuradas corretamente no arquivo `.env`.
+
+### Porta em uso
+
+Certifique-se de que as seguintes portas estão disponíveis:
+
+- `3000` (Front-end)
+- `8080` (Back-end)
+- `5435` (PostgreSQL)
+
+---
+
+# 👨‍💻 Autor
+
+Desenvolvido por **Guilherme Perondi**
+
+LinkedIn: https://www.linkedin.com/in/guilherme-perondi/
