@@ -9,19 +9,20 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import perondi.BeShuffle.exceptions.SpotifyApiException;
-import perondi.BeShuffle.exceptions.SpotifyAuthenticationException;
 
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 @Service
 public class SpotifyRandomAlbumService {
 
+    private static final String SEARCH_CHARSET = "abcdefghijklmnopqrstuvwxyz0123456789";
+    private static final int MAX_SEARCH_ATTEMPTS = 5;
+    private static final int MAX_OFFSET = 950;
+
     private final AuthService authService;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
-    private final Random random;
 
     public SpotifyRandomAlbumService(
             AuthService authService,
@@ -31,116 +32,77 @@ public class SpotifyRandomAlbumService {
         this.authService = authService;
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
-        this.random = new Random();
     }
 
     public String getRandomAlbumIdFromSpotify() {
-        try {
-            log.info("🎲 Buscando álbum totalmente aleatório...");
+        log.info("Buscando álbum aleatório no Spotify...");
 
-            String albumId = searchRandomAlbum();
-
-            if (albumId != null) {
-                log.info("✅ Álbum aleatório encontrado: {}", albumId);
+        for (int attempt = 1; attempt <= MAX_SEARCH_ATTEMPTS; attempt++) {
+            String albumId = buscarAlbumAleatorio();
+            if (albumId != null && !albumId.isBlank()) {
+                log.info("Álbum aleatório encontrado na tentativa {}: {}", attempt, albumId);
                 return albumId;
-            } else {
-                log.warn("⚠️ Nenhum álbum encontrado, tentando novamente...");
-                return retrySearch();
             }
-
-        } catch (Exception e) {
-            log.error("❌ Erro ao buscar álbum aleatório: {}", e.getMessage());
-            return null;
+            log.warn("Nenhum álbum válido encontrado na tentativa {} de {}", attempt, MAX_SEARCH_ATTEMPTS);
         }
+
+        log.error("Não foi possível encontrar um álbum aleatório após {} tentativas", MAX_SEARCH_ATTEMPTS);
+        return null;
     }
 
-    private String searchRandomAlbum() {
+    private String buscarAlbumAleatorio() {
         try {
             String token = authService.getAccessToken();
+            if (token == null || token.isBlank()) {
+                log.warn("Token de autenticação inválido ao buscar álbum aleatório");
+                return null;
+            }
 
-            String query = getRandomQuery();
-            int offset = random.nextInt(950);  // 0 a 949 (SEGURO)
-
-            log.debug("🔍 Query: {}, Offset: {}", query, offset);
-
-            String url = "https://api.spotify.com/v1/search?" +
-                    "q=" + query +
-                    "&type=album" +
-                    "&limit=5" +
-                    "&offset=" + offset;
-
-            log.debug("URL: {}", url);
+            String query = gerarQueryAleatoria();
+            int offset = ThreadLocalRandom.current().nextInt(MAX_OFFSET);
+            String url = String.format(
+                    "https://api.spotify.com/v1/search?q=%s&type=album&limit=5&offset=%d",
+                    query,
+                    offset
+            );
 
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(token);
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            ResponseEntity<String> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    entity,
-                    String.class
-            );
-
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                JsonNode root = objectMapper.readTree(response.getBody());
-                JsonNode albums = root.get("albums");
-
-                if (albums != null) {
-                    JsonNode items = albums.get("items");
-
-                    if (items != null && items.isArray() && items.size() > 0) {
-                        int randomIndex = random.nextInt(items.size());
-                        JsonNode album = items.get(randomIndex);
-
-                        String albumId = album.get("id").asText();
-                        String albumName = album.get("name").asText();
-                        String albumType = album.get("album_type").asText();
-
-                        log.info("📀 Álbum encontrado: {} (Tipo: {})", albumName, albumType);
-
-                        if ("album".equalsIgnoreCase(albumType)) {
-                            return albumId;
-                        } else {
-                            log.warn("⚠️ Resultado não é álbum: {}", albumType);
-                            return null;
-                        }
-                    }
-                }
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+                log.warn("Resposta inválida da API do Spotify ao buscar álbum aleatório: {}", response.getStatusCode());
+                return null;
             }
 
-            return null;
+            JsonNode root = objectMapper.readTree(response.getBody());
+            JsonNode items = root.path("albums").path("items");
+            if (!items.isArray() || items.isEmpty()) {
+                return null;
+            }
 
-        } catch (Exception e) {
-            log.error("❌ Erro ao buscar: {}", e.getMessage());
-            return null;
-        }
-    }
-    private String retrySearch() {
-        try {
-            log.info("🔄 Tentando novamente...");
+            for (JsonNode item : items) {
+                if (!"album".equalsIgnoreCase(item.path("album_type").asText())) {
+                    continue;
+                }
 
-            // Tenta 5 vezes com queries diferentes
-            for (int i = 0; i < 5; i++) {
-                String albumId = searchRandomAlbum();
-                if (albumId != null) {
+                String albumId = item.path("id").asText(null);
+                String albumName = item.path("name").asText("desconhecido");
+                if (albumId != null && !albumId.isBlank()) {
+                    log.debug("Álbum aleatório selecionado: {} ({})", albumName, albumId);
                     return albumId;
                 }
-                log.warn("⚠️ Tentativa {} falhou", i + 1);
             }
 
             return null;
-
         } catch (Exception e) {
-            log.error("❌ Erro na tentativa: {}", e.getMessage());
+            log.error("Erro ao buscar álbum aleatório no Spotify", e);
             return null;
         }
     }
 
-    private String getRandomQuery() {
-        char[] chars = "abcdefghijklmnopqrstuvwxyz0123456789".toCharArray();
-        char randomChar = chars[random.nextInt(chars.length)];
-
-        return String.valueOf(randomChar);
+    private String gerarQueryAleatoria() {
+        return String.valueOf(SEARCH_CHARSET.charAt(ThreadLocalRandom.current().nextInt(SEARCH_CHARSET.length())));
     }
 }

@@ -26,26 +26,28 @@ public class AuthService {
     }
 
     public String getAccessToken() {
-        if (clientId == null || clientId.isEmpty()) {
+        if (clientId == null || clientId.isBlank()) {
+            log.error("Credencial do Spotify ausente: clientId");
             throw new ValidationException("Credenciais Spotify não configuradas", "clientId");
         }
 
-        if (clientSecret == null || clientSecret.isEmpty()) {
+        if (clientSecret == null || clientSecret.isBlank()) {
+            log.error("Credencial do Spotify ausente: clientSecret");
             throw new ValidationException("Credenciais Spotify não configuradas", "clientSecret");
         }
 
         try {
             LoginResponse response = authSpotifyClient.login(new LoginRequest("client_credentials", clientId, clientSecret));
-
             if (response == null) {
                 throw new SpotifyAuthenticationException("Resposta vazia do Spotify", 401);
             }
 
             String token = response.getAccessToken();
-            if (token == null || token.isEmpty()) {
+            if (token == null || token.isBlank()) {
                 throw new SpotifyAuthenticationException("Token de acesso vazio", 401);
             }
 
+            log.debug("Token de acesso do Spotify obtido com sucesso");
             return token;
         } catch (SpotifyAuthenticationException e) {
             throw e;
@@ -54,4 +56,4 @@ public class AuthService {
             throw new SpotifyAuthenticationException("Falha na autenticação Spotify: " + e.getMessage(), e);
         }
     }
-}
+} 

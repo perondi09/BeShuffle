@@ -21,33 +21,45 @@ public class AlbumService {
     }
 
     public Album getAlbumById(String albumId) {
-        if (albumId == null || albumId.trim().isEmpty()) {
+        String normalizedAlbumId = normalizeAlbumId(albumId);
+        if (normalizedAlbumId.isBlank()) {
+            log.warn("Tentativa de busca por álbum com id vazio");
             throw new ValidationException("Album ID não pode ser vazio", "albumId");
         }
 
         String token;
         try {
             token = authService.getAccessToken();
+        } catch (ValidationException e) {
+            throw e;
         } catch (Exception e) {
-            log.error("Erro ao obter token", e);
+            log.error("Erro ao obter token de autenticação para o álbum {}", normalizedAlbumId, e);
             throw new SpotifyAuthenticationException("Falha ao obter token de autenticação", e);
         }
 
-        if (token == null || token.isEmpty()) {
+        if (token == null || token.isBlank()) {
+            log.warn("Token de autenticação inválido para o álbum {}", normalizedAlbumId);
             throw new SpotifyAuthenticationException("Token de autenticação inválido", 401);
         }
 
         try {
-            Album album = albumSpotifyClient.getAlbum("Bearer " + token, albumId);
+            Album album = albumSpotifyClient.getAlbum("Bearer " + token, normalizedAlbumId);
             if (album == null) {
-                throw new SpotifyApiException("Álbum não encontrado: " + albumId, 404);
+                log.warn("Álbum não encontrado no Spotify para o id {}", normalizedAlbumId);
+                throw new SpotifyApiException("Álbum não encontrado: " + normalizedAlbumId, 404);
             }
+
+            log.debug("Álbum encontrado com sucesso: {} ({})", album.getName(), album.getId());
             return album;
-        } catch (SpotifyApiException e) {
+        } catch (SpotifyApiException | SpotifyAuthenticationException e) {
             throw e;
         } catch (Exception e) {
-            log.error("Erro ao buscar álbum: {}", albumId, e);
+            log.error("Erro ao buscar álbum {} no Spotify", normalizedAlbumId, e);
             throw new SpotifyApiException("Erro ao buscar álbum: " + e.getMessage(), 503, e);
         }
+    }
+
+    private String normalizeAlbumId(String albumId) {
+        return albumId == null ? "" : albumId.trim();
     }
 }
