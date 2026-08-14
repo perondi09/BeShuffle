@@ -22,7 +22,7 @@ public class AlbumController {
     private final SpotifyRandomAlbumService spotifyRandomAlbumService;
     private final DailyAlbumService dailyAlbumService;
 
-    @GetMapping("/random")
+        @GetMapping("/random")
     public ResponseEntity<Album> getRandomAlbum() {
         String randomAlbumId = spotifyRandomAlbumService.getRandomAlbumIdFromSpotify();
         if (randomAlbumId == null) {

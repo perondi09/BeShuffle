@@ -1,144 +1,120 @@
-# BeShuffle
+# BeShuffle API
 
-Aplicação web full-stack para descobrir álbuns aleatórios do Spotify e acompanhar o **Álbum do Dia** gerado automaticamente.
+Backend Java/Spring Boot para selecionar álbuns aleatórios do Spotify e manter o Álbum do Dia em um banco PostgreSQL.
 
-## 📋 O que você precisa
+This repository contains only the API layer. The frontend was moved to a separate repository.
 
-- Docker Desktop (ou Docker Engine + Docker Compose)
+## Requirements
+
+- Docker Desktop or Docker Engine
+- Docker Compose
 - Git
+- Java 21 (for local development)
 
----
+## Local environment
 
-## 🚀 1. Clonar o projeto
+The default local setup uses a PostgreSQL container started by Docker Compose.
 
-```bash
-git clone https://github.com/perondi09/beshuffle.git
-cd beshuffle
-```
+### 1. Configure environment variables
 
----
-
-## 🔑 2. Configurar credenciais do Spotify e Banco de Dados
-
-Crie um arquivo `.env` dentro da pasta `infra/` contendo as suas credenciais:
+Inside `infra/`, create a `.env` file based on `.env.example`:
 
 ```env
-SPOTIFY_CLIENT_ID=seu_client_id
-SPOTIFY_CLIENT_SECRET=seu_client_secret
+SERVER_PORT=8080
+SPRING_PROFILES_ACTIVE=default
+
 DB_NAME=beshuffle_db
 DB_USER=postgres
-DB_PASSWORD=sua_senha
+DB_PASSWORD=Senhalol.123
+
+SPOTIFY_CLIENT_ID=your_spotify_client_id
+SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
 ```
 
-As credenciais do Spotify podem ser obtidas em:
+The Spotify credentials can be obtained here:
+https://developer.spotify.com/dashboard
 
-👉 https://developer.spotify.com/dashboard
-
----
-
-## 🐳 3. Rodar a aplicação com Docker Compose
-
-Acesse a pasta de infraestrutura e inicie os containers (PostgreSQL, Back-end Spring Boot e Front-end React com Nginx):
+### 2. Start the application with Docker Compose
 
 ```bash
 cd infra
-docker compose up -d --build
+docker compose up --build -d
 ```
 
-> **Observação:** Se estiver utilizando a versão antiga do Docker Compose, execute:
+This starts:
+- PostgreSQL 18 on port `5435`
+- The Spring Boot application on port `8080`
+
+### 3. Check application health
 
 ```bash
-docker-compose up -d --build
+curl http://localhost:8080/actuator/health
 ```
 
----
-
-## 🌐 4. Acessar a aplicação
-
-Após a inicialização dos containers, acesse:
-
-- **Front-end:** http://localhost:3000
-- **API (Swagger/Endpoints):** http://localhost:8080
-
-### Funcionalidades
-
-Ao abrir a aplicação:
-
-- O **Álbum do Dia** é carregado automaticamente pelo sistema.
-- Na aba **Aleatório**, é possível gerar novos álbuns ilimitadamente clicando no botão **Novo Álbum**.
-
----
-
-## 🛑 5. Parar a aplicação
-
-Para encerrar todos os containers:
+### 4. Stop the stack
 
 ```bash
 docker compose down
 ```
 
----
+## Database connection
 
-# 📡 Endpoints da API
+The app is configured to connect to the local PostgreSQL container using these defaults:
 
-| Método | Endpoint | Descrição |
-|---------|----------|-----------|
-| `GET` | `/api/albums/daily` | Retorna o Álbum do Dia atual. |
-| `GET` | `/api/albums/random` | Retorna um álbum totalmente aleatório do Spotify. |
+- Host: `db` (from inside Docker)
+- Port: `5432`
+- Database: `beshuffle_db`
+- User: `postgres`
+- Password: `Senhalol.123`
 
----
+For local host execution outside Docker, the application defaults to:
 
-# 🛠️ Tecnologias Utilizadas
+- Host: `localhost`
+- Port: `5435`
 
-### Front-end
+## Dockerfile
 
-- React
-- React Router
-- CSS Moderno
+The `Dockerfile` is a multi-stage build that compiles the project and runs the application in a lightweight Java image.
 
-### Back-end
+## API endpoints
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/api/albums/random` | Returns a random Spotify album |
+| `GET` | `/api/albums/daily` | Returns the Album of the Day |
+
+## Tech stack
 
 - Java 21
-- Spring Boot
+- Spring Boot 4
 - Spring Data JPA
-- Spring Cloud OpenFeign
-- Spring Scheduling
-
-### Banco de Dados
-
 - PostgreSQL 18
+- OpenFeign
+- Docker / Docker Compose
+- Actuator
 
-### DevOps & Infraestrutura
+## Troubleshooting
 
-- Docker
-- Docker Compose
-- Nginx
+### Database connection refused
 
----
+Check if the PostgreSQL container is running:
 
-# ❗ Erros comuns
+```bash
+docker compose ps
+docker logs beshuffle-db
+```
 
-### `invalid_client`
+### Spotify invalid_client
 
-Verifique se as variáveis:
+Verify that the variables `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET` are set correctly in `infra/.env`.
 
-- `SPOTIFY_CLIENT_ID`
-- `SPOTIFY_CLIENT_SECRET`
+### Local database port already in use
 
-estão configuradas corretamente no arquivo `.env`.
+If port `5435` is already occupied, change the mapping in `docker-compose.yml`:
 
-### Porta em uso
+```yaml
+ports:
+  - "5436:5432"
+```
 
-Certifique-se de que as seguintes portas estão disponíveis:
-
-- `3000` (Front-end)
-- `8080` (Back-end)
-- `5435` (PostgreSQL)
-
----
-
-# 👨‍💻 Autor
-
-Desenvolvido por **Guilherme Perondi**
-
-LinkedIn: https://www.linkedin.com/in/guilherme-perondi/
+Then align your local datasource settings accordingly.

@@ -1,34 +1,62 @@
-name: beshuffle-api
+name: beshuffle
 
 services:
-  app:
+  db:
+    image: postgres:18
+    container_name: beshuffle-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-beshuffle_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-Senhalol.123}
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-beshuffle_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - beshuffle-network
+
+  beshuffle:
     image: beshuffle-api:latest
     build:
       context: ..
       dockerfile: Dockerfile
     container_name: beshuffle-api
     restart: unless-stopped
-    env_file:
-      - .env
+    depends_on:
+      db:
+        condition: service_healthy
     environment:
       SERVER_PORT: ${SERVER_PORT:-8080}
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-default}
       SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID}
       SPOTIFY_CLIENT_SECRET: ${SPOTIFY_CLIENT_SECRET}
-      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://host.docker.internal:5432/beshuffle_db}
-      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-postgres}
-      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-postgres}
-      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO:-update}
+      DB_NAME: ${DB_NAME:-beshuffle_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-Senhalol.123}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME:-beshuffle_db}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-Senhalol.123}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
     ports:
       - "${SERVER_PORT:-8080}:${SERVER_PORT:-8080}"
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:${SERVER_PORT:-8080}/actuator/health || exit 1"]
       interval: 20s
       timeout: 5s
-      retries: 5
+      retries: 10
       start_period: 30s
     networks:
       - beshuffle-network
+
+volumes:
+  postgres_data:
 
 networks:
   beshuffle-network:
