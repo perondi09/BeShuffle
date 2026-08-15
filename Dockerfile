@@ -20,8 +20,11 @@ ENV TZ=UTC \
     SERVER_PORT=8080 \
     LOG_PATH=/tmp
 
+# Ensure the log directory exists and is owned by the non-root runtime user
+RUN mkdir -p ${LOG_PATH} && chown -R spring:spring ${LOG_PATH}
+
 EXPOSE 8080
 
 USER spring:spring
 
-ENTRYPOINT ["sh", "-c", "exec java -DLOG_PATH=${LOG_PATH:-/tmp} -Dserver.port=${SERVER_PORT:-8080} -jar /app/app.jar"]
+ENTRYPOINT ["sh", "-c", "exec java -DLOG_PATH=${LOG_PATH} -Dlogging.file.path=${LOG_PATH} -Dserver.port=${SERVER_PORT:-8080} -jar /app/app.jar"]
