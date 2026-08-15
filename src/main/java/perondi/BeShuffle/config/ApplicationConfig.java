@@ -38,9 +38,12 @@ public class ApplicationConfig {
         String defaultDb = env.getProperty("DB_NAME", "beshuffle_db");
         String defaultUrl = String.format("jdbc:postgresql://localhost:5435/%s", defaultDb);
 
-        String url = env.getProperty("SPRING_DATASOURCE_URL", defaultUrl);
-        String user = env.getProperty("SPRING_DATASOURCE_USERNAME", env.getProperty("DB_USER", "postgres"));
-        String password = env.getProperty("SPRING_DATASOURCE_PASSWORD", env.getProperty("DB_PASSWORD", ""));
+        String url = env.getProperty("spring.datasource.url",
+                env.getProperty("SPRING_DATASOURCE_URL", defaultUrl));
+        String user = env.getProperty("spring.datasource.username",
+                env.getProperty("SPRING_DATASOURCE_USERNAME", env.getProperty("DB_USER", "postgres")));
+        String password = env.getProperty("spring.datasource.password",
+                env.getProperty("SPRING_DATASOURCE_PASSWORD", env.getProperty("DB_PASSWORD", "")));
 
         // If the configured host is not resolvable from this environment (e.g. 'db' only resolves inside Docker),
         // fall back to localhost development port 5435. This allows running the app in IDE without Docker.
