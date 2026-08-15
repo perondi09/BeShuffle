@@ -65,6 +65,36 @@ body {
     margin-bottom: 40px;
 }
 
+.toggle-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+.toggle-btn {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: transparent;
+    color: var(--light);
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.toggle-btn:hover {
+    border-color: rgba(29, 185, 84, 0.7);
+}
+
+.toggle-btn.active {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%);
+    color: var(--dark);
+    border-color: rgba(29, 185, 84, 0.9);
+}
+
 .album-image {
     width: 100%;
     aspect-ratio: 1;
@@ -160,6 +190,50 @@ body {
 .loading-state h2 {
     font-size: 24px;
     font-family: 'Playfair Display', serif;
+}
+
+.status-description {
+    margin-top: 10px;
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 14px;
+}
+
+.loading-spinner {
+    width: 36px;
+    height: 36px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    border: 3px solid rgba(29, 185, 84, 0.2);
+    border-top-color: var(--primary);
+    animation: spin 1s linear infinite;
+}
+
+.status-card {
+    border-radius: 14px;
+    padding: 18px 16px;
+    margin-bottom: 22px;
+}
+
+.status-card h2 {
+    font-size: 22px;
+    margin-bottom: 8px;
+    font-family: 'Playfair Display', serif;
+}
+
+.status-card p {
+    color: rgba(255, 255, 255, 0.86);
+    line-height: 1.5;
+}
+
+.status-error {
+    border: 1px solid rgba(255, 99, 99, 0.35);
+    background: rgba(255, 99, 99, 0.08);
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 @media (max-width: 600px) {
