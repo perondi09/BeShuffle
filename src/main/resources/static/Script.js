@@ -83,6 +83,10 @@ function renderAlbum(mode, album) {
     const albumName = album.name || 'Álbum sem nome';
 
     const content = document.getElementById('content');
+    const refreshButtonHtml = mode === 'random'
+        ? `<button id="refresh-album-button" class="btn btn-secondary" type="button">Novo aleatório</button>`
+        : '';
+
     content.innerHTML = `
         ${getToggleHtml(mode)}
         <div class="album-section">
@@ -98,9 +102,7 @@ function renderAlbum(mode, album) {
             <a href="${escapeHtml(spotifyUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
                 Ouvir no Spotify
             </a>
-            <button id="refresh-album-button" class="btn btn-secondary" type="button">
-                Novo ${mode === 'daily' ? 'álbum do dia' : 'aleatório'}
-            </button>
+            ${refreshButtonHtml}
         </div>
     `;
     attachEvents();
