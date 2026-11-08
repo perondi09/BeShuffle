@@ -2,8 +2,8 @@ package perondi.BeShuffle.services;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import perondi.BeShuffle.entity.Album;
 import perondi.BeShuffle.entity.DailyAlbum;
 import perondi.BeShuffle.repository.DailyAlbumRepository;
@@ -17,6 +17,8 @@ import java.time.LocalDate;
 @Service
 @RequiredArgsConstructor
 public class DailyAlbumService {
+
+    private static final int MAX_TENTATIVAS_ALBUM_INEDITO = 3;
 
     private final DailyAlbumRepository dailyAlbumRepository;
     private final AlbumPicker albumPicker;
@@ -39,7 +41,6 @@ public class DailyAlbumService {
                 });
     }
 
-    @Transactional
     public Album gerarESalvarAlbumDoDia(LocalDate data) {
         if (data == null) {
             throw new IllegalArgumentException("Data do álbum do dia não pode ser nula");
@@ -53,11 +54,7 @@ public class DailyAlbumService {
     private Album persistirNovoAlbumDoDia(LocalDate data) {
         log.info("Gerando novo álbum do dia para a data: {}", data);
 
-        String randomAlbumId = albumPicker.pickAlbumId();
-        if (randomAlbumId == null || randomAlbumId.isBlank()) {
-            throw new IllegalStateException("Não foi possível gerar um álbum do dia no momento");
-        }
-
+        String randomAlbumId = sortearAlbumInedito();
         Album spotifyAlbum = albumService.getAlbumById(randomAlbumId);
         DailyAlbum dailyAlbum = new DailyAlbum();
         dailyAlbum.setSpotifyAlbumId(spotifyAlbum.getId());
@@ -80,9 +77,35 @@ public class DailyAlbumService {
             throw new IllegalStateException("Falha ao serializar o álbum do dia", e);
         }
 
-        DailyAlbum savedAlbum = dailyAlbumRepository.save(dailyAlbum);
+        DailyAlbum savedAlbum;
+        try {
+            savedAlbum = dailyAlbumRepository.save(dailyAlbum);
+        } catch (DataIntegrityViolationException e) {
+            // Outra execução (agendador ou outra requisição) salvou o álbum deste dia primeiro.
+            log.warn("Álbum do dia de {} já foi salvo por outra execução; usando o registro existente", data);
+            return dailyAlbumRepository.findByDisplayDate(data)
+                    .map(this::converterJsonParaAlbum)
+                    .orElseThrow(() -> new IllegalStateException("Falha ao salvar o álbum do dia", e));
+        }
+
         log.info("Álbum do dia salvo com sucesso para {}: {} ({})", data, savedAlbum.getAlbumName(), savedAlbum.getSpotifyAlbumId());
         return spotifyAlbum;
+    }
+
+    /** Sorteia um álbum que ainda não foi álbum do dia (a coluna spotify_album_id é única). */
+    private String sortearAlbumInedito() {
+        for (int tentativa = 1; tentativa <= MAX_TENTATIVAS_ALBUM_INEDITO; tentativa++) {
+            String albumId = albumPicker.pickAlbumId();
+            if (albumId == null || albumId.isBlank()) {
+                throw new IllegalStateException("Não foi possível gerar um álbum do dia no momento");
+            }
+            if (!dailyAlbumRepository.existsBySpotifyAlbumId(albumId)) {
+                return albumId;
+            }
+            log.info("Álbum {} já foi álbum do dia; sorteando outro (tentativa {} de {})",
+                    albumId, tentativa, MAX_TENTATIVAS_ALBUM_INEDITO);
+        }
+        throw new IllegalStateException("Todos os álbuns sorteados já foram álbum do dia; tente novamente");
     }
 
     private Album converterJsonParaAlbum(DailyAlbum dailyAlbum) {

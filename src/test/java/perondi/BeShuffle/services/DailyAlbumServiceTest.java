@@ -7,6 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.dao.DataIntegrityViolationException;
 import perondi.BeShuffle.entity.Album;
 import perondi.BeShuffle.entity.AlbumImage;
 import perondi.BeShuffle.entity.Artist;
@@ -22,7 +23,9 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -101,6 +104,54 @@ class DailyAlbumServiceTest {
         assertNotNull(result);
         assertEquals("123", result.getId());
         verify(dailyAlbumRepository).save(any(DailyAlbum.class));
+    }
+
+    @Test
+    @DisplayName("Sorteia de novo quando o álbum sorteado já foi álbum do dia")
+    void shouldSkipAlbumsAlreadyUsed() {
+        LocalDate date = LocalDate.of(2026, 1, 1);
+        when(dailyAlbumRepository.findByDisplayDate(date)).thenReturn(Optional.empty());
+        when(albumPicker.pickAlbumId()).thenReturn("repetido", "123");
+        when(dailyAlbumRepository.existsBySpotifyAlbumId("repetido")).thenReturn(true);
+        when(dailyAlbumRepository.existsBySpotifyAlbumId("123")).thenReturn(false);
+        when(albumService.getAlbumById("123")).thenReturn(createAlbum());
+        when(dailyAlbumRepository.save(any(DailyAlbum.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Album result = dailyAlbumService.gerarESalvarAlbumDoDia(date);
+
+        assertEquals("123", result.getId());
+        verify(albumService, never()).getAlbumById("repetido");
+    }
+
+    @Test
+    @DisplayName("Desiste com erro claro se todos os sorteios trouxerem álbuns já usados")
+    void shouldFailWhenEveryPickWasAlreadyUsed() {
+        LocalDate date = LocalDate.of(2026, 1, 1);
+        when(dailyAlbumRepository.findByDisplayDate(date)).thenReturn(Optional.empty());
+        when(albumPicker.pickAlbumId()).thenReturn("repetido");
+        when(dailyAlbumRepository.existsBySpotifyAlbumId("repetido")).thenReturn(true);
+
+        assertThrows(IllegalStateException.class, () -> dailyAlbumService.gerarESalvarAlbumDoDia(date));
+        verify(dailyAlbumRepository, never()).save(any(DailyAlbum.class));
+    }
+
+    @Test
+    @DisplayName("Se outra execução salvou o álbum do dia ao mesmo tempo, devolve o que foi salvo")
+    void shouldReturnConcurrentlySavedAlbum() {
+        LocalDate date = LocalDate.of(2026, 1, 1);
+        Album jaSalvo = createAlbum();
+        jaSalvo.setId("vencedor");
+        when(dailyAlbumRepository.findByDisplayDate(date))
+                .thenReturn(Optional.empty())
+                .thenReturn(Optional.of(stored(date, jaSalvo)));
+        when(albumPicker.pickAlbumId()).thenReturn("123");
+        when(albumService.getAlbumById("123")).thenReturn(createAlbum());
+        when(dailyAlbumRepository.save(any(DailyAlbum.class)))
+                .thenThrow(new DataIntegrityViolationException("duplicate key display_date"));
+
+        Album result = dailyAlbumService.gerarESalvarAlbumDoDia(date);
+
+        assertEquals("vencedor", result.getId());
     }
 
     private DailyAlbum stored(LocalDate date, Album album) {
