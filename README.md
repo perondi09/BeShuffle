@@ -34,6 +34,11 @@ SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
 The Spotify credentials can be obtained here:
 https://developer.spotify.com/dashboard
 
+`infra/.env` is the single source for keys and passwords and is ignored by git. Docker Compose
+reads it, and so does the app when started from the project root (IDE or `./mvnw spring-boot:run`).
+There are no fallback values: without `DB_PASSWORD`, `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET`
+the app does not start.
+
 ### 2. Start the application with Docker Compose
 
 ```bash
@@ -42,7 +47,7 @@ docker compose up --build -d
 ```
 
 This starts:
-- PostgreSQL 16 on port `5435`
+- PostgreSQL 16 on `127.0.0.1:5435` (reachable only from this machine)
 - The Spring Boot application on port `8080`
 
 ### 3. Check application health
@@ -88,8 +93,8 @@ The `Dockerfile` is a multi-stage build that compiles the project and runs the a
 - Java 21
 - Spring Boot 4
 - Spring Data JPA
-- PostgreSQL 16
-- OpenFeign
+- PostgreSQL 16 + Flyway
+- Spring RestClient (Spotify Web API)
 - Docker / Docker Compose
 - Actuator
 
@@ -114,7 +119,7 @@ If port `5435` is already occupied, change the mapping in `docker-compose.yml`:
 
 ```yaml
 ports:
-  - "5436:5432"
+  - "127.0.0.1:5436:5432"
 ```
 
 Then align your local datasource settings accordingly.
