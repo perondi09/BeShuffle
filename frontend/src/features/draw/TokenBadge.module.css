@@ -1,0 +1,28 @@
+.badge {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-2);
+  padding: 6px 14px 6px var(--espaco-2);
+  background: var(--cor-papel);
+  border: var(--borda);
+  border-radius: var(--raio-pilula);
+  box-shadow: var(--sombra-p);
+  font-weight: var(--peso-forte);
+  white-space: nowrap;
+}
+
+.coin {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: var(--borda-fina);
+  background: var(--cor-gema);
+  font-size: 12px;
+}
+
+.spent {
+  background: var(--cor-gasto);
+  color: var(--cor-gasto-texto);
+}

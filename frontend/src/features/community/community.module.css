@@ -1,0 +1,93 @@
+/* Estilos compartilhados pelos cartões "Sorteados de hoje" e "Sua nota". */
+.title {
+  margin-bottom: var(--espaco-2);
+  font-size: var(--titulo-card);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--espaco-3);
+  margin-top: 14px;
+}
+
+.mini {
+  aspect-ratio: 1;
+  border: var(--borda-fina);
+  border-radius: var(--raio-m);
+  overflow: hidden;
+  background: var(--fundo-pagina);
+}
+
+.miniName {
+  margin-top: 6px;
+  font-size: var(--texto-p);
+  font-weight: var(--peso-forte);
+  line-height: 1.2;
+}
+
+.miniName span {
+  display: block;
+  font-weight: var(--peso-normal);
+}
+
+.ratings {
+  display: flex;
+  gap: var(--espaco-2);
+  margin: var(--espaco-3) 0 14px;
+}
+
+.rating {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: var(--borda);
+  cursor: pointer;
+  background: repeating-radial-gradient(
+    circle,
+    var(--cor-vinil-apagado-1) 0 2px,
+    var(--cor-vinil-apagado-2) 2px 4px
+  );
+}
+
+.rating::after {
+  content: '';
+  position: absolute;
+  inset: 13px;
+  border-radius: 50%;
+  border: 2px solid var(--cor-tinta);
+  background: var(--cor-papel);
+}
+
+.ratingOn {
+  background: var(--fundo-vinil);
+}
+
+.ratingOn::after {
+  background: var(--cor-tomate);
+}
+
+.comment {
+  width: 100%;
+  min-height: 92px;
+  padding: var(--espaco-3);
+  border: var(--borda);
+  border-radius: var(--raio-m);
+  background: var(--cor-papel-frio);
+  resize: vertical;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espaco-3);
+  margin-top: var(--espaco-3);
+}
+
+@media (max-width: 560px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

@@ -1,0 +1,88 @@
+/*
+ * Tokens visuais do BeShuffle (guia: docs/design/index.html).
+ * Toda cor, fonte, borda, sombra, raio e fundo do site sai daqui.
+ * Componentes usam só var(--…); nada de valor solto em outro arquivo.
+ */
+:root {
+  /* Cores da marca */
+  --cor-lilas: #c9b8ff;
+  --cor-lilas-escuro: #b3a0f5;
+  --cor-lilas-claro: #f3eeff;
+  --cor-tinta: #1c1530;
+  --cor-tomate: #ff5a36;
+  --cor-gema: #ffc93c;
+  --cor-menta: #3ddc97;
+  --cor-rosa: #ff8fc7;
+  --cor-papel: #ffffff;
+  --cor-papel-frio: #fbfaff;
+
+  /* Cores de estado */
+  --cor-desativado: #d9d2ee;
+  --cor-desativado-texto: #6d6490;
+  --cor-gasto: #e9e4f7;
+  --cor-gasto-texto: #9b92b8;
+  --cor-erro: #c8321a;
+  --cor-vinil-1: #2a2140;
+  --cor-vinil-2: #3b3060;
+  --cor-vinil-apagado-1: #e7e1f8;
+  --cor-vinil-apagado-2: #f6f3ff;
+  --cor-veu: rgb(201 184 255 / 82%);
+
+  /* Fontes */
+  --fonte-display: 'Bagel Fat One', system-ui, sans-serif;
+  --fonte-texto: 'Fredoka', system-ui, sans-serif;
+  --peso-normal: 400;
+  --peso-medio: 500;
+  --peso-forte: 600;
+
+  --texto-p: 14px;
+  --texto-m: 15px;
+  --texto-base: 17px;
+  --texto-g: clamp(20px, 2.2vw, 24px);
+  --titulo-card: 28px;
+  --titulo-secao: clamp(26px, 3vw, 34px);
+  --titulo-pagina: clamp(38px, 5.4vw, 64px);
+
+  /* Bordas */
+  --espessura: 3px;
+  --espessura-fina: 2.5px;
+  --borda: var(--espessura) solid var(--cor-tinta);
+  --borda-fina: var(--espessura-fina) solid var(--cor-tinta);
+
+  /* Sombras chapadas */
+  --sombra-p: 3px 3px 0 var(--cor-tinta);
+  --sombra: 5px 5px 0 var(--cor-tinta);
+  --sombra-g: 8px 8px 0 var(--cor-tinta);
+
+  /* Raios */
+  --raio-p: 10px;
+  --raio-m: 14px;
+  --raio-g: 18px;
+  --raio-card: 24px;
+  --raio-palco: 32px;
+  --raio-pilula: 999px;
+
+  /* Espaços */
+  --espaco-1: 4px;
+  --espaco-2: 8px;
+  --espaco-3: 12px;
+  --espaco-4: 16px;
+  --espaco-5: 24px;
+  --espaco-6: 36px;
+  --margem-lateral: clamp(16px, 4vw, 40px);
+  --largura-max: 1180px;
+
+  /* Fundo padrão de todas as telas: lilás com bolinhas */
+  --fundo-pagina: radial-gradient(var(--cor-lilas-escuro) 1.6px, transparent 1.6px) 0 0 / 22px 22px,
+    var(--cor-lilas);
+  /* Superfície de disco de vinil */
+  --fundo-vinil: repeating-radial-gradient(circle, var(--cor-vinil-1) 0 3px, var(--cor-vinil-2) 3px 5px);
+
+  /* Movimento */
+  --mola: cubic-bezier(0.3, 1.6, 0.5, 1);
+  --mola-suave: cubic-bezier(0.25, 1.4, 0.45, 1);
+  --toque: 0.08s;
+
+  /* Foco */
+  --foco: 3px solid var(--cor-tomate);
+}

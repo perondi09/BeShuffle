@@ -1,0 +1,16 @@
+.when {
+  margin-bottom: 14px;
+}
+
+.title {
+  margin-bottom: var(--espaco-2);
+  font-size: var(--titulo-pagina);
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+.artists {
+  margin-bottom: 14px;
+  font-size: var(--texto-g);
+  font-weight: var(--peso-forte);
+}

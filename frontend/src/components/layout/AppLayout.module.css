@@ -1,0 +1,11 @@
+.main {
+  max-width: var(--largura-max);
+  margin: 0 auto;
+  padding: var(--espaco-2) var(--margem-lateral) 120px;
+}
+
+@media (max-width: 560px) {
+  .main {
+    padding: var(--espaco-1) var(--espaco-4) 170px;
+  }
+}

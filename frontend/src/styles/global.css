@@ -1,0 +1,63 @@
+@import './tokens.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  min-height: 100dvh;
+  font-family: var(--fonte-texto);
+  font-size: var(--texto-base);
+  line-height: 1.45;
+  color: var(--cor-tinta);
+  background: var(--fundo-pagina);
+}
+
+button,
+a,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+:focus-visible {
+  outline: var(--foco);
+  outline-offset: 3px;
+}
+
+/* Títulos com a fonte de display. */
+.display {
+  font-family: var(--fonte-display);
+  font-weight: var(--peso-normal);
+  letter-spacing: 0.01em;
+  line-height: 1.02;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  body {
+    font-size: 16px;
+  }
+}
