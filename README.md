@@ -1,125 +1,64 @@
-# BeShuffle API
+# BeShuffle
 
-Backend Java/Spring Boot para selecionar álbuns aleatórios do Spotify e manter o Álbum do Dia em um banco PostgreSQL.
+Um álbum novo por dia, sorteado do Spotify. Visitantes sorteiam álbuns; no futuro, quem tiver conta vai ver os
+sorteados do dia, dar nota e comentar.
 
-This repository contains only the API layer. The frontend was moved to a separate repository.
+## Estrutura
 
-## Requirements
-
-- Docker Desktop or Docker Engine
-- Docker Compose
-- Git
-- Java 21 (for local development)
-
-## Local environment
-
-The default local setup uses a PostgreSQL container started by Docker Compose.
-
-### 1. Configure environment variables
-
-Inside `infra/`, create a `.env` file based on `.env.example`:
-
-```env
-SERVER_PORT=8080
-SPRING_PROFILES_ACTIVE=default
-
-DB_NAME=beshuffle_db
-DB_USER=postgres
-DB_PASSWORD=change-me
-
-SPOTIFY_CLIENT_ID=your_spotify_client_id
-SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
-```
-
-The Spotify credentials can be obtained here:
-https://developer.spotify.com/dashboard
-
-`infra/.env` is the single source for keys and passwords and is ignored by git. Docker Compose
-reads it, and so does the app when started from the project root (IDE or `./mvnw spring-boot:run`).
-There are no fallback values: without `DB_PASSWORD`, `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET`
-the app does not start.
-
-### 2. Start the application with Docker Compose
-
-```bash
-cd infra
-docker compose up --build -d
-```
-
-This starts:
-- PostgreSQL 16 on `127.0.0.1:5435` (reachable only from this machine)
-- The Spring Boot application on port `8080`
-
-### 3. Check application health
-
-```bash
-curl http://localhost:8080/actuator/health
-```
-
-### 4. Stop the stack
-
-```bash
-docker compose down
-```
-
-## Database connection
-
-The app is configured to connect to the local PostgreSQL container using these defaults:
-
-- Host: `db` (from inside Docker)
-- Port: `5432`
-- Database: `beshuffle_db`
-- User: `postgres`
-- Password: the value of `DB_PASSWORD` in `infra/.env`
-
-For local host execution outside Docker, the application defaults to:
-
-- Host: `localhost`
-- Port: `5435`
-
-## Dockerfile
-
-The `Dockerfile` is a multi-stage build that compiles the project and runs the application in a lightweight Java image.
-
-## API endpoints
-
-| Method | Endpoint | Description |
+| Pasta | O que tem | Documentação |
 | --- | --- | --- |
-| `GET` | `/api/albums/random` | Returns a random Spotify album |
-| `GET` | `/api/albums/daily` | Returns the Album of the Day |
+| `backend/` | API Spring Boot 4 / Java 21 (Spotify, Álbum do Dia, PostgreSQL + Flyway) | [backend/README.md](backend/README.md) |
+| `frontend/` | Site em React 19 + TypeScript + Vite | [frontend/README.md](frontend/README.md) |
+| `infra/` | Docker Compose, Dockerfiles, nginx e `.env.example` | [infra/README.md](infra/README.md) |
+| `.github/` | CI (GitHub Actions): testes do backend e do frontend e build das imagens | [infra/README.md](infra/README.md#ci) |
+| `docs/` | Contexto do projeto, roadmap e proposta visual | [docs/CONTEXTO.md](docs/CONTEXTO.md) |
 
-## Tech stack
+## Começar
 
-- Java 21
-- Spring Boot 4
-- Spring Data JPA
-- PostgreSQL 16 + Flyway
-- Spring RestClient (Spotify Web API)
-- Docker / Docker Compose
-- Actuator
+1. **Crie o arquivo de segredos.** Chaves e senhas ficam só nesse arquivo, que o git ignora:
 
-## Troubleshooting
+   ```bash
+   cp infra/.env.example infra/.env
+   ```
 
-### Database connection refused
+   Preencha `DB_PASSWORD`, `SPOTIFY_CLIENT_ID` e `SPOTIFY_CLIENT_SECRET`. As credenciais do Spotify saem do
+   [dashboard de desenvolvedor](https://developer.spotify.com/dashboard).
 
-Check if the PostgreSQL container is running:
+2. **Suba tudo com Docker:**
 
-```bash
-docker compose ps
-docker logs beshuffle-db
+   ```bash
+   cd infra
+   docker compose up --build -d
+   ```
+
+   O site abre em http://localhost:3000 e a API responde em http://localhost:8080.
+
+Para desenvolver uma parte só, siga o README da pasta correspondente.
+
+## Requisitos
+
+- Docker com Docker Compose
+- JDK 21 para rodar o backend fora do Docker (o JDK 27 não compila o Lombok do Spring Boot 4.0.3)
+- Node.js 22 para rodar o frontend fora do Docker
+
+## Fluxo de branches
+
+```
+backend ─┐
+frontend ┼─► PR ─► test ─► (CI verde + testes) ─► PR ─► master
+devops ──┤
+docs ────┘
 ```
 
-### Spotify invalid_client
+- **Branch por área:** `backend`, `frontend`, `devops` (infra e CI) e `docs`.
+- **Tudo passa pela `test`:** cada mudança entra na `test` por pull request.
+- **`master` só depois dos testes:** o PR `test → master` só abre com o CI verde e a `test` testada.
+- **Commits:** [Conventional Commits](https://www.conventionalcommits.org/pt-br/), por exemplo `feat(frontend): ...`, `fix(backend): ...`, `ci: ...` ou `docs: ...`.
 
-Verify that the variables `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET` are set correctly in `infra/.env`.
+## Endpoints da API
 
-### Local database port already in use
-
-If port `5435` is already occupied, change the mapping in `docker-compose.yml`:
-
-```yaml
-ports:
-  - "127.0.0.1:5436:5432"
-```
-
-Then align your local datasource settings accordingly.
+| Método | Rota | O que faz |
+| --- | --- | --- |
+| `GET` | `/api/albums/random` | Sorteia um álbum do Spotify |
+| `GET` | `/api/albums/daily` | Álbum do Dia (vira à meia-noite de São Paulo) |
+| `GET` | `/actuator/health` | Saúde da API |
