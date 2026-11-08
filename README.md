@@ -34,6 +34,11 @@ SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
 The Spotify credentials can be obtained here:
 https://developer.spotify.com/dashboard
 
+`infra/.env` is the single source for keys and passwords and is ignored by git. Docker Compose
+reads it, and so does the app when started from the project root (IDE or `./mvnw spring-boot:run`).
+There are no fallback values: without `DB_PASSWORD`, `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET`
+the app does not start.
+
 ### 2. Start the application with Docker Compose
 
 ```bash
