@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BeShuffle — proposta visual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Fredoka:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --lilas:#C9B8FF; --lilas-2:#B3A0F5; --tinta:#1C1530; --tomate:#FF5A36;
+  --gema:#FFC93C; --menta:#3DDC97; --papel:#FFFFFF; --rosa:#FF8FC7;
+  --borda:3px solid var(--tinta); --sombra:5px 5px 0 var(--tinta); --sombra-p:3px 3px 0 var(--tinta);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Fredoka',system-ui,sans-serif;color:var(--tinta);background:var(--lilas);
+  background-image:radial-gradient(var(--lilas-2) 1.6px,transparent 1.6px);background-size:22px 22px;
+  min-height:100dvh;font-size:17px;line-height:1.45}
+button,a,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--tomate);outline-offset:3px}
+.display{font-family:'Bagel Fat One',system-ui,sans-serif;font-weight:400;letter-spacing:.01em;line-height:1.02}
+
+/* topo */
+.topo{display:flex;align-items:center;gap:16px;padding:16px clamp(16px,4vw,40px);max-width:1180px;margin:0 auto}
+.marca{font-size:clamp(28px,4vw,38px);text-decoration:none;display:flex;align-items:center;gap:10px}
+.marca .disco{width:34px;height:34px;border-radius:50%;border:var(--borda);
+  background:repeating-radial-gradient(var(--tinta) 0 2px,#3a2f57 2px 4px);position:relative}
+.marca .disco::after{content:"";position:absolute;inset:9px;border-radius:50%;background:var(--tomate);border:2px solid var(--tinta)}
+.espaco{flex:1}
+.fichas{display:flex;align-items:center;gap:8px;background:var(--papel);border:var(--borda);border-radius:999px;
+  padding:6px 14px 6px 8px;box-shadow:var(--sombra-p);font-weight:600}
+.ficha{width:24px;height:24px;border-radius:50%;background:var(--gema);border:2.5px solid var(--tinta);
+  display:grid;place-items:center;font-size:12px;font-weight:600}
+.ficha.gasta{background:#e9e4f7;color:#9b92b8}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:var(--borda);border-radius:14px;
+  padding:10px 18px;font-weight:600;cursor:pointer;text-decoration:none;background:var(--papel);box-shadow:var(--sombra-p);
+  transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--tinta)}
+.btn-entrar{background:var(--rosa)}
+
+/* palco */
+main{max-width:1180px;margin:0 auto;padding:8px clamp(16px,4vw,40px) 120px}
+.palco{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:clamp(20px,4vw,48px);align-items:center;
+  background:var(--papel);border:var(--borda);border-radius:32px;box-shadow:8px 8px 0 var(--tinta);padding:clamp(20px,4vw,44px)}
+.toca{position:relative;aspect-ratio:1.25/1;max-width:520px;width:100%}
+.capa{position:absolute;left:0;top:6%;width:72%;aspect-ratio:1;border:var(--borda);border-radius:18px;box-shadow:var(--sombra);
+  z-index:2;overflow:hidden;transition:transform .35s cubic-bezier(.3,1.6,.5,1)}
+.vinil{position:absolute;right:0;top:9%;width:66%;aspect-ratio:1;border-radius:50%;border:var(--borda);z-index:1;
+  background:repeating-radial-gradient(circle,#2a2140 0 3px,#3b3060 3px 5px);
+  transition:transform .7s cubic-bezier(.25,1.4,.45,1)}
+.vinil .rotulo{position:absolute;inset:32%;border-radius:50%;border:3px solid var(--tinta);overflow:hidden}
+.vinil .furo{position:absolute;inset:47.5%;border-radius:50%;background:var(--papel);border:2px solid var(--tinta);z-index:2}
+.vinil.gira{animation:gira 1.8s linear infinite}
+.toca.guardado .vinil{transform:translateX(-30%) rotate(-40deg)}
+@keyframes gira{to{transform:rotate(360deg)}}
+.brilho{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 20deg,transparent 0 40deg,rgba(255,255,255,.18) 50deg,transparent 70deg 220deg,rgba(255,255,255,.12) 230deg,transparent 250deg)}
+
+/* arte das capas (ilustrativas) */
+.arte{width:100%;height:100%}
+.adesivo{position:absolute;z-index:3;right:6%;bottom:2%;background:var(--gema);border:var(--borda);border-radius:999px;
+  padding:6px 14px;font-weight:600;box-shadow:var(--sombra-p);transform:rotate(-6deg);font-size:15px}
+
+.info .quando{display:inline-block;background:var(--menta);border:var(--borda);border-radius:999px;padding:4px 12px;
+  font-weight:600;font-size:15px;transform:rotate(-2deg);margin-bottom:14px}
+.info h1{font-size:clamp(38px,5.4vw,64px);margin-bottom:8px;text-wrap:balance}
+.info .artista{font-size:clamp(20px,2.2vw,24px);font-weight:600;margin-bottom:14px}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}
+.tag{border:2.5px solid var(--tinta);border-radius:10px;padding:2px 10px;font-weight:500;font-size:15px;background:#F3EEFF}
+.acoes{display:flex;flex-wrap:wrap;gap:12px}
+.btn-sortear{background:var(--tomate);color:var(--papel);font-size:20px;padding:14px 26px;border-radius:18px;box-shadow:var(--sombra)}
+.btn-sortear:active{box-shadow:0 0 0 var(--tinta);transform:translate(5px,5px)}
+.btn-sortear[disabled]{background:#d9d2ee;color:#6d6490;cursor:not-allowed}
+.btn-spotify{background:var(--menta);font-size:18px;padding:14px 22px;border-radius:18px}
+.aviso{margin-top:14px;font-size:15px;max-width:44ch}
+.aviso a{font-weight:600}
+
+/* filtros */
+.bloco{margin-top:36px}
+.bloco h2{font-size:clamp(26px,3vw,34px);margin-bottom:6px}
+.bloco .sub{margin-bottom:16px;max-width:60ch}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{border:var(--borda);border-radius:999px;padding:8px 16px;font-weight:600;background:var(--papel);cursor:pointer;box-shadow:var(--sombra-p)}
+.chip[aria-pressed="true"]{background:var(--gema)}
+.chip .x{display:none}
+.chip[aria-pressed="true"] .x{display:inline}
+
+/* grade inferior */
+.duo{display:grid;grid-template-columns:1.3fr 1fr;gap:24px;margin-top:36px}
+.cartao{background:var(--papel);border:var(--borda);border-radius:24px;box-shadow:var(--sombra);padding:22px;position:relative;overflow:hidden}
+.hoje-lista{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
+.mini{border:2.5px solid var(--tinta);border-radius:12px;overflow:hidden;aspect-ratio:1;position:relative}
+.mini-nome{font-size:14px;font-weight:600;margin-top:6px;line-height:1.2}
+.mini-nome span{display:block;font-weight:400}
+.tranca{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  text-align:center;padding:20px;background:rgba(201,184,255,.82);backdrop-filter:blur(5px)}
+.visitante .tranca{display:flex}
+.cadeado{width:56px;height:48px;background:var(--gema);border:var(--borda);border-radius:10px;position:relative;margin-top:22px}
+.cadeado::before{content:"";position:absolute;left:10px;right:10px;top:-26px;height:30px;border:var(--borda);border-bottom:none;border-radius:20px 20px 0 0}
+.tranca p{font-weight:600;max-width:28ch}
+
+.notas{display:flex;gap:8px;margin:12px 0 14px}
+.nota{width:42px;height:42px;border-radius:50%;border:var(--borda);cursor:pointer;
+  background:repeating-radial-gradient(circle,#e7e1f8 0 2px,#f6f3ff 2px 4px);position:relative}
+.nota::after{content:"";position:absolute;inset:13px;border-radius:50%;border:2px solid var(--tinta);background:var(--papel)}
+.nota.on{background:repeating-radial-gradient(circle,#2a2140 0 2px,#3b3060 2px 4px)}
+.nota.on::after{background:var(--tomate)}
+textarea{width:100%;min-height:92px;border:var(--borda);border-radius:14px;padding:12px;resize:vertical;background:#FBFAFF}
+.linha{display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:12px}
+.comentario{display:flex;gap:10px;margin-top:16px;align-items:flex-start}
+.avatar{flex:none;width:36px;height:36px;border-radius:50%;border:2.5px solid var(--tinta);background:var(--rosa);display:grid;place-items:center;font-weight:600}
+.balao{background:#F3EEFF;border:2.5px solid var(--tinta);border-radius:4px 14px 14px 14px;padding:8px 12px;font-size:15px}
+
+/* barra de demonstração */
+.demo{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:20;display:flex;gap:4px;background:var(--tinta);
+  border-radius:999px;padding:5px;color:var(--papel);font-size:14px;align-items:center}
+.demo span{padding:0 10px 0 12px;opacity:.8}
+.demo button{border:none;border-radius:999px;padding:6px 14px;background:transparent;color:var(--papel);cursor:pointer;font-weight:600}
+.demo button[aria-pressed="true"]{background:var(--gema);color:var(--tinta)}
+
+/* navegação mobile */
+.nav-mobile{display:none}
+
+@media (max-width:860px){
+  .palco{grid-template-columns:1fr;border-radius:26px;box-shadow:6px 6px 0 var(--tinta)}
+  .toca{max-width:420px;margin:0 auto}
+  .duo{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  body{font-size:16px}
+  .topo{padding:12px 16px;gap:10px}
+  .marca{font-size:26px}
+  .marca .disco{width:28px;height:28px}
+  .marca .disco::after{inset:7px}
+  .btn-entrar.topo-entrar{display:none}
+  main{padding:4px 16px 170px}
+  .palco{padding:16px}
+  .acoes{position:fixed;left:10px;right:10px;bottom:78px;z-index:15;background:var(--lilas);padding:8px;border:var(--borda);border-radius:24px;flex-wrap:nowrap;gap:8px}
+  .acoes .btn{flex:1}
+  .btn-sortear,.btn-spotify{font-size:17px;padding:12px 10px}
+  .aviso{font-size:14px}
+  .hoje-lista{grid-template-columns:repeat(2,1fr)}
+  .nav-mobile{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:14;background:var(--papel);border-top:var(--borda);
+    padding:8px 8px calc(8px + env(safe-area-inset-bottom));justify-content:space-around}
+  .nav-mobile a{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:13px;font-weight:600;text-decoration:none;padding:4px 14px;border-radius:12px;border:2.5px solid transparent}
+  .nav-mobile a[aria-current="page"]{background:var(--gema);border-color:var(--tinta)}
+  .nav-mobile svg{width:22px;height:22px}
+  .demo{bottom:auto;top:62px;font-size:12px}
+  .demo span{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .vinil,.capa{transition:none}
+  .vinil.gira{animation:none}
+}
+</style>
+</head>
+<body class="visitante">
+
+<header class="topo">
+  <a class="marca display" href="#"><span class="disco" aria-hidden="true"></span>BeShuffle</a>
+  <div class="espaco"></div>
+  <div class="fichas" id="fichas" aria-live="polite"></div>
+  <a class="btn btn-entrar topo-entrar" href="#">Entrar</a>
+</header>
+
+<main>
+  <section class="palco" aria-label="Sorteio">
+    <div class="toca" id="toca">
+      <div class="vinil gira" id="vinil" aria-hidden="true">
+        <div class="brilho"></div>
+        <div class="rotulo" id="rotulo"></div>
+        <div class="furo"></div>
+      </div>
+      <div class="capa" id="capa" role="img"></div>
+      <div class="adesivo" id="adesivo">Álbum do dia</div>
+    </div>
+
+    <div class="info">
+      <span class="quando" id="quando">Sorteado agora</span>
+      <h1 class="display" id="titulo">Clube da Esquina</h1>
+      <p class="artista" id="artista">Milton Nascimento &amp; Lô Borges</p>
+      <div class="tags" id="tags"></div>
+      <div class="acoes">
+        <button class="btn btn-sortear display" id="sortear" type="button">Sortear álbum</button>
+        <a class="btn btn-spotify" href="#" id="spotify">Ouvir no Spotify</a>
+      </div>
+      <p class="aviso" id="aviso"></p>
+    </div>
+  </section>
+
+  <section class="bloco" aria-labelledby="t-filtros">
+    <h2 class="display" id="t-filtros">O que você quer ouvir?</h2>
+    <p class="sub">Escolha gêneros para o próximo sorteio. Sem nada marcado, vale qualquer um dos álbuns que a galera mais escuta.</p>
+    <div class="chips" id="chips"></div>
+  </section>
+
+  <div class="duo">
+    <section class="cartao" aria-labelledby="t-hoje">
+      <h2 class="display" id="t-hoje" style="font-size:28px">Sorteados de hoje</h2>
+      <p>O que todo mundo tirou na jukebox desde a meia-noite.</p>
+      <div class="hoje-lista" id="hoje"></div>
+      <div class="tranca">
+        <div class="cadeado" aria-hidden="true"></div>
+        <p>Crie uma conta grátis para ver o que a galera sorteou hoje.</p>
+        <a class="btn btn-entrar" href="#">Criar conta</a>
+      </div>
+    </section>
+
+    <section class="cartao" aria-labelledby="t-nota">
+      <h2 class="display" id="t-nota" style="font-size:28px">Sua nota</h2>
+      <div class="notas" id="notas" role="radiogroup" aria-label="Nota de 1 a 5"></div>
+      <textarea placeholder="O que achou desse disco?" aria-label="Comentário"></textarea>
+      <div class="linha">
+        <small>128 pessoas deram nota, média 4,6</small>
+        <button class="btn" type="button" style="background:var(--gema)">Publicar</button>
+      </div>
+      <div class="comentario">
+        <div class="avatar" aria-hidden="true">M</div>
+        <div class="balao"><b>marina.wav</b><br>Faixa 3 em loop desde 2019. Não tenho cura.</div>
+      </div>
+      <div class="tranca">
+        <div class="cadeado" aria-hidden="true"></div>
+        <p>Entre para dar nota e comentar os discos que você sorteia.</p>
+        <a class="btn btn-entrar" href="#">Entrar</a>
+      </div>
+    </section>
+  </div>
+</main>
+
+<nav class="nav-mobile" aria-label="Principal">
+  <a href="#" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/></svg>Sortear</a>
+  <a href="#t-hoje"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>Hoje</a>
+  <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Perfil</a>
+</nav>
+
+<div class="demo" role="group" aria-label="Simular estado">
+  <span>Ver como</span>
+  <button type="button" data-modo="visitante" aria-pressed="true">Visitante</button>
+  <button type="button" data-modo="logado" aria-pressed="false">Logado</button>
+</div>
+
+<script>
+// Capas ilustrativas desenhadas em CSS (no app real vem a imagem do Spotify)
+const ALBUNS = [
+  {t:'Clube da Esquina',a:'Milton Nascimento & Lô Borges',g:['MPB','1972'],c:['#FFC93C','#3DDC97','#FF5A36'],f:'sol'},
+  {t:'SOS',a:'SZA',g:['R&B','2022'],c:['#5BC0EB','#FFFFFF','#1C1530'],f:'mar'},
+  {t:'AM',a:'Arctic Monkeys',g:['Indie rock','2013'],c:['#1C1530','#FFFFFF','#FF8FC7'],f:'onda'},
+  {t:'Bluesman',a:'Baco Exu do Blues',g:['Rap','2018'],c:['#FF5A36','#1C1530','#FFC93C'],f:'listras'},
+  {t:'Random Access Memories',a:'Daft Punk',g:['Eletrônica','2013'],c:['#C9B8FF','#FFC93C','#1C1530'],f:'sol'},
+  {t:'IGOR',a:'Tyler, the Creator',g:['Rap','2019'],c:['#FF8FC7','#FFC93C','#1C1530'],f:'listras'},
+  {t:'Tropicália ou Panis et Circencis',a:'Vários artistas',g:['Tropicália','1968'],c:['#3DDC97','#FF5A36','#FFC93C'],f:'onda'},
+  {t:'Currents',a:'Tame Impala',g:['Psicodélico','2015'],c:['#FF5A36','#C9B8FF','#5BC0EB'],f:'mar'}
+];
+const GENEROS=['Rock','Pop','Rap e trap','MPB','Indie','Eletrônica','Funk','R&B','Jazz','Metal','Sertanejo','Anos 2000'];
+
+function arte(al){
+  const [a,b,c]=al.c;
+  const fundos={
+    sol:`radial-gradient(circle at 50% 62%, ${b} 0 22%, transparent 22.5%), repeating-conic-gradient(from 0deg at 50% 62%, ${a} 0 10deg, ${c} 10deg 20deg)`,
+    mar:`radial-gradient(ellipse at 50% 120%, ${c} 0 40%, transparent 40.5%), linear-gradient(${a} 0 55%, ${b} 55% 58%, ${a} 58%)`,
+    onda:`repeating-radial-gradient(circle at 0 100%, ${a} 0 18px, ${c} 18px 30px, ${b} 30px 36px)`,
+    listras:`linear-gradient(135deg, transparent 0 60%, ${c} 60% 70%, transparent 70%), repeating-linear-gradient(90deg, ${a} 0 22px, ${b} 22px 30px)`
+  };
+  return `<div class="arte" style="background:${fundos[al.f]}"></div>`;
+}
+
+const $=s=>document.querySelector(s);
+let estado={modo:'visitante',fichas:1,atual:0,primeira:true,nota:0};
+
+function render(){
+  const al=ALBUNS[estado.atual];
+  $('#capa').innerHTML=arte(al);
+  $('#capa').setAttribute('aria-label','Capa de '+al.t);
+  $('#rotulo').innerHTML=arte(al);
+  $('#titulo').textContent=al.t;
+  $('#artista').textContent=al.a;
+  $('#tags').innerHTML=al.g.map(g=>`<span class="tag">${g}</span>`).join('');
+  $('#adesivo').style.display=estado.primeira?'block':'none';
+  $('#quando').textContent=estado.primeira?'Hoje na jukebox':'Sorteado agora';
+
+  const logado=estado.modo==='logado';
+  document.body.classList.toggle('visitante',!logado);
+  const f=$('#fichas');
+  if(logado){f.innerHTML='<span class="ficha">∞</span> Fichas à vontade';}
+  else{f.innerHTML=`<span class="ficha ${estado.fichas?'':'gasta'}">1</span> ${estado.fichas?'1 ficha hoje':'Ficha usada'}`;}
+
+  const btn=$('#sortear'), av=$('#aviso');
+  if(!logado && estado.fichas===0){
+    btn.disabled=true; btn.textContent='Volte amanhã';
+    av.innerHTML='Sua ficha de hoje já foi. <a href="#">Crie uma conta</a> para sortear quantas vezes quiser, ver os sorteados do dia e dar nota.';
+  }else{
+    btn.disabled=false; btn.textContent='Sortear álbum';
+    av.textContent=logado?'Cada sorteio fica salvo no seu histórico.':'Visitantes têm 1 ficha por dia. Ela renova à meia-noite.';
+  }
+}
+
+function sortear(){
+  if(estado.modo==='visitante'){ if(!estado.fichas) return; estado.fichas=0; }
+  const toca=$('#toca'), vinil=$('#vinil');
+  const reduz=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let prox; do{prox=Math.floor(Math.random()*ALBUNS.length)}while(prox===estado.atual);
+  if(reduz){estado.atual=prox;estado.primeira=false;render();return;}
+  vinil.classList.remove('gira'); toca.classList.add('guardado');
+  $('#capa').style.transform='rotate(-4deg) scale(.96)';
+  setTimeout(()=>{
+    estado.atual=prox; estado.primeira=false; render();
+    $('#capa').style.transform='';
+    toca.classList.remove('guardado'); vinil.classList.add('gira');
+  },650);
+}
+
+function montar(){
+  $('#chips').innerHTML=GENEROS.map(g=>`<button type="button" class="chip" aria-pressed="false">${g} <span class="x" aria-hidden="true">✓</span></button>`).join('');
+  $('#chips').addEventListener('click',e=>{const c=e.target.closest('.chip');if(c)c.setAttribute('aria-pressed',c.getAttribute('aria-pressed')!=='true');});
+  $('#hoje').innerHTML=ALBUNS.slice(1,5).map(al=>`<div><div class="mini">${arte(al)}</div><p class="mini-nome">${al.t}<span>${al.a}</span></p></div>`).join('');
+  $('#notas').innerHTML=[1,2,3,4,5].map(n=>`<button type="button" class="nota" role="radio" aria-checked="false" aria-label="${n} de 5" data-n="${n}"></button>`).join('');
+  $('#notas').addEventListener('click',e=>{const b=e.target.closest('.nota');if(!b)return;estado.nota=+b.dataset.n;
+    document.querySelectorAll('.nota').forEach(x=>{const on=+x.dataset.n<=estado.nota;x.classList.toggle('on',on);x.setAttribute('aria-checked',+x.dataset.n===estado.nota);});});
+  $('#sortear').addEventListener('click',sortear);
+  document.querySelectorAll('.demo button').forEach(b=>b.addEventListener('click',()=>{
+    estado.modo=b.dataset.modo;
+    document.querySelectorAll('.demo button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+    render();
+  }));
+  render();
+}
+montar();
+</script>
+</body>
+</html>

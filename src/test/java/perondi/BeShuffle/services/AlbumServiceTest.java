@@ -3,39 +3,33 @@ package perondi.BeShuffle.services;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import perondi.BeShuffle.client.AlbumSpotifyClient;
 import perondi.BeShuffle.entity.Album;
 import perondi.BeShuffle.entity.AlbumImage;
 import perondi.BeShuffle.entity.Artist;
 import perondi.BeShuffle.exceptions.SpotifyApiException;
 import perondi.BeShuffle.exceptions.SpotifyAuthenticationException;
 import perondi.BeShuffle.exceptions.ValidationException;
+import perondi.BeShuffle.spotify.SpotifyClient;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @DisplayName("Testes unitários do serviço de álbum")
-class ServiceUnitTests {
+class AlbumServiceTest {
 
-    @Mock
-    private AlbumSpotifyClient albumSpotifyClient;
-
-    @Mock
-    private AuthService authService;
-
+    private SpotifyClient spotifyClient;
     private AlbumService albumService;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
-        albumService = new AlbumService(albumSpotifyClient, authService);
+        spotifyClient = mock(SpotifyClient.class);
+        albumService = new AlbumService(spotifyClient);
     }
 
     @Test
@@ -46,13 +40,11 @@ class ServiceUnitTests {
     }
 
     @Test
-    @DisplayName("Deve buscar álbum com token válido")
-    void shouldReturnAlbumWhenTokenIsValid() {
-        when(authService.getAccessToken()).thenReturn("token");
-        Album album = createAlbum();
-        when(albumSpotifyClient.getAlbum(eq("Bearer token"), eq("123"))).thenReturn(album);
+    @DisplayName("Deve buscar o álbum pelo id sem espaços")
+    void shouldReturnAlbum() {
+        when(spotifyClient.getAlbum("123")).thenReturn(createAlbum());
 
-        Album result = albumService.getAlbumById("123");
+        Album result = albumService.getAlbumById(" 123 ");
 
         assertNotNull(result);
         assertEquals("Test", result.getName());
@@ -60,22 +52,30 @@ class ServiceUnitTests {
     }
 
     @Test
-    @DisplayName("Deve lançar erro quando o token for nulo ou vazio")
-    void shouldFailWhenAccessTokenIsInvalid() {
-        when(authService.getAccessToken()).thenReturn(null);
-        assertThrows(SpotifyAuthenticationException.class, () -> albumService.getAlbumById("123"));
+    @DisplayName("Deve repassar falha de autenticação do Spotify")
+    void shouldPropagateAuthenticationFailure() {
+        when(spotifyClient.getAlbum("123")).thenThrow(new SpotifyAuthenticationException("Token de acesso vazio", 401));
 
-        when(authService.getAccessToken()).thenReturn(" ");
         assertThrows(SpotifyAuthenticationException.class, () -> albumService.getAlbumById("123"));
     }
 
     @Test
-    @DisplayName("Deve lançar erro quando a API do Spotify retornar álbum nulo")
+    @DisplayName("Deve lançar 404 quando a API do Spotify retornar álbum nulo")
     void shouldFailWhenSpotifyReturnsNullAlbum() {
-        when(authService.getAccessToken()).thenReturn("token");
-        when(albumSpotifyClient.getAlbum(eq("Bearer token"), eq("123"))).thenReturn(null);
+        when(spotifyClient.getAlbum("123")).thenReturn(null);
 
-        assertThrows(SpotifyApiException.class, () -> albumService.getAlbumById("123"));
+        SpotifyApiException ex = assertThrows(SpotifyApiException.class, () -> albumService.getAlbumById("123"));
+        assertEquals(404, ex.getHttpStatus());
+    }
+
+    @Test
+    @DisplayName("Deve converter erro inesperado em 503")
+    void shouldWrapUnexpectedErrors() {
+        when(spotifyClient.getAlbum("123")).thenThrow(new IllegalStateException("timeout"));
+
+        SpotifyApiException ex = assertThrows(SpotifyApiException.class, () -> albumService.getAlbumById("123"));
+        assertEquals(503, ex.getHttpStatus());
+        assertFalse(ex.getMessage().contains("timeout"), "detalhe interno não deve ir para o cliente");
     }
 
     private Album createAlbum() {

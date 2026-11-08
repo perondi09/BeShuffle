@@ -10,4 +10,6 @@ import java.util.Optional;
 @Repository
 public interface DailyAlbumRepository extends JpaRepository<DailyAlbum, Long> {
     Optional<DailyAlbum> findByDisplayDate(LocalDate date);
+
+    boolean existsBySpotifyAlbumId(String spotifyAlbumId);
 }
