@@ -93,8 +93,8 @@ The `Dockerfile` is a multi-stage build that compiles the project and runs the a
 - Java 21
 - Spring Boot 4
 - Spring Data JPA
-- PostgreSQL 16
-- OpenFeign
+- PostgreSQL 16 + Flyway
+- Spring RestClient (Spotify Web API)
 - Docker / Docker Compose
 - Actuator
 

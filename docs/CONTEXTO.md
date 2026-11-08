@@ -164,11 +164,16 @@ Visitante: `anon_id` em cookie HttpOnly + hash de IP; a regra "1 por dia" é ver
 
 > **Fase 1 concluída** na branch `refactor/fase1-base`. Resolvidos: problemas 1 a 6 da §5, mais a remoção
 > do OpenFeign, o cache de token com renovação após 401 e as mensagens de erro que não expõem mais a resposta do Spotify.
-> Ficou para depois (levantado na revisão):
+> Também feitos na fase 1:
+> - todas as chaves e senhas vêm só de `infra/.env`, lido pelo compose e pela aplicação
+>   (`spring.config.import`), sem valor padrão no código;
+> - o Postgres escuta só em `127.0.0.1:5435`;
+> - CI no GitHub Actions (`.github/workflows/ci.yml`) roda `mvnw verify` com Java 21 em cada PR.
+>
+> Ficou para a fase 3 (deploy):
 > - o token é renovado dentro de um lock que espera a chamada HTTP;
 > - os `RestClient` não usam o `RestClient.Builder` do Boot (sem métricas);
-> - `baseline-on-migrate` deve sair depois do primeiro deploy;
-> - a porta 5435 do Postgres está exposta em todas as interfaces no compose.
+> - `baseline-on-migrate` deve sair depois do primeiro deploy.
 
 1. Localizar/commitar o código de cadastro; criar branch `feature/auth`.
 2. Refatoração sem mudar comportamento (`/ecc:orch-refine-code`): unificar cliente Spotify, cache de token,
