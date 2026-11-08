@@ -25,7 +25,7 @@ SPRING_PROFILES_ACTIVE=default
 
 DB_NAME=beshuffle_db
 DB_USER=postgres
-DB_PASSWORD=Senhalol.123
+DB_PASSWORD=change-me
 
 SPOTIFY_CLIENT_ID=your_spotify_client_id
 SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
@@ -42,7 +42,7 @@ docker compose up --build -d
 ```
 
 This starts:
-- PostgreSQL 18 on port `5435`
+- PostgreSQL 16 on port `5435`
 - The Spring Boot application on port `8080`
 
 ### 3. Check application health
@@ -65,7 +65,7 @@ The app is configured to connect to the local PostgreSQL container using these d
 - Port: `5432`
 - Database: `beshuffle_db`
 - User: `postgres`
-- Password: `Senhalol.123`
+- Password: the value of `DB_PASSWORD` in `infra/.env`
 
 For local host execution outside Docker, the application defaults to:
 
@@ -88,7 +88,7 @@ The `Dockerfile` is a multi-stage build that compiles the project and runs the a
 - Java 21
 - Spring Boot 4
 - Spring Data JPA
-- PostgreSQL 18
+- PostgreSQL 16
 - OpenFeign
 - Docker / Docker Compose
 - Actuator

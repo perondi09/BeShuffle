@@ -8,7 +8,7 @@ services:
     environment:
       POSTGRES_DB: ${DB_NAME:-beshuffle_db}
       POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-Senhalol.123}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in infra/.env}
     ports:
       - "5435:5432"
     volumes:
@@ -39,10 +39,10 @@ services:
       SPOTIFY_CLIENT_SECRET: ${SPOTIFY_CLIENT_SECRET}
       DB_NAME: ${DB_NAME:-beshuffle_db}
       DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-Senhalol.123}
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in infra/.env}
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME:-beshuffle_db}
       SPRING_DATASOURCE_USERNAME: ${DB_USER:-postgres}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-Senhalol.123}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in infra/.env}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
     ports:
       - "${SERVER_PORT:-8080}:${SERVER_PORT:-8080}"
