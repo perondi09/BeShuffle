@@ -10,6 +10,7 @@ import perondi.BeShuffle.repository.DailyAlbumRepository;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
+import java.time.Clock;
 import java.time.LocalDate;
 
 @Slf4j
@@ -21,9 +22,15 @@ public class DailyAlbumService {
     private final AlbumPicker albumPicker;
     private final AlbumService albumService;
     private final ObjectMapper objectMapper;
+    private final Clock clock;
+
+    /** Data de hoje no fuso da aplicação (beshuffle.timezone), não no fuso do servidor. */
+    public LocalDate hoje() {
+        return LocalDate.now(clock);
+    }
 
     public Album getAlbumDoDia() {
-        LocalDate hoje = LocalDate.now();
+        LocalDate hoje = hoje();
         return dailyAlbumRepository.findByDisplayDate(hoje)
                 .map(this::converterJsonParaAlbum)
                 .orElseGet(() -> {

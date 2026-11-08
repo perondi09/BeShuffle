@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
-import java.time.Clock;
 import java.time.Duration;
 
 /**
@@ -27,11 +26,6 @@ public class SpotifyConfig {
     @Bean
     public RestClient spotifyAccountsRestClient(@Value("${spotify.auth.url:https://accounts.spotify.com}") String baseUrl) {
         return buildClient(baseUrl);
-    }
-
-    @Bean
-    public Clock clock() {
-        return Clock.systemDefaultZone();
     }
 
     private RestClient buildClient(String baseUrl) {
