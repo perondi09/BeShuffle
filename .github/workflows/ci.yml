@@ -1,19 +1,26 @@
+# O GitHub só lê workflows em .github/ na raiz; o resto da parte de devops fica em infra/.
 name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [master, test]
   pull_request:
 
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  test:
-    name: Testes (Java 21)
+  backend:
+    name: Backend (Java 21)
     runs-on: ubuntu-latest
     timeout-minutes: 15
-
+    defaults:
+      run:
+        working-directory: backend
     steps:
       - uses: actions/checkout@v4
 
@@ -23,7 +30,47 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: maven
+          cache-dependency-path: backend/pom.xml
 
       # Os testes usam H2 e chaves falsas (application-test.properties): não precisam de .env nem de segredos.
-      - name: Rodar testes
+      - name: Testes
         run: ./mvnw -B clean verify
+
+  frontend:
+    name: Frontend (Node 22)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci --no-audit --no-fund
+      - name: Lint
+        run: npm run lint
+      - name: Testes
+        run: npm test
+      - name: Build
+        run: npm run build
+
+  docker:
+    name: Imagens Docker
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build da imagem da API
+        run: docker build -f infra/docker/backend.Dockerfile backend
+
+      - name: Build da imagem do site
+        run: docker build -f infra/docker/frontend.Dockerfile .
