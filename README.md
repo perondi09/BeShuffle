@@ -47,7 +47,7 @@ docker compose up --build -d
 ```
 
 This starts:
-- PostgreSQL 16 on port `5435`
+- PostgreSQL 16 on `127.0.0.1:5435` (reachable only from this machine)
 - The Spring Boot application on port `8080`
 
 ### 3. Check application health
@@ -119,7 +119,7 @@ If port `5435` is already occupied, change the mapping in `docker-compose.yml`:
 
 ```yaml
 ports:
-  - "5436:5432"
+  - "127.0.0.1:5436:5432"
 ```
 
 Then align your local datasource settings accordingly.
