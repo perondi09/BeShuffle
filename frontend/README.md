@@ -1,7 +1,19 @@
 # BeShuffle (frontend)
 
-Site do BeShuffle feito com React 19, TypeScript e Vite. Por enquanto ele mostra o Álbum do Dia e tem um botão
-para sortear um álbum, usando a API em `backend/`. O visual definitivo (`docs/design/index.html`) entra na fase 5.
+Site do BeShuffle feito com React 19, TypeScript, Vite e React Router, no visual de `docs/design/index.html`.
+
+Telas:
+
+| Rota | Tela |
+| --- | --- |
+| `/` | Home: Álbum do Dia, sorteio (visitante tem 1 ficha por dia), sorteados de hoje e nota (trancados para visitante) |
+| `/entrar` | Login |
+| `/cadastro` | Cadastro |
+| qualquer outra | Página 404 |
+
+Login e cadastro já validam os campos e chamam `POST /api/auth/login` e `POST /api/auth/register`, mas a API
+ainda não tem essas rotas: até lá a tela avisa que o recurso não está disponível. A ficha diária do visitante fica
+no `localStorage` só para a interface; a API ainda precisa garantir a regra de 1 sorteio por dia.
 
 ## Requisitos
 
@@ -35,7 +47,24 @@ O frontend não guarda chave nem senha: as chamadas ao Spotify são feitas pela 
 
 | Caminho | Papel |
 | --- | --- |
-| `src/api/albums.ts` | Chamadas à API e o tipo `Album` |
-| `src/App.tsx` | Tela inicial: Álbum do Dia e sorteio |
-| `src/App.test.tsx` | Testes da tela inicial |
+| `src/styles/tokens.css` | **Única fonte de estilo**: cores, fontes, bordas, sombras, raios, espaços e fundo |
+| `src/styles/global.css` | Reset, fundo de bolinhas, foco e a classe `.display` (fonte de títulos) |
+| `src/components/ui/` | Componentes base: `Button`, `Card`, `Sticker`, `Tag`, `TextField`, `LockedOverlay`, `VinylDisc` |
+| `src/components/layout/` | `AppLayout`, `Header`, `Brand`, `MobileNav` |
+| `src/features/draw/` | Sorteio: palco, vitrola, detalhes do álbum, ficha diária |
+| `src/features/community/` | Cartões "Sorteados de hoje" e "Sua nota" |
+| `src/features/auth/` | Moldura, formulários e validação de login/cadastro |
+| `src/pages/` | Uma página por rota, só compondo features |
+| `src/api/` | `http.ts` (fetch + `ApiError`), `albums.ts`, `auth.ts` |
+| `src/AppRoutes.tsx` | Rotas (o `App.tsx` só põe o `BrowserRouter`) |
+| `src/test/` | Setup do Vitest e `renderAt`/`mockApi` para os testes |
 | `vite.config.ts` | Proxy `/api` e configuração do Vitest |
+
+## Padrões de estilo
+
+- Cada componente tem uma pasta (ou arquivo) com `Componente.tsx` + `Componente.module.css` (CSS Modules).
+- CSS de componente só usa `var(--…)` de `tokens.css`. Cor, borda ou fonte nova entra primeiro nos tokens.
+- Variações viram props (`<Button variant="tomate" size="g">`), não classes soltas.
+- Todas as telas usam o mesmo fundo (`--fundo-pagina`), as fontes Bagel Fat One (títulos, classe `.display`) e
+  Fredoka (texto), borda `--borda` e sombra chapada `--sombra*`.
+- Textos da interface e comentários em português.

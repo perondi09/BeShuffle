@@ -1,0 +1,14 @@
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-2);
+}
+
+.tag {
+  border: var(--borda-fina);
+  border-radius: var(--raio-p);
+  padding: 2px 10px;
+  font-size: var(--texto-m);
+  font-weight: var(--peso-medio);
+  background: var(--cor-lilas-claro);
+}

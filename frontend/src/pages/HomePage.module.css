@@ -1,0 +1,12 @@
+.duo {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: var(--espaco-5);
+  margin-top: var(--espaco-6);
+}
+
+@media (max-width: 860px) {
+  .duo {
+    grid-template-columns: 1fr;
+  }
+}

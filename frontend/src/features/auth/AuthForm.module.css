@@ -1,0 +1,13 @@
+.form {
+  display: grid;
+  gap: var(--espaco-4);
+}
+
+.feedback {
+  padding: 10px var(--espaco-3);
+  border: var(--borda-fina);
+  border-radius: var(--raio-m);
+  background: var(--cor-gema);
+  font-weight: var(--peso-forte);
+  font-size: var(--texto-m);
+}
