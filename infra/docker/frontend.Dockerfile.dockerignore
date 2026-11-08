@@ -1,0 +1,7 @@
+# Contexto do build do frontend é a raiz do repositório: envia só o que a imagem usa.
+*
+!frontend/
+!infra/docker/nginx.conf.template
+frontend/node_modules/
+frontend/dist/
+frontend/**/*.log
