@@ -81,11 +81,14 @@ public class DailyAlbumService {
         try {
             savedAlbum = dailyAlbumRepository.save(dailyAlbum);
         } catch (DataIntegrityViolationException e) {
-            // Outra execução (agendador ou outra requisição) salvou o álbum deste dia primeiro.
+            // Se outra execução (agendador ou outra requisição) salvou o álbum deste dia primeiro, usa o dela.
+            // Qualquer outra violação (álbum repetido salvo em paralelo, campo obrigatório nulo) é repassada.
+            var salvoPorOutraExecucao = dailyAlbumRepository.findByDisplayDate(data);
+            if (salvoPorOutraExecucao.isEmpty()) {
+                throw e;
+            }
             log.warn("Álbum do dia de {} já foi salvo por outra execução; usando o registro existente", data);
-            return dailyAlbumRepository.findByDisplayDate(data)
-                    .map(this::converterJsonParaAlbum)
-                    .orElseThrow(() -> new IllegalStateException("Falha ao salvar o álbum do dia", e));
+            return converterJsonParaAlbum(salvoPorOutraExecucao.get());
         }
 
         log.info("Álbum do dia salvo com sucesso para {}: {} ({})", data, savedAlbum.getAlbumName(), savedAlbum.getSpotifyAlbumId());

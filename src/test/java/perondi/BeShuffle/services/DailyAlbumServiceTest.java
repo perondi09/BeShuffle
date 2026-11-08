@@ -23,6 +23,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -152,6 +153,21 @@ class DailyAlbumServiceTest {
         Album result = dailyAlbumService.gerarESalvarAlbumDoDia(date);
 
         assertEquals("vencedor", result.getId());
+    }
+
+    @Test
+    @DisplayName("Repassa a violação original quando o conflito não é com o álbum de hoje")
+    void shouldRethrowWhenConflictIsNotTodaysAlbum() {
+        LocalDate date = LocalDate.of(2026, 1, 1);
+        DataIntegrityViolationException violation = new DataIntegrityViolationException("duplicate spotify_album_id");
+        when(dailyAlbumRepository.findByDisplayDate(date)).thenReturn(Optional.empty());
+        when(albumPicker.pickAlbumId()).thenReturn("123");
+        when(albumService.getAlbumById("123")).thenReturn(createAlbum());
+        when(dailyAlbumRepository.save(any(DailyAlbum.class))).thenThrow(violation);
+
+        DataIntegrityViolationException thrown = assertThrows(DataIntegrityViolationException.class,
+                () -> dailyAlbumService.gerarESalvarAlbumDoDia(date));
+        assertSame(violation, thrown);
     }
 
     private DailyAlbum stored(LocalDate date, Album album) {
