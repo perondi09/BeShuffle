@@ -26,8 +26,8 @@ services:
   beshuffle:
     image: beshuffle-api:latest
     build:
-      context: ..
-      dockerfile: Dockerfile
+      context: ../backend
+      dockerfile: ../infra/docker/backend.Dockerfile
     container_name: beshuffle-api
     restart: unless-stopped
     depends_on:
@@ -51,6 +51,29 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
+    networks:
+      - beshuffle-network
+
+  frontend:
+    image: beshuffle-frontend:latest
+    build:
+      context: ..
+      dockerfile: infra/docker/frontend.Dockerfile
+    container_name: beshuffle-frontend
+    restart: unless-stopped
+    depends_on:
+      beshuffle:
+        condition: service_healthy
+    environment:
+      API_UPSTREAM: http://beshuffle:${SERVER_PORT:-8080}
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1/ || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     networks:
       - beshuffle-network
 
