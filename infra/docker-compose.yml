@@ -43,7 +43,6 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME:-beshuffle_db}
       SPRING_DATASOURCE_USERNAME: ${DB_USER:-postgres}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in infra/.env}
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
     ports:
       - "${SERVER_PORT:-8080}:${SERVER_PORT:-8080}"
     healthcheck:
