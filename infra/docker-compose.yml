@@ -26,8 +26,8 @@ services:
   beshuffle:
     image: beshuffle-api:latest
     build:
-      context: ..
-      dockerfile: Dockerfile
+      context: ../backend
+      dockerfile: ../infra/docker/backend.Dockerfile
     container_name: beshuffle-api
     restart: unless-stopped
     depends_on:
