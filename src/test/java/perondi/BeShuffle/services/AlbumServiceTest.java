@@ -14,6 +14,7 @@ import perondi.BeShuffle.spotify.SpotifyClient;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
@@ -74,6 +75,7 @@ class AlbumServiceTest {
 
         SpotifyApiException ex = assertThrows(SpotifyApiException.class, () -> albumService.getAlbumById("123"));
         assertEquals(503, ex.getHttpStatus());
+        assertFalse(ex.getMessage().contains("timeout"), "detalhe interno não deve ir para o cliente");
     }
 
     private Album createAlbum() {

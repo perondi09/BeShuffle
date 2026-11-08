@@ -18,6 +18,7 @@ import java.time.ZoneOffset;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.client.ExpectedCount.never;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
@@ -115,11 +116,30 @@ class SpotifyTokenProviderTest {
     }
 
     @Test
-    @DisplayName("Converte erro HTTP do Spotify em falha de autenticação")
+    @DisplayName("Converte erro HTTP do Spotify em falha de autenticação sem expor a resposta dele")
     void shouldWrapHttpErrors() {
-        server.expect(requestTo(TOKEN_URL)).andRespond(withServerError());
+        server.expect(requestTo(TOKEN_URL))
+                .andRespond(withServerError().body("{\"error\":\"detalhe interno do Spotify\"}"));
 
-        assertThrows(SpotifyAuthenticationException.class, () -> provider("client-id", "client-secret").getAccessToken());
+        SpotifyAuthenticationException ex = assertThrows(SpotifyAuthenticationException.class,
+                () -> provider("client-id", "client-secret").getAccessToken());
+        assertFalse(ex.getMessage().contains("detalhe interno"));
+        assertFalse(ex.getMessage().contains("accounts.spotify.com"));
+    }
+
+    @Test
+    @DisplayName("Depois de invalidate, pede um token novo mesmo antes de expirar")
+    void shouldRequestNewTokenAfterInvalidate() {
+        server.expect(requestTo(TOKEN_URL))
+                .andRespond(withSuccess(tokenJson("first", 3600), MediaType.APPLICATION_JSON));
+        server.expect(requestTo(TOKEN_URL))
+                .andRespond(withSuccess(tokenJson("second", 3600), MediaType.APPLICATION_JSON));
+        SpotifyTokenProvider provider = provider("client-id", "client-secret");
+
+        assertEquals("first", provider.getAccessToken());
+        provider.invalidate();
+        assertEquals("second", provider.getAccessToken());
+        server.verify();
     }
 
     private static final class MutableClock extends Clock {

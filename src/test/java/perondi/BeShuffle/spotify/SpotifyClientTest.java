@@ -15,7 +15,9 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withUnauthorizedRequest;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
@@ -71,6 +73,27 @@ class SpotifyClientTest {
 
         assertEquals(List.of(new AlbumSearchItem("x", "Nome", "album")), items);
         server.verify();
+    }
+
+    @Test
+    @DisplayName("Descarta o token em cache e repete uma vez quando o Spotify responde 401")
+    void shouldRefreshTokenOnUnauthorized() {
+        RestClient.Builder builder = RestClient.builder().baseUrl("https://api.spotify.com");
+        MockRestServiceServer server401 = MockRestServiceServer.bindTo(builder).build();
+        SpotifyTokenProvider tokenProvider = mock(SpotifyTokenProvider.class);
+        when(tokenProvider.getAccessToken()).thenReturn("revogado", "novo");
+        SpotifyClient retryingClient = new SpotifyClient(builder.build(), tokenProvider);
+
+        server401.expect(requestTo("https://api.spotify.com/v1/albums/abc"))
+                .andExpect(header("Authorization", "Bearer revogado"))
+                .andRespond(withUnauthorizedRequest());
+        server401.expect(requestTo("https://api.spotify.com/v1/albums/abc"))
+                .andExpect(header("Authorization", "Bearer novo"))
+                .andRespond(withSuccess("{\"id\":\"abc\",\"name\":\"Disco\"}", MediaType.APPLICATION_JSON));
+
+        assertEquals("abc", retryingClient.getAlbum("abc").getId());
+        verify(tokenProvider).invalidate();
+        server401.verify();
     }
 
     @Test

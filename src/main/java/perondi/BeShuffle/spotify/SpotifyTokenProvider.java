@@ -63,6 +63,12 @@ public class SpotifyTokenProvider {
         return cachedToken;
     }
 
+    /** Descarta o token em cache; a próxima chamada pede um novo ao Spotify. */
+    public synchronized void invalidate() {
+        cachedToken = null;
+        cachedUntil = Instant.EPOCH;
+    }
+
     private void validateCredentials() {
         if (clientId == null || clientId.isBlank()) {
             log.error("Credencial do Spotify ausente: clientId");
@@ -89,8 +95,9 @@ public class SpotifyTokenProvider {
                     .retrieve()
                     .body(TokenResponse.class);
         } catch (Exception e) {
+            // O detalhe (status, corpo da resposta, URL) vai só para o log, nunca para o cliente da API.
             log.error("Erro ao autenticar com Spotify", e);
-            throw new SpotifyAuthenticationException("Falha na autenticação Spotify: " + e.getMessage(), e);
+            throw new SpotifyAuthenticationException("não foi possível obter o token de acesso", e);
         }
 
         if (response == null) {

@@ -35,8 +35,9 @@ public class AlbumService {
         } catch (SpotifyApiException | SpotifyAuthenticationException | ValidationException e) {
             throw e;
         } catch (Exception e) {
+            // O detalhe do erro vai só para o log, nunca para o cliente da API.
             log.error("Erro ao buscar álbum {} no Spotify", normalizedAlbumId, e);
-            throw new SpotifyApiException("Erro ao buscar álbum: " + e.getMessage(), 503, e);
+            throw new SpotifyApiException("não foi possível buscar o álbum agora", 503, e);
         }
     }
 
