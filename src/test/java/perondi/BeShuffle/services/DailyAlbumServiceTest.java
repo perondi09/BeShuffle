@@ -1,6 +1,7 @@
 package perondi.BeShuffle.services;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,7 +30,7 @@ class DailyAlbumServiceTest {
     private DailyAlbumRepository dailyAlbumRepository;
 
     @Mock
-    private SpotifyRandomAlbumService spotifyRandomAlbumService;
+    private AlbumPicker albumPicker;
 
     @Mock
     private AlbumService albumService;
@@ -40,8 +41,8 @@ class DailyAlbumServiceTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        objectMapper = new ObjectMapper();
-        dailyAlbumService = new DailyAlbumService(dailyAlbumRepository, spotifyRandomAlbumService, albumService, objectMapper);
+        objectMapper = JsonMapper.builder().build();
+        dailyAlbumService = new DailyAlbumService(dailyAlbumRepository, albumPicker, albumService, objectMapper);
     }
 
     @Test
@@ -70,7 +71,7 @@ class DailyAlbumServiceTest {
         Album album = createAlbum();
 
         when(dailyAlbumRepository.findByDisplayDate(date)).thenReturn(Optional.empty());
-        when(spotifyRandomAlbumService.getRandomAlbumIdFromSpotify()).thenReturn("123");
+        when(albumPicker.pickAlbumId()).thenReturn("123");
         when(albumService.getAlbumById("123")).thenReturn(album);
         when(dailyAlbumRepository.save(any(DailyAlbum.class))).thenAnswer(invocation -> invocation.getArgument(0));
 

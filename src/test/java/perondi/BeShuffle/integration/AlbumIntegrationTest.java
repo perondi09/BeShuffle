@@ -11,7 +11,7 @@ import perondi.BeShuffle.entity.AlbumImage;
 import perondi.BeShuffle.entity.Artist;
 import perondi.BeShuffle.services.AlbumService;
 import perondi.BeShuffle.services.DailyAlbumService;
-import perondi.BeShuffle.services.SpotifyRandomAlbumService;
+import perondi.BeShuffle.services.AlbumPicker;
 
 import java.util.List;
 
@@ -25,18 +25,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AlbumIntegrationTest {
 
     private final AlbumService albumService = mock(AlbumService.class);
-    private final SpotifyRandomAlbumService spotifyRandomAlbumService = mock(SpotifyRandomAlbumService.class);
+    private final AlbumPicker albumPicker = mock(AlbumPicker.class);
     private final DailyAlbumService dailyAlbumService = mock(DailyAlbumService.class);
 
     private final MockMvc mockMvc = MockMvcBuilders.standaloneSetup(
-            new AlbumController(albumService, spotifyRandomAlbumService, dailyAlbumService)
+            new AlbumController(albumService, albumPicker, dailyAlbumService)
     ).build();
 
     @Test
     @DisplayName("Deve retornar um álbum aleatório quando a busca for bem-sucedida")
     void shouldReturnRandomAlbum() throws Exception {
         Album album = createAlbum();
-        when(spotifyRandomAlbumService.getRandomAlbumIdFromSpotify()).thenReturn("123");
+        when(albumPicker.pickAlbumId()).thenReturn("123");
         when(albumService.getAlbumById("123")).thenReturn(album);
 
         mockMvc.perform(get("/api/albums/random").accept(MediaType.APPLICATION_JSON))

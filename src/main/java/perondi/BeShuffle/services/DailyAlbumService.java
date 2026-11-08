@@ -1,7 +1,5 @@
 package perondi.BeShuffle.services;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -9,6 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 import perondi.BeShuffle.entity.Album;
 import perondi.BeShuffle.entity.DailyAlbum;
 import perondi.BeShuffle.repository.DailyAlbumRepository;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
 
@@ -18,7 +18,7 @@ import java.time.LocalDate;
 public class DailyAlbumService {
 
     private final DailyAlbumRepository dailyAlbumRepository;
-    private final SpotifyRandomAlbumService spotifyRandomAlbumService;
+    private final AlbumPicker albumPicker;
     private final AlbumService albumService;
     private final ObjectMapper objectMapper;
 
@@ -46,7 +46,7 @@ public class DailyAlbumService {
     private Album persistirNovoAlbumDoDia(LocalDate data) {
         log.info("Gerando novo álbum do dia para a data: {}", data);
 
-        String randomAlbumId = spotifyRandomAlbumService.getRandomAlbumIdFromSpotify();
+        String randomAlbumId = albumPicker.pickAlbumId();
         if (randomAlbumId == null || randomAlbumId.isBlank()) {
             throw new IllegalStateException("Não foi possível gerar um álbum do dia no momento");
         }
@@ -68,7 +68,7 @@ public class DailyAlbumService {
 
         try {
             dailyAlbum.setFullAlbumJson(objectMapper.writeValueAsString(spotifyAlbum));
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("Erro ao serializar o álbum do dia {} em JSON", spotifyAlbum.getId(), e);
             throw new IllegalStateException("Falha ao serializar o álbum do dia", e);
         }
@@ -90,7 +90,7 @@ public class DailyAlbumService {
     private Album converterJsonParaAlbum(String json) {
         try {
             return objectMapper.readValue(json, Album.class);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("Erro ao ler JSON do álbum do dia do banco", e);
             throw new IllegalStateException("Erro ao carregar álbum do dia", e);
         }

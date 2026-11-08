@@ -6,8 +6,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
-import org.springframework.web.client.RestTemplate;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.client.RestClient;
+import perondi.BeShuffle.spotify.SpotifyClient;
+import perondi.BeShuffle.spotify.SpotifyTokenProvider;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -22,20 +23,20 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import static org.hamcrest.Matchers.startsWith;
 
 @DisplayName("Caracterização do sorteio de álbum aleatório")
-class SpotifyRandomAlbumServiceTest {
+class RandomQueryAlbumPickerTest {
 
     private static final String SEARCH_URL = "https://api.spotify.com/v1/search";
 
     private MockRestServiceServer server;
-    private SpotifyRandomAlbumService service;
+    private RandomQueryAlbumPicker picker;
 
     @BeforeEach
     void setUp() {
-        RestTemplate restTemplate = new RestTemplate();
-        server = MockRestServiceServer.bindTo(restTemplate).build();
-        AuthService authService = mock(AuthService.class);
-        when(authService.getAccessToken()).thenReturn("token");
-        service = new SpotifyRandomAlbumService(authService, restTemplate, new ObjectMapper());
+        RestClient.Builder builder = RestClient.builder().baseUrl("https://api.spotify.com");
+        server = MockRestServiceServer.bindTo(builder).build();
+        SpotifyTokenProvider tokenProvider = mock(SpotifyTokenProvider.class);
+        when(tokenProvider.getAccessToken()).thenReturn("token");
+        picker = new RandomQueryAlbumPicker(new SpotifyClient(builder.build(), tokenProvider));
     }
 
     @Test
@@ -51,7 +52,7 @@ class SpotifyRandomAlbumServiceTest {
                           {"id":"album2","name":"Outro","album_type":"album"}
                         ]}}""", MediaType.APPLICATION_JSON));
 
-        assertEquals("album1", service.getRandomAlbumIdFromSpotify());
+        assertEquals("album1", picker.pickAlbumId());
         server.verify();
     }
 
@@ -65,7 +66,7 @@ class SpotifyRandomAlbumServiceTest {
         server.expect(requestTo(startsWith(SEARCH_URL)))
                 .andRespond(withSuccess("{\"albums\":{\"items\":[{\"id\":\"found\",\"album_type\":\"album\"}]}}", MediaType.APPLICATION_JSON));
 
-        assertEquals("found", service.getRandomAlbumIdFromSpotify());
+        assertEquals("found", picker.pickAlbumId());
         server.verify();
     }
 
@@ -74,7 +75,7 @@ class SpotifyRandomAlbumServiceTest {
     void returnsNullAfterFiveFailedAttempts() {
         server.expect(times(5), requestTo(startsWith(SEARCH_URL))).andRespond(withServerError());
 
-        assertNull(service.getRandomAlbumIdFromSpotify());
+        assertNull(picker.pickAlbumId());
         server.verify();
     }
 }
