@@ -23,37 +23,48 @@ Stack a manter: **Java 21 + Spring Boot + PostgreSQL + Docker**, frontend separa
 
 ## 2. Estado atual do repositório
 
-### Stack real (pom.xml)
-- Spring Boot **4.0.3** (`spring-boot-starter-webmvc`), Spring Cloud **2025.1.0** (OpenFeign)
-- Spring Data JPA + PostgreSQL (H2 nos testes), Actuator, Lombok, `dotenv-java`
-- `jackson-databind` 2 declarado explicitamente (Boot 4 usa Jackson 3 → mistura, ver §5)
-- Docker multi-stage (Maven → `eclipse-temurin:21-jre`, usuário não-root) e `infra/docker-compose.yml` (Postgres 16 + API)
+> Atualizado depois da fase 1 e da separação em `backend/`, `frontend/` e `infra/`. O retrato original,
+> de antes das mudanças, está no histórico do git (`git show 4c41e9d:docs/CONTEXTO.md`).
 
-### Estrutura
+### Organização (monorepo)
 
 ```
-src/main/java/perondi/BeShuffle/
-├── BeShuffleApplication.java      carrega .env em System properties; @EnableFeignClients @EnableScheduling
-├── client/
-│   ├── AuthSpotifyClient          Feign → POST accounts.spotify.com/api/token (client_credentials)
-│   └── AlbumSpotifyClient         Feign → GET api.spotify.com/v1/albums/{id}
-├── config/
-│   ├── ApplicationConfig          ObjectMapper (Jackson 2), RestTemplate, DataSource Hikari manual c/ fallback de DNS
-│   └── DailyAlbumScheduler        cron 00:00 (horário do servidor) → gera Álbum do Dia
-├── controller/AlbumController     GET /api/albums/random, GET /api/albums/daily
-├── dtos/login/                    LoginRequest (form), LoginResponse (access_token)
-├── entity/
-│   ├── Album, AlbumImage, Artist  na prática são DTOs do Spotify (não são @Entity)
-│   └── DailyAlbum                 @Entity daily_albums (album id único, display_date único, JSON completo)
-├── exceptions/                    AlbumException + Spotify*/Validation + GlobalExceptionHandler
-├── repository/DailyAlbumRepository findByDisplayDate
-└── services/
-    ├── AuthService                busca token do Spotify (a cada chamada)
-    ├── AlbumService               busca álbum por id via Feign
-    ├── SpotifyRandomAlbumService  ALGORITMO DE SORTEIO (ver §4)
-    └── DailyAlbumService          lê/gera/persiste o álbum do dia
-src/main/resources/static/          frontend vanilla (index.html, Script.js, Styles.css)
-src/test/...                        AuthServiceTest, DailyAlbumServiceTest, ServiceUnitTests, AlbumIntegrationTest (MockMvc standalone)
+backend/     API Spring Boot 4 / Java 21 (Maven Wrapper próprio)        → backend/README.md
+frontend/    site React 19 + TypeScript + Vite                          → frontend/README.md
+infra/       docker-compose, Dockerfiles, nginx, .env.example           → infra/README.md
+.github/     workflow de CI (o GitHub só lê aqui)
+docs/        este contexto e a proposta visual (docs/design/index.html)
+```
+
+Chaves e senhas ficam só em `infra/.env` (gitignored). O compose e a API (`spring.config.import`) leem esse
+arquivo, e nenhum segredo tem valor padrão no código.
+
+### Stack
+- **Backend:**
+  - Spring Boot **4.0.3** (webmvc), Java 21, Jackson 3.
+  - `RestClient` para a Web API do Spotify.
+  - Spring Data JPA + PostgreSQL 16, com Flyway (`ddl-auto=validate`).
+  - Testes com H2 e `MockRestServiceServer`.
+- **Frontend:** React 19, TypeScript, Vite 6, Vitest e Testing Library.
+- **Infra:**
+  - Postgres 16, com a porta publicada só em `127.0.0.1`.
+  - Imagem da API: Maven → `eclipse-temurin:21-jre`, rodando sem root.
+  - Imagem do site: Node 22 → nginx 1.27, que repassa `/api` para a API.
+- **CI** (GitHub Actions), três jobs:
+  - backend: `mvnw verify`;
+  - frontend: lint, testes e build;
+  - build das duas imagens Docker.
+
+### Backend (`backend/src/main/java/perondi/BeShuffle/`)
+
+```
+├── config/        DailyAlbumScheduler (cron 00:00 em beshuffle.timezone), TimeConfig (Clock)
+├── controller/    AlbumController: GET /api/albums/random, GET /api/albums/daily
+├── entity/        Album, AlbumImage, Artist (DTOs do Spotify) e DailyAlbum (@Entity daily_albums)
+├── exceptions/    Spotify*/Validation + GlobalExceptionHandler (sem repassar detalhes do Spotify)
+├── repository/    DailyAlbumRepository
+├── services/      AlbumPicker (interface) + RandomQueryAlbumPicker, AlbumService, DailyAlbumService
+└── spotify/       SpotifyClient (única porta para a API), SpotifyTokenProvider (token em cache), SpotifyConfig
 ```
 
 ### Endpoints
@@ -63,14 +74,24 @@ src/test/...                        AuthServiceTest, DailyAlbumServiceTest, Serv
 | GET | `/api/albums/daily` | retorna álbum do dia do banco; se não houver, gera na hora |
 | GET | `/actuator/health` | health check |
 
-### Frontend atual
-- Vanilla JS servido pelo próprio Spring (`/static`). Card escuro único, toggle "Aleatório / Do dia",
-  capa, artista, título, botão "Ouvir no Spotify" e "Novo aleatório". Fonte Playfair + Poppins, verde Spotify.
-- Layout "sem scroll" (`overflow: hidden` no body) — no celular pode cortar conteúdo.
-- Havia um frontend React (CRA) em `beshuffle-frontend/`, removido em `b66f16f`
-  ("migrado para repositório dedicado"). Esse repositório **não está nesta máquina**.
+### Frontend
+- Tela inicial provisória com o Álbum do Dia e o botão "Sortear álbum".
+- O visual definitivo, cartunizado e para celular e desktop, está proposto em `docs/design/index.html` e entra na fase 5.
+- O frontend vanilla antigo (`src/main/resources/static`) não existe mais.
 
----
+### Fluxo de branches
+
+```
+backend ─┐
+frontend ┼─► PR ─► test ─► (CI verde + testes) ─► PR ─► master
+devops ──┤
+docs ────┘
+```
+
+- Cada área tem sua branch: `backend`, `frontend`, `devops` (infra e CI) e `docs`. Trabalhos maiores podem usar
+  branches curtas a partir delas (por exemplo `backend/filtros-sorteio`).
+- Toda mudança entra por PR na `test`. Só depois do CI verde e dos testes da `test` abre-se o PR `test → master`.
+- Commits seguem Conventional Commits (`feat`, `fix`, `refactor`, `ci`, `docs`, …), descritivos e sem trailer de coautoria.
 
 ## 3. Histórico (commits e branches)
 
@@ -164,11 +185,22 @@ Visitante: `anon_id` em cookie HttpOnly + hash de IP; a regra "1 por dia" é ver
 
 > **Fase 1 concluída** na branch `refactor/fase1-base`. Resolvidos: problemas 1 a 6 da §5, mais a remoção
 > do OpenFeign, o cache de token com renovação após 401 e as mensagens de erro que não expõem mais a resposta do Spotify.
-> Ficou para depois (levantado na revisão):
+> Também feitos na fase 1:
+> - todas as chaves e senhas vêm só de `infra/.env`, lido pelo compose e pela aplicação
+>   (`spring.config.import`), sem valor padrão no código;
+> - o Postgres escuta só em `127.0.0.1:5435`;
+> - CI no GitHub Actions (`.github/workflows/ci.yml`) roda `mvnw verify` com Java 21 em cada PR.
+>
+> **Reorganização concluída** antes da fase 2:
+> - monorepo com `backend/`, `frontend/` (React + TypeScript + Vite, tela inicial provisória) e `infra/`
+>   (compose com Postgres, API e site; Dockerfiles; nginx);
+> - CI separado para backend, frontend e imagens Docker;
+> - fluxo de branches `backend`/`frontend`/`devops`/`docs` → `test` → `master` (ver §2).
+>
+> Ficou para a fase 3 (deploy):
 > - o token é renovado dentro de um lock que espera a chamada HTTP;
 > - os `RestClient` não usam o `RestClient.Builder` do Boot (sem métricas);
-> - `baseline-on-migrate` deve sair depois do primeiro deploy;
-> - a porta 5435 do Postgres está exposta em todas as interfaces no compose.
+> - `baseline-on-migrate` deve sair depois do primeiro deploy.
 
 1. Localizar/commitar o código de cadastro; criar branch `feature/auth`.
 2. Refatoração sem mudar comportamento (`/ecc:orch-refine-code`): unificar cliente Spotify, cache de token,

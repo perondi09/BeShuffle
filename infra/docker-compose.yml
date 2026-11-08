@@ -10,7 +10,8 @@ services:
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in infra/.env}
     ports:
-      - "5435:5432"
+      # Só a própria máquina acessa o banco; a API usa a rede interna do compose.
+      - "127.0.0.1:5435:5432"
     volumes:
       - postgres_data_v2:/var/lib/postgresql/data
     healthcheck:
@@ -25,8 +26,8 @@ services:
   beshuffle:
     image: beshuffle-api:latest
     build:
-      context: ..
-      dockerfile: Dockerfile
+      context: ../backend
+      dockerfile: ../infra/docker/backend.Dockerfile
     container_name: beshuffle-api
     restart: unless-stopped
     depends_on:
@@ -35,14 +36,13 @@ services:
     environment:
       SERVER_PORT: ${SERVER_PORT:-8080}
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-default}
-      SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID}
-      SPOTIFY_CLIENT_SECRET: ${SPOTIFY_CLIENT_SECRET}
+      SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID:?Set SPOTIFY_CLIENT_ID in infra/.env}
+      SPOTIFY_CLIENT_SECRET: ${SPOTIFY_CLIENT_SECRET:?Set SPOTIFY_CLIENT_SECRET in infra/.env}
+      DB_HOST: db
+      DB_PORT: 5432
       DB_NAME: ${DB_NAME:-beshuffle_db}
       DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in infra/.env}
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME:-beshuffle_db}
-      SPRING_DATASOURCE_USERNAME: ${DB_USER:-postgres}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in infra/.env}
     ports:
       - "${SERVER_PORT:-8080}:${SERVER_PORT:-8080}"
     healthcheck:
@@ -51,6 +51,29 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
+    networks:
+      - beshuffle-network
+
+  frontend:
+    image: beshuffle-frontend:latest
+    build:
+      context: ..
+      dockerfile: infra/docker/frontend.Dockerfile
+    container_name: beshuffle-frontend
+    restart: unless-stopped
+    depends_on:
+      beshuffle:
+        condition: service_healthy
+    environment:
+      API_UPSTREAM: http://beshuffle:${SERVER_PORT:-8080}
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1/ || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     networks:
       - beshuffle-network
 

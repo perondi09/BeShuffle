@@ -1,3 +1,5 @@
+# Imagem da API. O contexto de build é backend/ (ver infra/docker-compose.yml);
+# as exclusões ficam em backend.Dockerfile.dockerignore, ao lado deste arquivo.
 FROM maven:3.9.9-eclipse-temurin-21 AS build
 WORKDIR /workspace
 
