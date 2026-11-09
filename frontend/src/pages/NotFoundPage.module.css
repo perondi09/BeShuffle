@@ -1,0 +1,12 @@
+.page {
+  display: grid;
+  justify-items: center;
+  gap: var(--espaco-4);
+  max-width: 640px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.title {
+  font-size: var(--titulo-secao);
+}

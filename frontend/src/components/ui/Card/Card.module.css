@@ -1,0 +1,31 @@
+.card {
+  position: relative;
+  overflow: hidden;
+  background: var(--cor-papel);
+  border: var(--borda);
+}
+
+.cartao {
+  border-radius: var(--raio-card);
+  box-shadow: var(--sombra);
+  padding: 22px;
+}
+
+.palco {
+  border-radius: var(--raio-palco);
+  box-shadow: var(--sombra-g);
+  padding: clamp(20px, 4vw, 44px);
+}
+
+@media (max-width: 860px) {
+  .palco {
+    border-radius: 26px;
+    box-shadow: 6px 6px 0 var(--cor-tinta);
+  }
+}
+
+@media (max-width: 560px) {
+  .palco {
+    padding: var(--espaco-4);
+  }
+}

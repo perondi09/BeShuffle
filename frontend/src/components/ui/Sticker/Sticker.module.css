@@ -1,0 +1,29 @@
+.sticker {
+  display: inline-block;
+  border: var(--borda);
+  border-radius: var(--raio-pilula);
+  padding: var(--espaco-1) var(--espaco-3);
+  font-size: var(--texto-m);
+  font-weight: var(--peso-forte);
+}
+
+.menta {
+  background: var(--cor-menta);
+}
+
+.gema {
+  background: var(--cor-gema);
+  box-shadow: var(--sombra-p);
+}
+
+.rosa {
+  background: var(--cor-rosa);
+}
+
+.leve {
+  transform: rotate(-2deg);
+}
+
+.forte {
+  transform: rotate(-6deg);
+}
