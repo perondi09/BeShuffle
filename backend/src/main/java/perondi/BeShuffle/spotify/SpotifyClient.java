@@ -37,14 +37,25 @@ public class SpotifyClient {
                 .body(Album.class));
     }
 
-    public List<AlbumSearchItem> searchAlbums(String query, int limit, int offset) {
+    /**
+     * Busca álbuns. O Spotify ordena por relevância, então os primeiros resultados são os mais ouvidos.
+     *
+     * @param market código do país (ex.: "BR"); vazio ou nulo para não filtrar por mercado
+     * @param limit  no Development Mode o Spotify aceita no máximo 10
+     */
+    public List<AlbumSearchItem> searchAlbums(String query, String market, int limit, int offset) {
         SearchResponse response = withToken(token -> apiClient.get()
-                .uri(uri -> uri.path("/v1/search")
-                        .queryParam("q", query)
-                        .queryParam("type", "album")
-                        .queryParam("limit", limit)
-                        .queryParam("offset", offset)
-                        .build())
+                .uri(uri -> {
+                    uri.path("/v1/search")
+                            .queryParam("q", query)
+                            .queryParam("type", "album");
+                    if (market != null && !market.isBlank()) {
+                        uri.queryParam("market", market);
+                    }
+                    return uri.queryParam("limit", limit)
+                            .queryParam("offset", offset)
+                            .build();
+                })
                 .headers(headers -> headers.setBearerAuth(token))
                 .retrieve()
                 .body(SearchResponse.class));
@@ -72,8 +83,14 @@ public class SpotifyClient {
     public record AlbumSearchItem(
             String id,
             String name,
-            @JsonProperty("album_type") String albumType
+            @JsonProperty("album_type") String albumType,
+            @JsonProperty("total_tracks") Integer totalTracks,
+            List<ArtistRef> artists
     ) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record ArtistRef(String id, String name) {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
