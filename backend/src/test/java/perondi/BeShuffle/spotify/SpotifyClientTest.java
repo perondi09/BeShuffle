@@ -61,17 +61,29 @@ class SpotifyClientTest {
     }
 
     @Test
-    @DisplayName("Monta a busca de álbuns com query, limite e offset")
+    @DisplayName("Monta a busca de álbuns com query, mercado, limite e offset e lê faixas e artistas")
     void shouldSearchAlbums() {
-        server.expect(requestTo("https://api.spotify.com/v1/search?q=k&type=album&limit=5&offset=42"))
+        server.expect(requestTo("https://api.spotify.com/v1/search?q=year:1995&type=album&market=BR&limit=10&offset=40"))
                 .andExpect(header("Authorization", "Bearer token"))
                 .andRespond(withSuccess("""
-                        {"albums":{"total":1,"items":[{"id":"x","name":"Nome","album_type":"album","total_tracks":9}]}}""",
+                        {"albums":{"total":1,"items":[{"id":"x","name":"Nome","album_type":"album","total_tracks":9,
+                          "artists":[{"id":"ar1","name":"Artista","type":"artist"}],"release_date":"1995"}]}}""",
                         MediaType.APPLICATION_JSON));
 
-        List<AlbumSearchItem> items = client.searchAlbums("k", 5, 42);
+        List<AlbumSearchItem> items = client.searchAlbums("year:1995", "BR", 10, 40);
 
-        assertEquals(List.of(new AlbumSearchItem("x", "Nome", "album")), items);
+        assertEquals(List.of(new AlbumSearchItem("x", "Nome", "album", 9,
+                List.of(new SpotifyClient.ArtistRef("ar1", "Artista")))), items);
+        server.verify();
+    }
+
+    @Test
+    @DisplayName("Sem mercado, não envia o parâmetro market")
+    void shouldOmitMarketWhenBlank() {
+        server.expect(requestTo("https://api.spotify.com/v1/search?q=k&type=album&limit=5&offset=0"))
+                .andRespond(withSuccess("{\"albums\":{\"items\":[]}}", MediaType.APPLICATION_JSON));
+
+        assertTrue(client.searchAlbums("k", null, 5, 0).isEmpty());
         server.verify();
     }
 
@@ -102,6 +114,6 @@ class SpotifyClientTest {
         server.expect(requestTo("https://api.spotify.com/v1/search?q=k&type=album&limit=5&offset=0"))
                 .andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
 
-        assertTrue(client.searchAlbums("k", 5, 0).isEmpty());
+        assertTrue(client.searchAlbums("k", null, 5, 0).isEmpty());
     }
 }
