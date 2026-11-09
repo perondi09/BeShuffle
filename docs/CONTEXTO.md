@@ -223,6 +223,7 @@ Visitante: `anon_id` em cookie HttpOnly + hash de IP; a regra "1 por dia" é ver
 > **Fase 2 concluída** (sorteio de álbuns populares por ano, ver §4), mais limpezas:
 > - `dotenv-java` removido (o `.env` é lido só pelo `spring.config.import`);
 > - branches antigas apagadas;
+> - frontend vanilla antigo (`backend/src/main/resources/static`) apagado; a API não serve mais página em `/`;
 > - senha antiga do Postgres local trocada (ela continua no histórico do git, então nunca deve ser reusada).
 >
 > Ficou para a fase 3 (deploy):
