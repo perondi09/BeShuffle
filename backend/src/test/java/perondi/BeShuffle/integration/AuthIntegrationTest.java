@@ -139,6 +139,15 @@ class AuthIntegrationTest {
     }
 
     @Test
+    @DisplayName("Visitante consultando /api/me não ganha sessão (nada fica guardado na memória da API)")
+    void meSemSessaoNaoCriaSessao() throws Exception {
+        MvcResult r = mvc.perform(get("/api/me")).andExpect(status().isUnauthorized()).andReturn();
+
+        org.junit.jupiter.api.Assertions.assertNull(r.getRequest().getSession(false),
+                "uma sessão foi criada para um visitante anônimo");
+    }
+
+    @Test
     @DisplayName("Logout encerra a sessão: depois dele /api/me volta a ser 401")
     void logout() throws Exception {
         MockHttpSession sessao = cadastrar("ana@exemplo.com");

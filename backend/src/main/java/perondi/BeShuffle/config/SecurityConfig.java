@@ -55,6 +55,8 @@ public class SecurityConfig {
                 // O token é "preguiçoso": sem isto o cookie só sairia quando alguém lesse o token.
                 .addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)
                 .sessionManagement(s -> s.sessionFixation(f -> f.changeSessionId()))
+                // Sem tela de login para "voltar depois": guardar o pedido criaria uma sessão a cada visitante.
+                .requestCache(cache -> cache.disable())
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .logout(logout -> logout
