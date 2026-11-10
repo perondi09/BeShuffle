@@ -11,8 +11,10 @@ Telas:
 | `/cadastro` | Cadastro |
 | qualquer outra | Página 404 |
 
-Login e cadastro já validam os campos e chamam `POST /api/auth/login` e `POST /api/auth/register`, mas a API
-ainda não tem essas rotas: até lá a tela avisa que o recurso não está disponível. A ficha diária do visitante fica
+Login e cadastro validam os campos e chamam `POST /api/auth/login` e `POST /api/auth/register`. A sessão fica
+num cookie HttpOnly da API; o `SessionProvider` (`src/features/session/`) lê `GET /api/me` ao abrir o site, e o
+topo mostra "Oi, nome" e o botão Sair (`POST /api/auth/logout`) para quem está logado. Todo `POST` manda o
+header `X-XSRF-TOKEN` com o valor do cookie `XSRF-TOKEN` (proteção CSRF, em `src/api/http.ts`). A ficha diária do visitante fica
 no `localStorage` só para a interface; a API ainda precisa garantir a regra de 1 sorteio por dia.
 
 ## Requisitos
