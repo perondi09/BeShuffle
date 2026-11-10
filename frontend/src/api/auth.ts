@@ -1,9 +1,13 @@
-import { ApiError, postJson } from './http'
+import { ApiError, getJson, postJson } from './http'
 
-/*
- * Rotas planejadas em docs/CONTEXTO.md §7 (passo 6). A API ainda não as tem:
- * até lá, as telas mostram que o login não está disponível.
- */
+/* Rotas de conta da API (backend/README.md). A sessão fica num cookie HttpOnly que o navegador manda sozinho. */
+
+/** Quem está logado (GET /api/me). */
+export interface SessionUser {
+  id: number
+  email: string
+  displayName: string
+}
 
 export interface LoginInput {
   email: string
@@ -19,7 +23,11 @@ export interface RegisterInput {
 export const login = (input: LoginInput) => postJson<void>('/api/auth/login', input)
 
 export const register = (input: RegisterInput) =>
-  postJson<void>('/api/auth/register', { displayName: input.name, email: input.email, password: input.password })
+  postJson<SessionUser>('/api/auth/register', { displayName: input.name, email: input.email, password: input.password })
+
+export const me = () => getJson<SessionUser>('/api/me')
+
+export const logout = () => postJson<void>('/api/auth/logout', {})
 
 /** Traduz a falha de login/cadastro numa mensagem para a pessoa. */
 export function authErrorMessage(error: unknown, action: 'login' | 'cadastro'): string {

@@ -14,7 +14,8 @@ describe('LoginPage', () => {
     expect(screen.getByText('Informe seu e-mail.')).toBeInTheDocument()
     expect(screen.getByText('Informe sua senha.')).toBeInTheDocument()
     expect(screen.getByLabelText('E-mail')).toHaveAttribute('aria-invalid', 'true')
-    expect(fetchMock).not.toHaveBeenCalled()
+    // O site sempre pergunta /api/me ao abrir; o que não pode acontecer é tentar o login.
+    expect(fetchMock).not.toHaveBeenCalledWith('/api/auth/login', expect.anything())
   })
 
   it('envia e-mail e senha e avisa quando o login ainda não existe na API', async () => {

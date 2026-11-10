@@ -20,12 +20,20 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (await response.json()) as T
 }
 
+/** Token CSRF que a API manda no cookie XSRF-TOKEN; todo POST precisa devolvê-lo no header. */
+function xsrfToken(): string | undefined {
+  const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/)
+  return match ? decodeURIComponent(match[1]) : undefined
+}
+
 export const getJson = <T>(path: string) => request<T>(path)
 
-export const postJson = <T>(path: string, body: unknown) =>
-  request<T>(path, {
+export const postJson = <T>(path: string, body: unknown) => {
+  const token = xsrfToken()
+  return request<T>(path, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(token ? { 'X-XSRF-TOKEN': token } : {}) },
     body: JSON.stringify(body),
     credentials: 'same-origin',
   })
+}
