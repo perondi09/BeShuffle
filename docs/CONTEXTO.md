@@ -58,12 +58,13 @@ arquivo, e nenhum segredo tem valor padrão no código.
 ### Backend (`backend/src/main/java/perondi/BeShuffle/`)
 
 ```
-├── config/        DailyAlbumScheduler (cron 00:00 em beshuffle.timezone), TimeConfig (Clock)
+├── config/        DailyAlbumScheduler (cron 00:00 em beshuffle.timezone), TimeConfig (Clock),
+│                  SorteioProperties (beshuffle.sorteio.*) + SorteioConfig
 ├── controller/    AlbumController: GET /api/albums/random, GET /api/albums/daily
 ├── entity/        Album, AlbumImage, Artist (DTOs do Spotify) e DailyAlbum (@Entity daily_albums)
 ├── exceptions/    Spotify*/Validation + GlobalExceptionHandler (sem repassar detalhes do Spotify)
 ├── repository/    DailyAlbumRepository
-├── services/      AlbumPicker (interface) + RandomQueryAlbumPicker, AlbumService, DailyAlbumService
+├── services/      AlbumPicker (interface) + PopularPorAnoAlbumPicker, FiltroDeAlbum, AlbumService, DailyAlbumService
 └── spotify/       SpotifyClient (única porta para a API), SpotifyTokenProvider (token em cache), SpotifyConfig
 ```
 
@@ -75,8 +76,9 @@ arquivo, e nenhum segredo tem valor padrão no código.
 | GET | `/actuator/health` | health check |
 
 ### Frontend
-- Tela inicial provisória com o Álbum do Dia e o botão "Sortear álbum".
-- O visual definitivo, cartunizado e para celular e desktop, está proposto em `docs/design/index.html` e entra na fase 5.
+- Visual do guia `docs/design/index.html` (cartunizado, celular e desktop), com tokens e CSS Modules.
+- Home com Álbum do Dia, sorteio (ficha diária do visitante, só na interface por enquanto), cards da comunidade
+  trancados para visitante; telas `/entrar` e `/cadastro` prontas, esperando `/api/auth/*` (fase 4).
 - O frontend vanilla antigo (`src/main/resources/static`) não existe mais.
 
 ### Fluxo de branches
@@ -95,8 +97,9 @@ docs ────┘
 
 ## 3. Histórico (commits e branches)
 
-Remoto: `github.com/perondi09/BeShuffle`. Branches remotas: `create-ramdomalbum`, `create-repositories`,
-`security`, `visual-changes` — **todas já mergeadas** (0 commits à frente de `master`). Não há stash.
+Remoto: `github.com/perondi09/BeShuffle`. As branches antigas `create-ramdomalbum`, `create-repositories`,
+`security`, `visual-changes` e `refactor/fase1-base` estavam todas mergeadas e foram apagadas em 08/11/2026;
+hoje existem só `master`, `test` e as branches de área (`backend`, `frontend`, `devops`, `docs`).
 
 | Fase | Commits | O que aconteceu |
 | --- | --- | --- |
@@ -116,7 +119,27 @@ não commitado, em outra pasta, ou no repositório do frontend. → Precisamos l
 
 ## 4. Análise do sorteio (`SpotifyRandomAlbumService`)
 
-Como funciona hoje:
+> **Fase 2 concluída (08/11/2026).** O sorteio agora é o `PopularPorAnoAlbumPicker` (ver `backend/README.md`):
+> ano aleatório entre 1960 e o atual, página aleatória entre os 50 primeiros resultados de `year:ANO` no mercado
+> BR, filtro `FiltroDeAlbum` (só `album`, 6–40 faixas, sem "Various Artists", sem termos bloqueados) e sorteio
+> entre os aprovados. Configurável em `beshuffle.sorteio.*`.
+>
+> O que o app (Development Mode) recebe do Spotify, testado em 08/11/2026:
+>
+> | Recurso | Resultado |
+> | --- | --- |
+> | `popularity`, `genres`, `followers`, `label` (álbum e artista) | não vêm |
+> | `GET /v1/albums?ids=`, top tracks, new-releases, categorias | 403 |
+> | Playlists editoriais (Top 50) e faixas de playlists | 404 / 403 |
+> | `recommendations` | 404 |
+> | Busca de artista por `genre:` | 0 resultados |
+> | Busca de álbum `year:ANO` + `market=BR` | **funciona**, ordenada por relevância; `limit` máximo 10 |
+>
+> Por isso as opções 1 (busca por faixas com `genre:`) e o filtro por `popularity` abaixo não são viáveis
+> hoje. O pool curado (opção 2, Last.fm) continua sendo o próximo passo se quisermos filtrar por gênero.
+> O texto abaixo é a análise original, de antes da fase 1.
+
+Como funcionava antes:
 1. Pega um token novo (`client_credentials`).
 2. Monta a busca `q=<1 caractere aleatório a-z0-9>&type=album&limit=5&offset=<0..949>`.
 3. Pega o primeiro item com `album_type == "album"`; até 5 tentativas.
@@ -196,6 +219,12 @@ Visitante: `anon_id` em cookie HttpOnly + hash de IP; a regra "1 por dia" é ver
 >   (compose com Postgres, API e site; Dockerfiles; nginx);
 > - CI separado para backend, frontend e imagens Docker;
 > - fluxo de branches `backend`/`frontend`/`devops`/`docs` → `test` → `master` (ver §2).
+>
+> **Fase 2 concluída** (sorteio de álbuns populares por ano, ver §4), mais limpezas:
+> - `dotenv-java` removido (o `.env` é lido só pelo `spring.config.import`);
+> - branches antigas apagadas;
+> - frontend vanilla antigo (`backend/src/main/resources/static`) apagado; a API não serve mais página em `/`;
+> - senha antiga do Postgres local trocada (ela continua no histórico do git, então nunca deve ser reusada).
 >
 > Ficou para a fase 3 (deploy):
 > - o token é renovado dentro de um lock que espera a chamada HTTP;
