@@ -192,7 +192,7 @@ Outros pontos:
 ## 6. Modelo de dados sugerido (para a visão)
 
 ```
-users            id, email (único), password_hash, display_name, created_at
+users            id, email (único), password_hash, display_name, created_at   -- FEITO (V2, fase 4)
 user_genres      user_id, genre                      -- preferências para o sorteio
 album_candidates spotify_album_id (pk), name, artist, image_url, genres[], year, source, score, last_drawn_at
 daily_album      date (pk, fuso America/Sao_Paulo), spotify_album_id
@@ -226,10 +226,26 @@ Visitante: `anon_id` em cookie HttpOnly + hash de IP; a regra "1 por dia" é ver
 > - frontend vanilla antigo (`backend/src/main/resources/static`) apagado; a API não serve mais página em `/`;
 > - senha antiga do Postgres local trocada (ela continua no histórico do git, então nunca deve ser reusada).
 >
+> **Fase 4, parte 1 concluída: contas.**
+> - API: `POST /api/auth/register`, `/login`, `/logout` e `GET /api/me` (Spring Security 7), tabela `users`
+>   (Flyway V2), senha com BCrypt, sessão em cookie HttpOnly e CSRF no modo SPA (cookie `XSRF-TOKEN` → header
+>   `X-XSRF-TOKEN`). Só `/api/me` exige login; os álbuns continuam públicos.
+> - Site: `SessionProvider` lê `/api/me`; o topo mostra "Oi, nome" e Sair.
+> - Bruno: pasta "Auth" com o fluxo completo.
+> - Achados no teste de ponta a ponta: a API não subia no Docker desde a fase 2 (`RandomGenerator.getDefault()`
+>   precisa do módulo `jdk.random`, ausente na imagem JRE) e cada visitante ganhava uma sessão (request cache do
+>   Spring). Os dois foram corrigidos.
+>
+> Fase 4, parte 2 (próxima): sorteados do dia, histórico de sorteios (`draws`), notas e comentários (`reviews`),
+> e destrancar os cards da comunidade para quem está logado.
+>
 > Ficou para a fase 3 (deploy):
 > - o token é renovado dentro de um lock que espera a chamada HTTP;
 > - os `RestClient` não usam o `RestClient.Builder` do Boot (sem métricas);
-> - `baseline-on-migrate` deve sair depois do primeiro deploy.
+> - `baseline-on-migrate` deve sair depois do primeiro deploy;
+> - sessões ficam na memória da API (reinício desloga todo mundo; não escala para 2 instâncias): Spring Session JDBC;
+> - sem limite de tentativas de login (força bruta);
+> - o job de Docker do CI só gera as imagens; ele deveria subir a API e checar o `/actuator/health`.
 
 1. Localizar/commitar o código de cadastro; criar branch `feature/auth`.
 2. Refatoração sem mudar comportamento (`/ecc:orch-refine-code`): unificar cliente Spotify, cache de token,

@@ -16,4 +16,5 @@ Contexto completo, problemas conhecidos e roadmap: [docs/CONTEXTO.md](docs/CONTE
 - Schema: migrations Flyway em `backend/src/main/resources/db/migration`; Hibernate só valida (`ddl-auto=validate`)
 - Branches: trabalho em `backend`, `frontend`, `devops` (infra/CI) ou `docs` → PR para `test` → depois do CI verde, PR `test` → `master`. Nunca commitar direto em `test`/`master`
 - Idioma do código/logs: português. Commits: Conventional Commits, descritivos, sem trailer de coautoria.
-- Visitante sorteia 1x/dia; usuário logado vê sorteados do dia, dá nota e comenta (ainda não implementado).
+- Contas: `config/SecurityConfig` (sessão em cookie, CSRF SPA: todo POST manda `X-XSRF-TOKEN` com o cookie `XSRF-TOKEN`), `controller/AuthController`, `services/AuthService`; só `/api/me` exige login. Testes de integração usam o cookie+header de verdade, nunca o `csrf()` do spring-security-test (ele vaza entre testes)
+- Visitante sorteia 1x/dia; usuário logado vê sorteados do dia, dá nota e comenta (contas prontas; sorteados, notas e comentários ainda não).
