@@ -34,6 +34,19 @@ Os testes usam H2 e chaves falsas (`src/test/resources/application-test.properti
 | `GET` | `/api/albums/random` | Sorteia um álbum do Spotify |
 | `GET` | `/api/albums/daily` | Álbum do Dia (vira à meia-noite de São Paulo) |
 | `GET` | `/actuator/health` | Saúde da aplicação |
+| `POST` | `/api/auth/register` | Cria a conta `{displayName, email, password}` e já entra (201); e-mail repetido 409, dados ruins 400 |
+| `POST` | `/api/auth/login` | Entra com `{email, password}` (204); senha ou e-mail errado 401 |
+| `POST` | `/api/auth/logout` | Sai (204) |
+| `GET` | `/api/me` | Quem está logado `{id, email, displayName}`; sem login 401 |
+
+### Conta e sessão
+
+- A sessão fica num cookie `JSESSIONID` HttpOnly (SameSite=Lax, 7 dias). Em produção com HTTPS, defina
+  `COOKIE_SECURE=true`.
+- Todo `POST` exige o token CSRF: a API manda o cookie `XSRF-TOKEN` em qualquer resposta e o site devolve o
+  valor no header `X-XSRF-TOKEN`. No Bruno, a pasta "Auth" faz isso sozinha.
+- Só `/api/me` exige login por enquanto; os álbuns continuam públicos.
+- A sessão vive na memória da API: reiniciar desloga todo mundo (Spring Session JDBC fica para o deploy).
 
 ## Como o sorteio escolhe o álbum
 
@@ -56,6 +69,8 @@ Tudo é configurável em `beshuffle.sorteio.*` (ver `application.properties`).
 | `spotify/SpotifyClient` | Única porta para a Web API do Spotify |
 | `spotify/SpotifyTokenProvider` | Token `client_credentials` em cache; renovado depois de um 401 |
 | `services/AlbumPicker` | Estratégia de sorteio (implementação atual: `PopularPorAnoAlbumPicker`) |
+| `config/SecurityConfig` | Rotas públicas e protegidas, CSRF, logout e erros 401/403 em JSON |
+| `controller/AuthController` e `services/AuthService` | Cadastro, login e `/api/me`; senha com BCrypt |
 | `services/FiltroDeAlbum` e `config/SorteioProperties` | O que entra no sorteio (`beshuffle.sorteio.*`) |
 | `services/DailyAlbumService` e `config/DailyAlbumScheduler` | Álbum do Dia |
 | `config/TimeConfig` | `Clock` no fuso `beshuffle.timezone` (padrão `America/Sao_Paulo`) |
