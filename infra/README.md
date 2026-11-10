@@ -31,6 +31,13 @@ dizendo qual variável falta.
 Para desenvolver só uma parte, suba só o banco (`docker compose up -d db`) e rode a API e o site fora do Docker
 (veja `backend/README.md` e `frontend/README.md`).
 
+## Login
+
+A API guarda a sessão num cookie HttpOnly (`JSESSIONID`), e o nginx do site repassa esse cookie junto com
+`/api`, então nada muda no proxy. Em produção, com HTTPS, use `COOKIE_SECURE=true` no `.env`; em localhost
+deixe `false`, ou o navegador não envia o cookie. `SESSION_TIMEOUT` (padrão `7d`) é quanto tempo o login dura.
+A sessão fica na memória da API: reiniciar o container desloga todo mundo.
+
 ## CI
 
 O workflow roda a cada PR e a cada push em `master` e `test`:
