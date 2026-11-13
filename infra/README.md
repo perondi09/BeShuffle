@@ -38,6 +38,9 @@ A API guarda a sessão num cookie HttpOnly (`JSESSIONID`), e o nginx do site rep
 deixe `false`, ou o navegador não envia o cookie. `SESSION_TIMEOUT` (padrão `7d`) é quanto tempo o login dura.
 A sessão fica na memória da API: reiniciar o container desloga todo mundo.
 
+Os sorteios do dia são contados no banco. O visitante é identificado pelo cookie `bs_anon` (HttpOnly, 1 ano), que
+também segue o `COOKIE_SECURE`; o nginx repassa os cookies sem configuração extra.
+
 ## CI
 
 O workflow roda a cada PR e a cada push em `master` e `test`:
