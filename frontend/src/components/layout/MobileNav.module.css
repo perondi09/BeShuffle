@@ -27,6 +27,13 @@
     text-decoration: none;
     border: var(--espessura-fina) solid transparent;
     border-radius: var(--raio-m);
+    /* A aba Sair é um <button>: tira o visual padrão para ficar igual aos links. */
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-size: 13px;
+    font-weight: var(--peso-forte);
+    cursor: pointer;
   }
 
   .link[aria-current='page'] {

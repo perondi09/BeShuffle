@@ -11,7 +11,6 @@ export interface Album {
 }
 
 export const fetchDailyAlbum = () => getJson<Album>('/api/albums/daily')
-export const fetchRandomAlbum = () => getJson<Album>('/api/albums/random')
 
 /** Link público do álbum no Spotify (open.spotify.com), montado a partir do id. */
 export function spotifyUrl(album: Album): string {

@@ -6,7 +6,7 @@ Telas:
 
 | Rota | Tela |
 | --- | --- |
-| `/` | Home: Álbum do Dia, sorteio (visitante tem 1 ficha por dia), sorteados de hoje e nota (trancados para visitante) |
+| `/` | Home: Álbum do Dia, sorteio (1 ficha por dia para visitante, 10 e escolha de estilos para conta logada), sorteados de hoje e nota do Álbum do Dia (trancados para visitante) |
 | `/entrar` | Login |
 | `/cadastro` | Cadastro |
 | qualquer outra | Página 404 |
@@ -14,8 +14,16 @@ Telas:
 Login e cadastro validam os campos e chamam `POST /api/auth/login` e `POST /api/auth/register`. A sessão fica
 num cookie HttpOnly da API; o `SessionProvider` (`src/features/session/`) lê `GET /api/me` ao abrir o site, e o
 topo mostra "Oi, nome" e o botão Sair (`POST /api/auth/logout`) para quem está logado. Todo `POST` manda o
-header `X-XSRF-TOKEN` com o valor do cookie `XSRF-TOKEN` (proteção CSRF, em `src/api/http.ts`). A ficha diária do visitante fica
-no `localStorage` só para a interface; a API ainda precisa garantir a regra de 1 sorteio por dia.
+header `X-XSRF-TOKEN` com o valor do cookie `XSRF-TOKEN` (proteção CSRF, em `src/api/http.ts`); o `PUT` da nota também.
+
+Sorteio e comunidade (tudo grátis):
+
+- As fichas do dia vêm da API (`GET /api/draws/allowance`), que é quem conta: visitante tem 1, conta logada tem 10.
+  O `AllowanceProvider` (`src/features/draw/`) lê o saldo ao abrir o site e de novo quando alguém entra ou sai.
+- `POST /api/draws` sorteia e devolve o álbum junto com o saldo novo. Conta logada pode mandar estilos
+  (`{"genres":["rock","jazz"]}`, lista em `GET /api/genres`); a escolha fica salva no `localStorage` só por conveniência.
+- Logado, "Sorteados de hoje" lê `GET /api/draws/today` e "Sua nota" lê e grava `GET`/`PUT /api/reviews/today`.
+  Notas e comentários são só para o Álbum do Dia.
 
 ## Requisitos
 
@@ -53,11 +61,11 @@ O frontend não guarda chave nem senha: as chamadas ao Spotify são feitas pela 
 | `src/styles/global.css` | Reset, fundo de bolinhas, foco e a classe `.display` (fonte de títulos) |
 | `src/components/ui/` | Componentes base: `Button`, `Card`, `Sticker`, `Tag`, `TextField`, `LockedOverlay`, `VinylDisc` |
 | `src/components/layout/` | `AppLayout`, `Header`, `Brand`, `MobileNav` |
-| `src/features/draw/` | Sorteio: palco, vitrola, detalhes do álbum, ficha diária |
-| `src/features/community/` | Cartões "Sorteados de hoje" e "Sua nota" |
+| `src/features/draw/` | Sorteio: palco, vitrola, detalhes do álbum, fichas do dia (`AllowanceProvider`) e estilos (`StylePicker`) |
+| `src/features/community/` | Cartões "Sorteados de hoje" e "Sua nota" (trancados para visitante) |
 | `src/features/auth/` | Moldura, formulários e validação de login/cadastro |
 | `src/pages/` | Uma página por rota, só compondo features |
-| `src/api/` | `http.ts` (fetch + `ApiError`), `albums.ts`, `auth.ts` |
+| `src/api/` | `http.ts` (fetch + `ApiError` com a mensagem da API), `albums.ts`, `auth.ts`, `draws.ts`, `reviews.ts` |
 | `src/AppRoutes.tsx` | Rotas (o `App.tsx` só põe o `BrowserRouter`) |
 | `src/test/` | Setup do Vitest e `renderAt`/`mockApi` para os testes |
 | `vite.config.ts` | Proxy `/api` e configuração do Vitest |
