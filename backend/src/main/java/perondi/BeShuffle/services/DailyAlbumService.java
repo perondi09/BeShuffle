@@ -41,6 +41,16 @@ public class DailyAlbumService {
                 });
     }
 
+    /** Registro do Álbum do Dia de hoje no banco (gera e salva se ainda não existe). Usado pelas notas. */
+    public DailyAlbum registroDeHoje() {
+        LocalDate hoje = hoje();
+        return dailyAlbumRepository.findByDisplayDate(hoje).orElseGet(() -> {
+            gerarESalvarAlbumDoDia(hoje);
+            return dailyAlbumRepository.findByDisplayDate(hoje)
+                    .orElseThrow(() -> new IllegalStateException("Álbum do dia não foi salvo"));
+        });
+    }
+
     public Album gerarESalvarAlbumDoDia(LocalDate data) {
         if (data == null) {
             throw new IllegalArgumentException("Data do álbum do dia não pode ser nula");

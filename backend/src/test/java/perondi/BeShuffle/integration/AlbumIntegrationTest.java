@@ -9,9 +9,7 @@ import perondi.BeShuffle.controller.AlbumController;
 import perondi.BeShuffle.entity.Album;
 import perondi.BeShuffle.entity.AlbumImage;
 import perondi.BeShuffle.entity.Artist;
-import perondi.BeShuffle.services.AlbumService;
 import perondi.BeShuffle.services.DailyAlbumService;
-import perondi.BeShuffle.services.AlbumPicker;
 
 import java.util.List;
 
@@ -24,26 +22,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DisplayName("Testes de integração do controller de álbuns")
 class AlbumIntegrationTest {
 
-    private final AlbumService albumService = mock(AlbumService.class);
-    private final AlbumPicker albumPicker = mock(AlbumPicker.class);
     private final DailyAlbumService dailyAlbumService = mock(DailyAlbumService.class);
 
     private final MockMvc mockMvc = MockMvcBuilders.standaloneSetup(
-            new AlbumController(albumService, albumPicker, dailyAlbumService)
+            new AlbumController(dailyAlbumService)
     ).build();
-
-    @Test
-    @DisplayName("Deve retornar um álbum aleatório quando a busca for bem-sucedida")
-    void shouldReturnRandomAlbum() throws Exception {
-        Album album = createAlbum();
-        when(albumPicker.pickAlbumId()).thenReturn("123");
-        when(albumService.getAlbumById("123")).thenReturn(album);
-
-        mockMvc.perform(get("/api/albums/random").accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value("123"))
-                .andExpect(jsonPath("$.name").value("Test Album"));
-    }
 
     @Test
     @DisplayName("Deve retornar o álbum do dia")
@@ -55,6 +38,12 @@ class AlbumIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value("123"))
                 .andExpect(jsonPath("$.artists[0].name").value("Artist Name"));
+    }
+
+    @Test
+    @DisplayName("O sorteio saiu de /api/albums/random e foi para POST /api/draws")
+    void randomNaoExisteMais() throws Exception {
+        mockMvc.perform(get("/api/albums/random")).andExpect(status().isNotFound());
     }
 
     private Album createAlbum() {

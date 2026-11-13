@@ -116,4 +116,32 @@ class SpotifyClientTest {
 
         assertTrue(client.searchAlbums("k", null, 5, 0).isEmpty());
     }
+
+    @Test
+    @DisplayName("Busca faixas por gênero e devolve o álbum de cada faixa, ignorando faixas sem álbum")
+    void shouldSearchTrackAlbums() {
+        server.expect(requestTo("https://api.spotify.com/v1/search?q=genre:%22rock%22&type=track&market=BR&limit=10&offset=20"))
+                .andExpect(header("Authorization", "Bearer token"))
+                .andRespond(withSuccess("""
+                        {"tracks":{"items":[
+                          {"name":"Faixa","album":{"id":"x","name":"Nome","album_type":"album","total_tracks":11,
+                            "artists":[{"id":"ar1","name":"Artista"}]}},
+                          {"name":"Sem álbum"},
+                          null]}}""", MediaType.APPLICATION_JSON));
+
+        List<AlbumSearchItem> items = client.searchTrackAlbums("genre:\"rock\"", "BR", 10, 20);
+
+        assertEquals(List.of(new AlbumSearchItem("x", "Nome", "album", 11,
+                List.of(new SpotifyClient.ArtistRef("ar1", "Artista")))), items);
+        server.verify();
+    }
+
+    @Test
+    @DisplayName("Busca de faixas sem resultado devolve lista vazia")
+    void shouldReturnEmptyListWhenNoTracks() {
+        server.expect(requestTo("https://api.spotify.com/v1/search?q=k&type=track&limit=5&offset=0"))
+                .andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
+
+        assertTrue(client.searchTrackAlbums("k", null, 5, 0).isEmpty());
+    }
 }
