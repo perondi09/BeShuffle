@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router'
-import { DailyTokenProvider } from '../../features/draw/DailyTokenProvider'
+import { AllowanceProvider } from '../../features/draw/AllowanceProvider'
 import { SessionProvider } from '../../features/session/SessionProvider'
 import styles from './AppLayout.module.css'
 import { Header } from './Header'
@@ -9,13 +9,13 @@ import { MobileNav } from './MobileNav'
 export function AppLayout() {
   return (
     <SessionProvider>
-      <DailyTokenProvider>
+      <AllowanceProvider>
         <Header />
         <main className={styles.main}>
           <Outlet />
         </main>
         <MobileNav />
-      </DailyTokenProvider>
+      </AllowanceProvider>
     </SessionProvider>
   )
 }
