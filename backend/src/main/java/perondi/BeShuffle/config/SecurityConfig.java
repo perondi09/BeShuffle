@@ -26,7 +26,7 @@ import java.util.Map;
 
 /**
  * Sessão por cookie (JSESSIONID, HttpOnly) no mesmo domínio do site, que chega à API pelo proxy /api.
- * Só /api/me exige login; o resto continua público. CSRF no modo SPA: o cookie XSRF-TOKEN é legível
+ * Exigem login: /api/me, /api/draws/today e /api/reviews/**; o resto é público. CSRF no modo SPA: o cookie XSRF-TOKEN é legível
  * pelo site, que devolve o valor no header X-XSRF-TOKEN em todo POST.
  */
 @Configuration
@@ -48,7 +48,7 @@ public class SecurityConfig {
                                                    ObjectMapper objectMapper) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/me").authenticated()
+                        .requestMatchers("/api/me", "/api/draws/today", "/api/reviews/**").authenticated()
                         .anyRequest().permitAll())
                 .securityContext(ctx -> ctx.securityContextRepository(contextRepository))
                 .csrf(csrf -> csrf.spa())

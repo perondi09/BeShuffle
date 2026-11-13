@@ -67,6 +67,36 @@ public class SpotifyClient {
     }
 
     /**
+     * Busca faixas e devolve o álbum de cada uma. Serve para filtrar por gênero ({@code genre:"rock"}),
+     * que o Spotify só aceita na busca de faixas e artistas, não na de álbuns.
+     */
+    public List<AlbumSearchItem> searchTrackAlbums(String query, String market, int limit, int offset) {
+        TrackSearchResponse response = withToken(token -> apiClient.get()
+                .uri(uri -> {
+                    uri.path("/v1/search")
+                            .queryParam("q", query)
+                            .queryParam("type", "track");
+                    if (market != null && !market.isBlank()) {
+                        uri.queryParam("market", market);
+                    }
+                    return uri.queryParam("limit", limit)
+                            .queryParam("offset", offset)
+                            .build();
+                })
+                .headers(headers -> headers.setBearerAuth(token))
+                .retrieve()
+                .body(TrackSearchResponse.class));
+
+        if (response == null || response.tracks() == null || response.tracks().items() == null) {
+            return List.of();
+        }
+        return response.tracks().items().stream()
+                .filter(track -> track != null && track.album() != null)
+                .map(TrackItem::album)
+                .toList();
+    }
+
+    /**
      * Executa a chamada com o token em cache. Se o Spotify recusar o token (401, ex.: revogado),
      * descarta o cache e tenta uma única vez com um token novo.
      */
@@ -99,5 +129,17 @@ public class SpotifyClient {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     record AlbumPage(List<AlbumSearchItem> items) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    record TrackSearchResponse(TrackPage tracks) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    record TrackPage(List<TrackItem> items) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    record TrackItem(AlbumSearchItem album) {
     }
 }
