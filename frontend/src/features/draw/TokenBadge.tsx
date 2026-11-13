@@ -1,17 +1,26 @@
 import { cx } from '../../lib/cx'
-import { useDailyToken } from './dailyToken'
+import { useAllowance } from './allowance'
 import styles from './TokenBadge.module.css'
 
-/** Contador de fichas do visitante, no topo da página. */
+/** Fichas de hoje no topo da página: 1 para visitante, 10 para conta logada. */
 export function TokenBadge() {
-  const { available } = useDailyToken()
+  const { allowance } = useAllowance()
+  if (!allowance) return null
+
+  const { remaining } = allowance
+  const label =
+    remaining === 0
+      ? allowance.dailyLimit === 1
+        ? 'Ficha usada'
+        : 'Fichas usadas'
+      : `${remaining} ${remaining === 1 ? 'ficha' : 'fichas'} hoje`
 
   return (
     <div className={styles.badge} aria-live="polite">
-      <span className={cx(styles.coin, !available && styles.spent)} aria-hidden="true">
-        1
+      <span className={cx(styles.coin, remaining === 0 && styles.spent)} aria-hidden="true">
+        {remaining}
       </span>
-      {available ? '1 ficha hoje' : 'Ficha usada'}
+      {label}
     </div>
   )
 }
