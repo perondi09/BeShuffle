@@ -17,7 +17,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(AlbumException.class)
     public ResponseEntity<Map<String, Object>> handleAlbumException(AlbumException ex) {
-        log.error("AlbumException: {} [{}]", ex.getMessage(), ex.getErrorCode(), ex);
+        if (ex.getHttpStatus() >= 500) {
+            log.error("AlbumException: {} [{}]", ex.getMessage(), ex.getErrorCode(), ex);
+        } else {
+            // Erro esperado (login, validação, limite): uma linha basta, sem stack trace.
+            log.warn("{} {}: {}", ex.getHttpStatus(), ex.getErrorCode(), ex.getMessage());
+        }
         
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now());
