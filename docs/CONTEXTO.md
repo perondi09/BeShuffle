@@ -6,13 +6,15 @@
 
 Site onde a pessoa **sorteia um álbum do Spotify** e descobre música nova.
 
+Tudo é grátis (decisão de 12/11/2026: sem planos pagos, fichas avulsas nem mensalidade).
+
 | Recurso | Visitante (sem conta) | Usuário cadastrado |
 | --- | --- | --- |
-| Sortear álbum aleatório | **1 vez por dia** | Ilimitado (ou cota maior) |
-| Ver o "Álbum do Dia" | Sim | Sim |
-| Ver os sorteados do dia (histórico) | Não | Sim |
-| Dar nota ao álbum | Não | Sim |
-| Comentar o álbum | Não | Sim |
+| Ver o "Álbum do Dia" (sorteio à parte, igual para todos) | Sim | Sim |
+| Sortear álbum aleatório | **1 vez por dia** | **10 vezes por dia** |
+| Escolher estilos musicais no sorteio | Não | Sim (um ou vários) |
+| Ver os sorteados do dia | Não | Sim |
+| Dar nota e comentar | Não | Sim, só no Álbum do Dia |
 
 Problema de produto relatado: o sorteio traz álbuns que quase ninguém ouviria
 (ex.: álbum infantil mexicano). Objetivo: sortear **álbuns que pessoas realmente escutam**, com filtros.
@@ -60,25 +62,33 @@ arquivo, e nenhum segredo tem valor padrão no código.
 ```
 ├── config/        DailyAlbumScheduler (cron 00:00 em beshuffle.timezone), TimeConfig (Clock),
 │                  SorteioProperties (beshuffle.sorteio.*) + SorteioConfig
-├── controller/    AlbumController: GET /api/albums/random, GET /api/albums/daily
+├── controller/    AlbumController (Álbum do Dia), AuthController, DrawController (sorteios com fichas),
+│                  EstiloController (/api/genres), ReviewController (notas do Álbum do Dia)
 ├── entity/        Album, AlbumImage, Artist (DTOs do Spotify) e DailyAlbum (@Entity daily_albums)
 ├── exceptions/    Spotify*/Validation + GlobalExceptionHandler (sem repassar detalhes do Spotify)
 ├── repository/    DailyAlbumRepository
-├── services/      AlbumPicker (interface) + PopularPorAnoAlbumPicker, FiltroDeAlbum, AlbumService, DailyAlbumService
+├── services/      AlbumPicker (interface) + PopularPorAnoAlbumPicker, EstiloAlbumPicker + Estilo, FiltroDeAlbum,
+│                  AlbumService, DailyAlbumService, DrawService, DrawAllowanceService + Plano/Dono, ReviewService
 └── spotify/       SpotifyClient (única porta para a API), SpotifyTokenProvider (token em cache), SpotifyConfig
 ```
 
 ### Endpoints
 | Método | Rota | O que faz |
 | --- | --- | --- |
-| GET | `/api/albums/random` | sorteia id → busca álbum completo → retorna JSON do Spotify |
 | GET | `/api/albums/daily` | retorna álbum do dia do banco; se não houver, gera na hora |
+| POST | `/api/draws` | sorteia gastando uma ficha do dia (estilos opcionais, só logado) |
+| GET | `/api/draws/allowance` | fichas de hoje |
+| GET | `/api/draws/today` | sorteados de hoje (login) |
+| GET | `/api/genres` | estilos do sorteio |
+| GET/PUT | `/api/reviews/today` | notas do Álbum do Dia (login) |
+
+Lista completa, com códigos de erro, em `backend/README.md`.
 | GET | `/actuator/health` | health check |
 
 ### Frontend
 - Visual do guia `docs/design/index.html` (cartunizado, celular e desktop), com tokens e CSS Modules.
-- Home com Álbum do Dia, sorteio (ficha diária do visitante, só na interface por enquanto), cards da comunidade
-  trancados para visitante; telas `/entrar` e `/cadastro` prontas, esperando `/api/auth/*` (fase 4).
+- Home com Álbum do Dia e sorteio com fichas contadas pela API (1 para visitante, 10 e estilos para logado);
+  "Sorteados de hoje" e "Sua nota" abertos para logado e trancados para visitante; telas `/entrar` e `/cadastro`.
 - O frontend vanilla antigo (`src/main/resources/static`) não existe mais.
 
 ### Fluxo de branches
@@ -196,11 +206,14 @@ users            id, email (único), password_hash, display_name, created_at   -
 user_genres      user_id, genre                      -- preferências para o sorteio
 album_candidates spotify_album_id (pk), name, artist, image_url, genres[], year, source, score, last_drawn_at
 daily_album      date (pk, fuso America/Sao_Paulo), spotify_album_id
-draws            id, user_id NULL, anon_id NULL, spotify_album_id, drawn_at   -- histórico + cota diária
-reviews          id, user_id, spotify_album_id, rating (1–5, meio ponto), comment, created_at, updated_at
-                 UNIQUE(user_id, spotify_album_id)
+draws            id, user_id NULL, anon_id NULL, spotify_album_id, album_name, artist_name, image_url,
+                 draw_date, created_at                                          -- FEITO (V3, fase 4.2)
+draw_quota       owner_key, quota_date, used  PK(owner_key, quota_date)         -- FEITO (V3): fichas do dia
+reviews          id, user_id, daily_album_id, rating (1–5), comment (≤500), created_at, updated_at
+                 UNIQUE(user_id, daily_album_id)                                -- FEITO (V3): só Álbum do Dia
 ```
-Visitante: `anon_id` em cookie HttpOnly + hash de IP; a regra "1 por dia" é verificada em `draws`.
+Visitante: `anon_id` no cookie HttpOnly `bs_anon`. Hash de IP ficou de fora: apagar cookies dá outra ficha, o que é
+aceitável para 1 sorteio grátis.
 
 ---
 
@@ -236,8 +249,15 @@ Visitante: `anon_id` em cookie HttpOnly + hash de IP; a regra "1 por dia" é ver
 >   precisa do módulo `jdk.random`, ausente na imagem JRE) e cada visitante ganhava uma sessão (request cache do
 >   Spring). Os dois foram corrigidos.
 >
-> Fase 4, parte 2 (próxima): sorteados do dia, histórico de sorteios (`draws`), notas e comentários (`reviews`),
-> e destrancar os cards da comunidade para quem está logado.
+> **Fase 4, parte 2 concluída: comunidade e limite no servidor (tudo grátis).**
+> - Sorteio em `POST /api/draws` (saiu `GET /api/albums/random`), com fichas contadas pela API: visitante 1 por dia
+>   (cookie `bs_anon`), conta logada 10 por dia. Tabelas `draws`, `draw_quota` e `reviews` (Flyway V3).
+> - Conta logada escolhe estilos (`GET /api/genres`): busca de faixas `genre:"..."` no Spotify, porque a de álbuns
+>   ignora gênero. Funk, sertanejo, pagode e piseiro quase não têm resultado e ficaram fora do catálogo.
+> - Sorteados de hoje (`GET /api/draws/today`) e notas do Álbum do Dia (`GET/PUT /api/reviews/today`) para logado.
+> - Site: fichas vindas da API, seletor de estilos, cards da comunidade abertos para logado, aba Sair no celular.
+> - Erros esperados (4xx) agora são uma linha de aviso no log, sem stack trace.
+> - Planos pagos (fichas avulsas, mensalidade, grupos de gêneros) foram descartados em 12/11/2026.
 >
 > Ficou para a fase 3 (deploy):
 > - o token é renovado dentro de um lock que espera a chamada HTTP;
