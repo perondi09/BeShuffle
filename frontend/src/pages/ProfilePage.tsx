@@ -3,6 +3,7 @@ import { Navigate, useNavigate } from 'react-router'
 import { fetchMyDraws, type MyDraw } from '../api/draws'
 import { fetchTodayReviews, type TodayReviews } from '../api/reviews'
 import { Button, Card, Sticker } from '../components/ui'
+import { DailyAlbumBadge } from '../features/community/DailyAlbumBadge'
 import { useAllowance } from '../features/draw/allowance'
 import { useSession } from '../features/session/session'
 import styles from './ProfilePage.module.css'
@@ -141,8 +142,9 @@ function MyReviewCard() {
         <p role="status">Carregando…</p>
       ) : data.mine ? (
         <>
+          <DailyAlbumBadge data={data} />
           <p>
-            Você deu <strong>{data.mine.rating} de 5</strong> para <strong>{data.albumName}</strong>.
+            Você deu <strong>{data.mine.rating} de 5</strong>.
           </p>
           {data.mine.comment ? <blockquote className={styles.quote}>{data.mine.comment}</blockquote> : null}
           <Button variant="gema" to="/">
@@ -151,9 +153,8 @@ function MyReviewCard() {
         </>
       ) : (
         <>
-          <p>
-            Você ainda não deu nota para o Álbum do Dia, <strong>{data.albumName}</strong>.
-          </p>
+          <DailyAlbumBadge data={data} />
+          <p>Você ainda não deu nota para esse disco.</p>
           <Button variant="gema" to="/">
             Dar nota
           </Button>

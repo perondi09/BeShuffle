@@ -1,4 +1,4 @@
-import { fireEvent, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import type { Album } from '../api/albums'
 import type { Allowance } from '../api/draws'
@@ -16,14 +16,24 @@ const daily: Album = {
 const drawn: Album = { id: 'random-1', name: 'Álbum Sorteado', artists: [{ name: 'Outro Artista' }] }
 const ana = { id: 1, email: 'ana@exemplo.com', displayName: 'Ana' }
 const resetsAt = '2026-11-13T03:00:00Z'
+/** Fim do dia no futuro: o sorteio guardado ainda vale. */
+const amanha = '2099-01-01T03:00:00Z'
 
 const visitante = (remaining: number): Allowance => ({ plan: 'VISITANTE', remaining, dailyLimit: 1, resetsAt })
 const logado = (remaining: number): Allowance => ({ plan: 'LOGADO', remaining, dailyLimit: 10, resetsAt })
 const semLogin = () => json({ status: 401 }, 401)
 
+/** Abre a aba Sorteio do palco. */
+async function abrirSorteio() {
+  fireEvent.click(await screen.findByRole('tab', { name: 'Sorteio' }))
+}
+
 const notasVazias: TodayReviews = {
   albumId: 'daily-1',
   albumName: 'Álbum do Dia',
+  albumArtist: 'Artista Diário',
+  albumImageUrl: 'https://example.com/daily.jpg',
+  date: '2026-11-14',
   average: null,
   count: 0,
   mine: null,
@@ -47,12 +57,61 @@ describe('HomePage (visitante)', () => {
     )
   })
 
-  it('avisa quando o álbum do dia não carrega', async () => {
-    mockApi({ '/api/me': semLogin, '/api/draws/allowance': () => json(visitante(1)), '/api/albums/daily': () => json({}, 503) })
+  it('mostra a tela de fora do ar quando a API não responde e tenta de novo', async () => {
+    let fora = true
+    mockApi({
+      '/api/me': semLogin,
+      '/api/draws/allowance': () => json(visitante(1)),
+      '/api/albums/daily': () => (fora ? json({}, 504) : json(daily)),
+    })
 
     renderAt('/')
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Não deu para carregar o álbum do dia')
+    expect(screen.getByRole('heading', { level: 1, name: 'A jukebox parou de tocar' })).toBeInTheDocument()
+    fora = false
+    fireEvent.click(screen.getByRole('button', { name: 'Tentar de novo' }))
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Álbum do Dia' })).toBeInTheDocument()
+  })
+
+  it('o Álbum do Dia fica fixo e o último sorteio continua na aba Sorteio depois de recarregar', async () => {
+    mockApi({
+      '/api/me': semLogin,
+      '/api/draws/allowance': () => json(visitante(1)),
+      '/api/albums/daily': () => json(daily),
+      '/api/draws': () => json({ album: drawn, allowance: { ...visitante(0), resetsAt: amanha } }),
+    })
+
+    renderAt('/')
+    expect(await screen.findByRole('tab', { name: 'Álbum do dia' })).toHaveAttribute('aria-selected', 'true')
+    await abrirSorteio()
+    expect(screen.getByRole('heading', { level: 1, name: 'Sorteie um disco' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Sortear álbum' }))
+    expect(await screen.findByRole('heading', { level: 1, name: 'Álbum Sorteado' })).toBeInTheDocument()
+
+    cleanup()
+    renderAt('/')
+
+    expect(await screen.findByRole('tab', { name: 'Sorteio' })).toHaveAttribute('aria-selected', 'true')
+    expect(await screen.findByRole('heading', { level: 1, name: 'Álbum Sorteado' })).toBeInTheDocument()
+    expect(screen.getByText('Seu último sorteio')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('tab', { name: 'Álbum do dia' }))
+    expect(await screen.findByRole('heading', { level: 1, name: 'Álbum do Dia' })).toBeInTheDocument()
+  })
+
+  it('não mostra o sorteio de ontem', async () => {
+    localStorage.setItem('beshuffle:aba', 'draw')
+    localStorage.setItem(
+      'beshuffle:ultimo-sorteio',
+      JSON.stringify({ owner: null, expiresAt: '2020-01-01T03:00:00Z', album: drawn }),
+    )
+    mockApi({ '/api/me': semLogin, '/api/draws/allowance': () => json(visitante(1)), '/api/albums/daily': () => json(daily) })
+
+    renderAt('/')
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Sorteie um disco' })).toBeInTheDocument()
+    expect(screen.queryByText('Álbum Sorteado')).not.toBeInTheDocument()
   })
 
   it('sorteia pela API sem estilos e mostra a ficha gasta que a API devolveu', async () => {
@@ -69,6 +128,7 @@ describe('HomePage (visitante)', () => {
 
     renderAt('/')
     expect(await screen.findByText('1 ficha hoje')).toBeInTheDocument()
+    await abrirSorteio()
     fireEvent.click(screen.getByRole('button', { name: 'Sortear álbum' }))
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Álbum Sorteado' })).toBeInTheDocument()
@@ -88,6 +148,7 @@ describe('HomePage (visitante)', () => {
     })
 
     renderAt('/')
+    await abrirSorteio()
     fireEvent.click(await screen.findByRole('button', { name: 'Sortear álbum' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('sua ficha continua com você')
@@ -107,6 +168,7 @@ describe('HomePage (visitante)', () => {
     })
 
     renderAt('/')
+    await abrirSorteio()
     fireEvent.click(await screen.findByRole('button', { name: 'Sortear álbum' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Você já usou o sorteio de hoje.')
@@ -117,6 +179,7 @@ describe('HomePage (visitante)', () => {
     mockApi({ '/api/me': semLogin, '/api/draws/allowance': () => json(visitante(0)), '/api/albums/daily': () => json(daily) })
 
     renderAt('/')
+    await abrirSorteio()
 
     expect(await screen.findByRole('button', { name: 'Volte amanhã' })).toBeDisabled()
     expect(screen.queryByRole('group', { name: /Estilos/ })).not.toBeInTheDocument()
@@ -160,6 +223,7 @@ describe('HomePage (conta logada)', () => {
 
     renderAt('/')
     expect(await screen.findByText('10 fichas hoje')).toBeInTheDocument()
+    await abrirSorteio()
     fireEvent.click(await screen.findByRole('button', { name: 'Rock' }))
     fireEvent.click(screen.getByRole('button', { name: 'Jazz' }))
     expect(screen.getByRole('button', { name: 'Rock' })).toHaveAttribute('aria-pressed', 'true')
@@ -185,6 +249,7 @@ describe('HomePage (conta logada)', () => {
     })
 
     renderAt('/')
+    await abrirSorteio()
     expect(await screen.findByRole('button', { name: 'Rock' })).toHaveAttribute('aria-pressed', 'true')
     fireEvent.click(screen.getByRole('button', { name: 'Todos' }))
     fireEvent.click(screen.getByRole('button', { name: 'Sortear álbum' }))
@@ -208,6 +273,40 @@ describe('HomePage (conta logada)', () => {
     expect(card.getByText('Banda X (3x)')).toBeInTheDocument()
     expect(card.getByRole('link', { name: 'Disco X no Spotify' })).toHaveAttribute('href', 'https://open.spotify.com/album/x1')
     expect(screen.queryByText('Crie uma conta grátis para ver o que a galera sorteou hoje.')).not.toBeInTheDocument()
+  })
+
+  it('em outro aparelho, a aba Sorteio recupera o último sorteio da conta pela API', async () => {
+    localStorage.setItem('beshuffle:aba', 'draw')
+    mockApi({
+      ...base,
+      '/api/draws/allowance': () => json(logado(9)),
+      '/api/draws/today': () => json([]),
+      '/api/draws/mine': () =>
+        json([{ id: 'x1', name: 'Disco X', artist: 'Banda X', imageUrl: 'https://img/x1.jpg', drawnAt: resetsAt }]),
+    })
+
+    renderAt('/')
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Disco X' })).toBeInTheDocument()
+    expect(screen.getByText('Seu último sorteio')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Ouvir no Spotify' })).toHaveAttribute(
+      'href',
+      'https://open.spotify.com/album/x1',
+    )
+  })
+
+  it('a nota mostra a capa, o nome e o dia do Álbum do Dia', async () => {
+    mockApi({ ...base, '/api/draws/allowance': () => json(logado(10)), '/api/draws/today': () => json([]) })
+
+    renderAt('/')
+    const card = within(await screen.findByRole('region', { name: 'Sua nota' }))
+
+    expect(await card.findByText('Álbum do Dia de sábado, 14 de novembro')).toBeInTheDocument()
+    expect(card.getByRole('img', { name: 'Capa de Álbum do Dia' })).toHaveAttribute(
+      'src',
+      'https://example.com/daily.jpg',
+    )
+    expect(card.getByText('Artista Diário')).toBeInTheDocument()
   })
 
   it('dá nota e comentário ao Álbum do Dia', async () => {

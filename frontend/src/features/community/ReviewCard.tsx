@@ -3,6 +3,7 @@ import { ApiError } from '../../api/http'
 import { fetchTodayReviews, saveReview, type TodayReviews } from '../../api/reviews'
 import { Button, Card, LockedOverlay } from '../../components/ui'
 import { useSession } from '../session/session'
+import { DailyAlbumBadge } from './DailyAlbumBadge'
 import styles from './community.module.css'
 import { RatingDiscs } from './RatingDiscs'
 
@@ -63,15 +64,7 @@ function ReviewForm() {
       <h2 id="nota-titulo" className={`display ${styles.title}`}>
         Sua nota
       </h2>
-      <p>
-        {data ? (
-          <>
-            Para o Álbum do Dia, <strong>{data.albumName}</strong>.
-          </>
-        ) : (
-          'Para o Álbum do Dia.'
-        )}
-      </p>
+      {data ? <DailyAlbumBadge data={data} /> : <p>Para o Álbum do Dia.</p>}
       <RatingDiscs value={rating} onChange={setRating} />
       <textarea
         className={styles.comment}
