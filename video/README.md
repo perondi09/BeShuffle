@@ -1,6 +1,6 @@
 # Vídeo de apresentação
 
-Vídeo vertical (1080×1920, 37 segundos, narrado) que apresenta o BeShuffle, feito em código com
+Vídeo vertical (1080×1920, 34 segundos, narrado) que apresenta o BeShuffle, feito em código com
 [Remotion](https://www.remotion.dev/). Usa as cores, as fontes e o vinil do site, e um mascote próprio: o
 Radinho, um rádio retrô de desenho animado.
 
@@ -24,16 +24,17 @@ As capas de disco são inventadas (formas e cores), sem capas reais com direitos
 
 ## Narração
 
-A voz é a Microsoft Maria (pt-BR), que vem com o Windows, então não tem custo nem serviço externo. O texto de
-cada cena está em `narracao.json`, e ele é ao mesmo tempo a fala e a legenda.
+A voz é a **Lucas – Social Media Voice** do ElevenLabs (português do Brasil), no modelo `eleven_v4`, que aceita
+marcações de emoção como `[excited]` e `[mischievously]`. "BeShuffle" é falado em inglês: no texto enviado à voz
+ele vai como pronúncia fonética, `/biː ˈʃʌfəl/`, e a legenda continua escrevendo "BeShuffle".
 
-1. Edite `narracao.json`.
-2. No PowerShell, dentro de `video/`, rode `.\scripts\gerar-voz.ps1`. Ele grava um WAV por cena em `public/voz/`
-   e a duração de cada fala em `src/narracao.json`.
-3. Cada cena dura pelo menos o tempo da sua fala, e as palavras da legenda acompanham o ritmo da voz.
+- `narracao.json`: a voz usada e, por cena, a legenda e o texto exato enviado ao ElevenLabs.
+- `public/voz/<cena>.mp3`: os áudios gerados.
+- `src/narracao.json`: a duração de cada áudio. Cada cena dura pelo menos o tempo da sua fala, e as palavras
+  da legenda acompanham o ritmo da voz.
 
-Para uma voz mais natural, troque os WAVs por gravações suas (ou de um serviço de voz) com os mesmos nomes e
-ajuste os `segundos` em `src/narracao.json`.
+Para trocar uma fala: gere o áudio de novo no ElevenLabs com o texto de `narracao.json`, salve por cima do MP3
+da cena e atualize os `segundos` em `src/narracao.json`.
 
 ## Comandos
 

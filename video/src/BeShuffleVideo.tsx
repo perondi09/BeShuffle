@@ -37,8 +37,8 @@ const ROTEIRO: { cena: string; Componente: FC<PropsDaCena>; minimo: number }[] =
 
 /**
  * Roteiro em loop: a última cena termina com o palco vazio e a fala "Entra lá e me conta:", que emenda na
- * pergunta da primeira cena. Cada cena dura pelo menos o tempo da sua fala (src/narracao.json, gerado por
- * scripts/gerar-voz.ps1).
+ * pergunta da primeira cena. Cada cena dura pelo menos o tempo da sua fala (src/narracao.json; a voz vem do
+ * ElevenLabs, ver narracao.json e o README).
  */
 export const CENAS = ROTEIRO.map(({ cena, Componente, minimo }) => {
   const falada = narracao.find((item) => item.cena === cena)
@@ -46,7 +46,7 @@ export const CENAS = ROTEIRO.map(({ cena, Componente, minimo }) => {
   const quadros = Math.ceil(falada.segundos * FPS)
   const saida = cena === 'chamada' ? SAIDA_DA_CHAMADA : 0
   const duracao = Math.max(minimo, Math.ceil(ATRASO_DA_VOZ * FPS) + quadros + RESPIRO + saida)
-  return { cena, Componente, duracao, fala: { texto: falada.texto, quadros } }
+  return { cena, Componente, duracao, arquivo: falada.arquivo, fala: { texto: falada.texto, quadros } }
 })
 
 /** As transições sobrepõem as cenas, então o vídeo é mais curto que a soma delas. */
@@ -54,12 +54,12 @@ export const DURACAO_TOTAL = CENAS.reduce((total, cena) => total + cena.duracao,
 
 export const BeShuffleVideo = () => (
   <TransitionSeries>
-    {CENAS.flatMap(({ cena, Componente, duracao, fala }, i) => {
+    {CENAS.flatMap(({ Componente, duracao, arquivo, fala }, i) => {
       const sequencia = (
         <TransitionSeries.Sequence key={`cena-${i}`} durationInFrames={duracao}>
           <Componente duracao={duracao} fala={fala} />
           <Sequence from={Math.round(ATRASO_DA_VOZ * FPS)} layout="none">
-            <Audio src={staticFile(`voz/${cena}.wav`)} />
+            <Audio src={staticFile(arquivo)} />
           </Sequence>
         </TransitionSeries.Sequence>
       )
