@@ -5,8 +5,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("IP do visitante (só como hash)")
 class IpDoVisitanteTest {
@@ -41,8 +41,8 @@ class IpDoVisitanteTest {
         String a = ip.hash(pedido("200.1.2.3"));
         assertEquals(a, ip.hash(pedido("9.9.9.9, 200.1.2.3")));
         assertNotEquals(a, ip.hash(pedido("200.1.2.4")));
-        assertEquals(32, a.length());
-        assertFalse(a.contains("200"));
+        // Só hexadecimal: o IP (com pontos) não aparece. Procurar "200" no hash falhava ~0,7% das vezes por acaso.
+        assertTrue(a.matches("[0-9a-f]{32}"));
     }
 
     @Test
