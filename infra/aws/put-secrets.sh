@@ -4,7 +4,7 @@
 # Uso: infra/aws/put-secrets.sh [região]
 set -euo pipefail
 
-REGIAO="${1:-us-east-1}"
+REGIAO="${1:-us-east-2}"
 ENV_FILE="$(dirname "$0")/../.env"
 
 valor() {
