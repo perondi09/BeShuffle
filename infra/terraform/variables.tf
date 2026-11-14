@@ -1,7 +1,7 @@
 variable "region" {
-  description = "Região da AWS. us-east-1 é a mais barata; o CloudFront entrega o site perto do usuário."
+  description = "Região da AWS. us-east-2 (Ohio) tem o preço mais baixo e é a região liberada para EC2 na conta; o CloudFront entrega o site perto do usuário."
   type        = string
-  default     = "us-east-1"
+  default     = "us-east-2"
 }
 
 variable "project" {

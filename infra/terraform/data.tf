@@ -12,7 +12,7 @@ data "aws_subnets" "default" {
   }
 }
 
-# Só as zonas onde o tipo de instância existe (nem toda AZ de us-east-1 tem t4g).
+# Só as zonas onde o tipo de instância existe (nem toda AZ tem t4g).
 data "aws_ec2_instance_type_offerings" "app" {
   location_type = "availability-zone"
 

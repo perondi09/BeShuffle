@@ -90,7 +90,7 @@ terraform apply plano.tfplan
 
 Depois:
 
-1. **Segredos do Spotify no SSM:** `infra/aws/put-secrets.sh us-east-1` (lê o `infra/.env`).
+1. **Segredos do Spotify no SSM:** `infra/aws/put-secrets.sh us-east-2` (lê o `infra/.env`).
 2. **Primeiro deploy:** `infra/aws/deploy-manual.sh`. Ele monta a imagem ARM, sobe o site e liga a API. O endereço
    aparece no fim (`terraform output site_url`).
 3. **Deploy automático:** crie as variáveis do repositório no GitHub com os valores do `terraform output`:
