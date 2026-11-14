@@ -4,8 +4,11 @@ import styles from './AlbumDetails.module.css'
 
 interface AlbumDetailsProps {
   album: Album
-  source: 'daily' | 'drawn'
+  /** daily: Álbum do Dia; drawn: acabou de sair; last: último sorteio, guardado. */
+  source: 'daily' | 'drawn' | 'last'
 }
+
+const STICKERS = { daily: 'Hoje na jukebox', drawn: 'Sorteado agora', last: 'Seu último sorteio' } as const
 
 /** Título, artistas e etiquetas do álbum em destaque. */
 export function AlbumDetails({ album, source }: AlbumDetailsProps) {
@@ -16,7 +19,7 @@ export function AlbumDetails({ album, source }: AlbumDetailsProps) {
   return (
     <div>
       <Sticker color="menta" className={styles.when}>
-        {source === 'daily' ? 'Hoje na jukebox' : 'Sorteado agora'}
+        {STICKERS[source]}
       </Sticker>
       <h1 className={`display ${styles.title}`}>{album.name}</h1>
       {artists ? <p className={styles.artists}>{artists}</p> : null}

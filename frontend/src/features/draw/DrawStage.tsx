@@ -1,57 +1,172 @@
-import { useState } from 'react'
+import { type KeyboardEvent, type ReactNode, useState } from 'react'
 import { Link } from 'react-router'
 import { coverUrl, spotifyUrl } from '../../api/albums'
-import { Button, Card } from '../../components/ui'
+import { Button, Card, Sticker } from '../../components/ui'
 import { useSession } from '../session/session'
 import { AlbumDetails } from './AlbumDetails'
 import { useAllowance } from './allowance'
 import styles from './DrawStage.module.css'
+import { readTab, saveTab, type StageTab } from './lastDraw'
+import { ServiceDown } from './ServiceDown'
 import { StylePicker } from './StylePicker'
 import { readSavedStyles } from './styleStorage'
 import { Turntable } from './Turntable'
-import { type DrawProblem, useAlbumDraw } from './useAlbumDraw'
+import { type DailyState, type DrawProblem, type LastDraw, useAlbumDraw } from './useAlbumDraw'
 
-/** Palco da home: o álbum em destaque, os estilos (conta logada), o botão de sortear e o link do Spotify. */
+const TABS: { id: StageTab; label: string }[] = [
+  { id: 'daily', label: 'Álbum do dia' },
+  { id: 'draw', label: 'Sorteio' },
+]
+
+/** Palco da home em duas abas: o Álbum do Dia, fixo, e o Sorteio, que guarda o último disco sorteado até a meia-noite. */
 export function DrawStage() {
-  const { state, drawing, problem, draw } = useAlbumDraw()
+  const { user, loading } = useSession()
+  const owner = user?.id ?? null
+  const { daily, retry, last, drawing, problem, draw } = useAlbumDraw(owner, !loading)
   const { allowance } = useAllowance()
-  const { user } = useSession()
   const [styleIds, setStyleIds] = useState(readSavedStyles)
-  const album = state.status === 'ready' ? state.album : undefined
+  const [tab, setTab] = useState<StageTab>(readTab)
   // Sem saldo carregado (API fora), o botão fica ativo e o próprio sorteio mostra o erro.
   const hasTokens = allowance ? allowance.remaining > 0 : true
+
+  function choose(next: StageTab) {
+    setTab(next)
+    saveTab(next)
+  }
 
   function handleDraw() {
     if (!hasTokens) return
     void draw(user ? styleIds : [])
   }
 
+  // Setas do teclado trocam de aba, como pede o padrão de abas (WAI-ARIA).
+  function handleKeys(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
+    event.preventDefault()
+    const next = tab === 'daily' ? 'draw' : 'daily'
+    choose(next)
+    document.getElementById(`aba-${next}`)?.focus()
+  }
+
   return (
-    <Card size="palco" className={styles.stage} aria-label="Sorteio">
+    <Card size="palco" aria-label="Álbum do dia e sorteio">
+      <div role="tablist" aria-label="O que mostrar no palco" className={styles.tabs} onKeyDown={handleKeys}>
+        {TABS.map(({ id, label }) => (
+          <button
+            key={id}
+            id={`aba-${id}`}
+            type="button"
+            role="tab"
+            aria-selected={tab === id}
+            aria-controls="palco"
+            tabIndex={tab === id ? 0 : -1}
+            className={styles.tab}
+            onClick={() => choose(id)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <div role="tabpanel" id="palco" aria-labelledby={`aba-${tab}`} className={styles.panel}>
+        {tab === 'daily' ? (
+          <DailyPanel daily={daily} onRetry={retry} onGoDraw={() => choose('draw')} />
+        ) : (
+          <DrawPanel
+            last={last}
+            drawing={drawing}
+            hasTokens={hasTokens}
+            onDraw={handleDraw}
+            picker={user ? <StylePicker selected={styleIds} onChange={setStyleIds} disabled={drawing} /> : null}
+            notice={<Notice problem={problem} loggedIn={Boolean(user)} remaining={allowance?.remaining} />}
+          />
+        )}
+      </div>
+    </Card>
+  )
+}
+
+interface DailyPanelProps {
+  daily: DailyState
+  onRetry: () => void
+  onGoDraw: () => void
+}
+
+/** Aba "Álbum do dia": sempre o disco do dia, igual para todo mundo. */
+function DailyPanel({ daily, onRetry, onGoDraw }: DailyPanelProps) {
+  if (daily.status === 'error') return <ServiceDown onRetry={onRetry} />
+  const album = daily.status === 'ready' ? daily.album : undefined
+
+  return (
+    <>
       <Turntable
         cover={album ? coverUrl(album) : undefined}
         title={album?.name}
-        stashed={drawing || state.status === 'loading'}
-        showDailySticker={state.status === 'ready' && state.source === 'daily'}
+        stashed={!album}
+        showDailySticker={Boolean(album)}
       />
-
       <div className={styles.info}>
-        {state.status === 'loading' && (
+        {album ? (
+          <AlbumDetails album={album} source="daily" />
+        ) : (
           <p role="status" className={styles.message}>
             Colocando o disco do dia na vitrola…
           </p>
         )}
-        {state.status === 'error' && (
-          <p role="alert" className={styles.message}>
-            Não deu para carregar o álbum do dia. Confira se a API está rodando e recarregue a página.
-          </p>
-        )}
-        {state.status === 'ready' && <AlbumDetails album={state.album} source={state.source} />}
+        <div className={styles.actions}>
+          {album ? (
+            <Button variant="menta" size="g" href={spotifyUrl(album)} target="_blank" rel="noreferrer">
+              Ouvir no Spotify
+            </Button>
+          ) : null}
+          <Button variant="papel" size="g" onClick={onGoDraw}>
+            Sortear outro
+          </Button>
+        </div>
+        <p className={styles.notice}>O mesmo disco para todo mundo hoje. Ele muda à meia-noite.</p>
+      </div>
+    </>
+  )
+}
 
-        {user ? <StylePicker selected={styleIds} onChange={setStyleIds} disabled={drawing} /> : null}
+interface DrawPanelProps {
+  last: LastDraw | null
+  drawing: boolean
+  hasTokens: boolean
+  onDraw: () => void
+  /** Estilos (só conta logada). */
+  picker: ReactNode
+  /** Aviso abaixo dos botões. */
+  notice: ReactNode
+}
+
+/** Aba "Sorteio": o último disco sorteado, os estilos e o botão de sortear. */
+function DrawPanel({ last, drawing, hasTokens, onDraw, picker, notice }: DrawPanelProps) {
+  const album = last?.album
+
+  return (
+    <>
+      <Turntable
+        cover={album ? coverUrl(album) : undefined}
+        title={album?.name}
+        stashed={drawing || !album}
+        showDailySticker={false}
+      />
+      <div className={styles.info}>
+        {album && last ? (
+          <AlbumDetails album={album} source={last.fresh ? 'drawn' : 'last'} />
+        ) : (
+          <div>
+            <Sticker color="rosa">Sua vez</Sticker>
+            <h1 className={`display ${styles.bigTitle}`}>Sorteie um disco</h1>
+            <p>A jukebox escolhe um álbum para você. O último sorteio fica guardado aqui até a meia-noite.</p>
+          </div>
+        )}
+
+        {picker}
 
         <div className={styles.actions}>
-          <Button variant="tomate" size="g" display onClick={handleDraw} disabled={drawing || !hasTokens}>
+          <Button variant="tomate" size="g" display onClick={onDraw} disabled={drawing || !hasTokens}>
             {drawing ? 'Sorteando…' : hasTokens ? 'Sortear álbum' : 'Volte amanhã'}
           </Button>
           {album ? (
@@ -61,9 +176,9 @@ export function DrawStage() {
           ) : null}
         </div>
 
-        <Notice problem={problem} loggedIn={Boolean(user)} remaining={allowance?.remaining} />
+        {notice}
       </div>
-    </Card>
+    </>
   )
 }
 
