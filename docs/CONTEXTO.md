@@ -271,12 +271,20 @@ aceitável para 1 sorteio grátis.
 >   Lambda foi descartada: o EC2 é pago por hora e a Lambda precisaria de NAT Gateway (~US$ 32/mês) para falar com o
 >   banco e o Spotify. Diagrama em `docs/arquitetura-aws.svg`.
 >
+> **No ar na AWS (14/11/2026):** https://d2uleu997pab30.cloudfront.net, projeto no plano Free, região us-east-2.
+> - O SCP do plano Free nega `iam:*Provider*`, então o provedor OIDC do GitHub não pode ser criado. A parte de deploy
+>   automático ficou atrás de `github_deploy_enabled` (desligada) e o deploy é pelo `infra/aws/deploy-manual.sh`.
+> - O mesmo SCP só deixa criar EC2 na região do projeto (us-east-2).
+> - Teste de fumaça pelo CloudFront passou: sorteio de visitante e limite, cadastro, estilos, fichas, notas, cookie
+>   de sessão `Secure`, porta do EC2 fechada para a internet. O Bruno tem o ambiente `aws`.
+>
 > Ainda pendente:
 > - o token é renovado dentro de um lock que espera a chamada HTTP;
 > - os `RestClient` não usam o `RestClient.Builder` do Boot (sem métricas);
-> - `baseline-on-migrate` deve sair depois do primeiro deploy;
+> - `baseline-on-migrate` pode sair (o primeiro deploy já foi feito);
 > - sem limite de tentativas de login (força bruta);
-> - domínio próprio (Route 53 + certificado no ACM) no lugar do endereço `*.cloudfront.net`.
+> - domínio próprio (Route 53 + certificado no ACM) no lugar do endereço `*.cloudfront.net`;
+> - deploy automático pelo GitHub depende de passar o projeto para o plano pago (ou de aceitar uma chave IAM).
 
 1. Localizar/commitar o código de cadastro; criar branch `feature/auth`.
 2. Refatoração sem mudar comportamento (`/ecc:orch-refine-code`): unificar cliente Spotify, cache de token,
