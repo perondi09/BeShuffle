@@ -20,9 +20,19 @@ concurrency:
 jobs:
   deploy:
     name: API no EC2 e site no S3
+    # Só deploya o CI de um push na master deste repositório. O filtro branches do workflow_run olha o nome do
+    # branch de quem disparou, e um PR de fork vindo de um branch chamado "master" também passaria por ele.
     if: >-
       vars.AWS_DEPLOY_ROLE_ARN != '' &&
-      (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
+      (
+        (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/master') ||
+        (
+          github.event.workflow_run.conclusion == 'success' &&
+          github.event.workflow_run.event == 'push' &&
+          github.event.workflow_run.head_branch == 'master' &&
+          github.event.workflow_run.head_repository.full_name == github.repository
+        )
+      )
     # Runner ARM: a imagem sai nativa para o EC2 Graviton, sem emulação.
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 30
