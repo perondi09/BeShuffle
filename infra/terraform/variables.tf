@@ -28,6 +28,18 @@ variable "db_deletion_protection" {
   default     = true
 }
 
+variable "domain_name" {
+  description = "Domínio próprio do site (ex.: beshuffle.com.br). Vazio usa só o endereço *.cloudfront.net."
+  type        = string
+  default     = ""
+}
+
+variable "domain_nameservers_delegated" {
+  description = "Ligue depois de trocar os nameservers no registrador pelos do output name_servers: cria o certificado e põe o domínio no CloudFront."
+  type        = bool
+  default     = false
+}
+
 variable "github_deploy_enabled" {
   description = "Cria o provedor OIDC e a role de deploy do GitHub Actions. O plano Free da AWS bloqueia provedores de identidade: ligue só no plano pago."
   type        = bool

@@ -110,6 +110,21 @@ A partir daí, cada merge na `master` com CI verde faz o deploy. Sem a variável
 
 O estado do Terraform fica local (`terraform.tfstate`, ignorado pelo git) e não tem segredos.
 
+### Domínio próprio
+
+O DNS fica no Route 53 e o domínio continua registrado onde foi comprado (ex.: HostGator). Em duas fases, porque o
+certificado só valida depois que o domínio aponta para o Route 53:
+
+1. No `terraform.tfvars`, `domain_name = "beshuffle.com.br"` e `terraform apply`. Isso cria só a zona do Route 53
+   (~US$ 0,50/mês). `terraform output name_servers` mostra os 4 nameservers.
+2. No painel do registrador, troque os nameservers do domínio por esses 4. Para `.com.br` a troca leva de minutos a
+   algumas horas. Confira com `nslookup -type=NS beshuffle.com.br`.
+3. Com os nameservers novos respondendo, `domain_nameservers_delegated = true` e `terraform apply`. Isso pede o
+   certificado no ACM (em us-east-1, a região que o CloudFront usa), valida pelo DNS, põe o domínio e o `www` no
+   CloudFront com TLS 1.2 no mínimo e cria os registros A/AAAA. O `www` redireciona para o domínio sem `www`.
+
+Os registros de validação do certificado ficam na zona: o ACM usa os mesmos para renovar sozinho.
+
 ### Operar
 
 - **Logs:** CloudWatch, grupo `/beshuffle/api`.

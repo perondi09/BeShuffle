@@ -1,6 +1,11 @@
 output "site_url" {
   description = "Endereço do site (HTTPS pelo CloudFront)."
-  value       = "https://${aws_cloudfront_distribution.this.domain_name}"
+  value       = local.dominio_ativo ? "https://${var.domain_name}" : "https://${aws_cloudfront_distribution.this.domain_name}"
+}
+
+output "name_servers" {
+  description = "Nameservers do Route 53: troque no registrador do domínio (ex.: painel da HostGator) por estes."
+  value       = local.usar_dominio ? aws_route53_zone.site[0].name_servers : []
 }
 
 output "cloudfront_distribution_id" {
