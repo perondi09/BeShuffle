@@ -4,7 +4,7 @@ Uma jukebox que sorteia álbuns do Spotify. Todo dia há um **Álbum do Dia**, i
 descobrir mais música sorteia outros discos, e quem cria conta escolhe estilos, vê o que a comunidade tirou no dia
 e dá nota ao Álbum do Dia. Tudo é grátis.
 
-**No ar:** https://d2uleu997pab30.cloudfront.net
+**No ar:** https://beshuffle.com.br
 
 ![Arquitetura do BeShuffle na AWS e fluxo de DevOps](docs/arquitetura-aws.svg)
 
@@ -51,14 +51,17 @@ busca, que vem por relevância:
 | Banco | PostgreSQL 16 (H2 nos testes) |
 | Site | React 19, TypeScript, Vite 6, React Router 7, CSS Modules, Vitest e Testing Library |
 | Local | Docker Compose: Postgres, API e site no nginx |
-| Nuvem | AWS: CloudFront, S3, EC2 Graviton, RDS, ECR, SSM, Secrets Manager, CloudWatch, Budgets |
+| Nuvem | AWS: Route 53, ACM, CloudFront, S3, EC2 Graviton, RDS, ECR, SSM, Secrets Manager, CloudWatch |
 | Infraestrutura em código | Terraform (`infra/terraform`) |
 | CI/CD | GitHub Actions: testes e stack Docker de verdade; deploy na AWS por script (OIDC pronto para o plano pago) |
 | Testes de endpoint | Bruno (coleção local, fora do repositório) |
 
 ## Arquitetura na AWS
 
-- **CloudFront** é a única porta de entrada, com HTTPS. Ele serve o site e repassa `/api/*` para a API, sem cache.
+- **Domínio:** `beshuffle.com.br` tem o DNS no Route 53 e aponta para o CloudFront. O `www` redireciona para o
+  endereço sem `www`. O certificado HTTPS é do ACM, gratuito, e se renova sozinho.
+- **CloudFront** é a única porta de entrada, com HTTPS (TLS 1.2 no mínimo). Ele serve o site e repassa `/api/*` para a
+  API, sem cache.
 - **S3** guarda o build do site num bucket privado, que só o CloudFront lê (Origin Access Control).
 - **EC2 `t4g.small`** (ARM, Amazon Linux 2023) roda a API em Docker:
   - a porta 8080 só aceita o CloudFront;
@@ -71,7 +74,8 @@ busca, que vem por relevância:
 - **Deploy:** `infra/aws/deploy-manual.sh` publica a imagem ARM no ECR, atualiza o container pelo SSM, publica o
   site no S3 e limpa o cache do CloudFront. O mesmo fluxo existe no GitHub Actions (role por OIDC, sem chave
   guardada, só a partir da `master`), mas fica desligado: o plano Free da AWS não deixa criar o provedor OIDC.
-- **Custo:** cerca de US$ 30/mês, pagos pelos créditos do plano Free da AWS. Há um orçamento com alerta por e-mail.
+- **Custo:** cerca de US$ 30/mês, pagos pelos créditos do plano Free da AWS. O alerta de orçamento por e-mail liga ao
+  preencher `budget_email` no Terraform.
 
 Passo a passo para criar e atualizar a infraestrutura: [infra/README.md](infra/README.md#aws).
 
