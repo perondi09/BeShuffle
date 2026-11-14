@@ -42,7 +42,7 @@ Os testes usam H2 e chaves falsas (`src/test/resources/application-test.properti
 | `GET` | `/api/draws/today` | Sorteados de hoje por todo mundo, com quantas vezes cada álbum saiu (login) |
 | `GET` | `/api/draws/mine` | Os sorteios da própria conta hoje, do mais recente ao mais antigo (login) |
 | `GET` | `/api/genres` | Estilos que podem ser escolhidos no sorteio `[{id, name}]` |
-| `GET` | `/api/reviews/today` | Notas do Álbum do Dia: média, total, a sua e as 50 mais recentes (login) |
+| `GET` | `/api/reviews/today` | Notas do Álbum do Dia: álbum (nome, artista, capa e dia), média, total, a sua e as 50 mais recentes (login) |
 | `PUT` | `/api/reviews/today` | Cria ou edita a sua nota `{rating 1-5, comment até 500}` (login) |
 
 ### Conta e sessão

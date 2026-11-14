@@ -1,0 +1,25 @@
+{
+  "name": "beshuffle-video",
+  "private": true,
+  "description": "Vídeo de apresentação do BeShuffle feito em Remotion",
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render BeShuffle out/beshuffle.mp4",
+    "still": "remotion still",
+    "typecheck": "tsc --noEmit",
+    "quadro": "remotion still BeShuffle out/quadro.png"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.543",
+    "@remotion/google-fonts": "4.0.543",
+    "@remotion/media": "^4.0.543",
+    "@remotion/transitions": "4.0.543",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "remotion": "4.0.543"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.2",
+    "typescript": "5.9.3"
+  }
+}

@@ -279,12 +279,24 @@ aceitável para 1 sorteio grátis.
 > - Teste de fumaça pelo CloudFront passou: sorteio de visitante e limite, cadastro, estilos, fichas, notas, cookie
 >   de sessão `Secure`, porta do EC2 fechada para a internet. O Bruno tem o ambiente `aws`.
 >
+> **Produto e divulgação (14/11/2026):**
+> - Home em duas abas: o Álbum do Dia fica fixo e a aba Sorteio guarda o último disco sorteado até a meia-noite
+>   (no navegador e, para conta logada, por `GET /api/draws/mine` em outro aparelho).
+> - Tela de "fora do ar" quando a API não responde, com botão para tentar de novo.
+> - As notas mostram a capa, o nome, o artista e o dia do Álbum do Dia (`/api/reviews/today` ganhou esses campos).
+> - Revisão de segurança da release: o `deploy.yml` passou a aceitar só push na `master` deste repositório (um PR de
+>   fork com branch chamado `master` poderia disparar o deploy quando o OIDC for ligado).
+> - Os dados do teste de fumaça foram apagados do banco de produção.
+> - Vídeo de apresentação em `video/` (Remotion): mascote Radinho, narração do ElevenLabs, trilha original e loop.
+>
 > Ainda pendente:
 > - o token é renovado dentro de um lock que espera a chamada HTTP;
 > - os `RestClient` não usam o `RestClient.Builder` do Boot (sem métricas);
 > - `baseline-on-migrate` pode sair (o primeiro deploy já foi feito);
 > - sem limite de tentativas de login (força bruta);
-> - deploy automático pelo GitHub depende de passar o projeto para o plano pago (ou de aceitar uma chave IAM).
+> - deploy automático pelo GitHub depende de passar o projeto para o plano pago (ou de aceitar uma chave IAM);
+> - alerta de orçamento por e-mail (`budget_email`), log de acesso do CloudFront e alarmes no CloudWatch;
+> - origem privada (CloudFront VPC Origins) para o EC2 não precisar de IP público.
 
 1. Localizar/commitar o código de cadastro; criar branch `feature/auth`.
 2. Refatoração sem mudar comportamento (`/ecc:orch-refine-code`): unificar cliente Spotify, cache de token,
