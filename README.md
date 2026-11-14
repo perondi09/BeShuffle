@@ -6,6 +6,8 @@ e dá nota ao Álbum do Dia. Tudo é grátis.
 
 **No ar:** https://beshuffle.com.br
 
+**Vídeo de apresentação:** feito em código com Remotion, com narração e trilha original. Ver [video/README.md](video/README.md).
+
 ![Arquitetura do BeShuffle na AWS e fluxo de DevOps](docs/arquitetura-aws.svg)
 
 ## O que dá para fazer
@@ -13,10 +15,11 @@ e dá nota ao Álbum do Dia. Tudo é grátis.
 | Recurso | Visitante | Conta grátis |
 | --- | --- | --- |
 | Ouvir o Álbum do Dia (sorteio à parte, vira à meia-noite de São Paulo) | Sim | Sim |
+| Home em duas abas: o Álbum do Dia fixo e o seu último sorteio, guardado até a meia-noite | Sim | Sim (volta em qualquer aparelho) |
 | Sortear um álbum aleatório | 1 por dia | 10 por dia |
 | Escolher estilos no sorteio (um ou vários) | Não | Sim |
 | Ver os sorteados do dia por toda a comunidade | Não | Sim |
-| Dar nota (1 a 5) e comentar | Não | Só o Álbum do Dia |
+| Dar nota (1 a 5) e comentar, com a capa e o dia do álbum | Não | Só o Álbum do Dia |
 | Página de perfil com os seus sorteios e a sua nota | Não | Sim |
 
 ### Como o sorteio evita álbuns que ninguém ouviria
@@ -42,6 +45,8 @@ busca, que vem por relevância:
   limite. Se o Spotify falhar, a ficha volta.
 - **Login em cookie de sessão** guardado no Postgres (Spring Session JDBC): um deploy não desloga ninguém.
 - **CSRF no modo SPA:** todo `POST` e `PUT` manda o header `X-XSRF-TOKEN` com o valor do cookie `XSRF-TOKEN`.
+- **Fora do ar com aviso:** se a API não responder, o site mostra uma tela de "fora do ar" com um botão para tentar
+  de novo, em vez de quebrar.
 
 ## Stack
 
@@ -127,7 +132,7 @@ Para desenvolver uma parte só, siga o README da pasta correspondente.
 | `GET` | `/api/draws/today` | Sorteados de hoje pela comunidade (login) |
 | `GET` | `/api/draws/mine` | Os seus sorteios de hoje (login) |
 | `GET` | `/api/genres` | Estilos do sorteio |
-| `GET`, `PUT` | `/api/reviews/today` | Notas do Álbum do Dia; o `PUT` cria ou edita a sua (login) |
+| `GET`, `PUT` | `/api/reviews/today` | Notas do Álbum do Dia, com nome, artista, capa e dia do álbum; o `PUT` cria ou edita a sua (login) |
 | `POST` | `/api/auth/register`, `/api/auth/login`, `/api/auth/logout` | Conta e sessão |
 | `GET` | `/api/me` | Quem está logado |
 | `GET` | `/actuator/health` | Saúde da API |
@@ -143,6 +148,7 @@ Detalhes e códigos de erro: [backend/README.md](backend/README.md#endpoints).
 | `infra/` | Docker Compose, Dockerfiles, nginx, Terraform da AWS e scripts de deploy | [infra/README.md](infra/README.md) |
 | `.github/workflows/` | CI (`ci.yml`) e deploy na AWS (`deploy.yml`) | [infra/README.md](infra/README.md#ci) |
 | `docs/` | Contexto, roadmap, diagrama da arquitetura e proposta visual | [docs/CONTEXTO.md](docs/CONTEXTO.md) |
+| `video/` | Vídeo de apresentação feito em código (Remotion) | [video/README.md](video/README.md) |
 
 ## Fluxo de branches
 

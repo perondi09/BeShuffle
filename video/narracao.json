@@ -1,0 +1,50 @@
+{
+  "voz": {
+    "servico": "ElevenLabs",
+    "voice_id": "7lu3ze7orhWaNeSPowWx",
+    "nome": "Lucas - Social Media Voice",
+    "modelo": "eleven_v4"
+  },
+  "falas": [
+    {
+      "cena": "gancho",
+      "legenda": "Qual disco você vai ouvir HOJE?",
+      "texto_para_voz": "[excited] Qual disco você vai ouvir HOJE?"
+    },
+    {
+      "cena": "problema",
+      "legenda": "Cansou de ouvir sempre os mesmos discos?",
+      "texto_para_voz": "[sarcastic] Cansou de ouvir sempre os mesmos discos?"
+    },
+    {
+      "cena": "ideia",
+      "legenda": "Conheça o BeShuffle: a jukebox que escolhe por você!",
+      "texto_para_voz": "[excited] Conheça o /biː ˈʃʌfəl/: a jukebox que escolhe por você!"
+    },
+    {
+      "cena": "dia",
+      "legenda": "Todo dia, um álbum novo. Igual pra todo mundo.",
+      "texto_para_voz": "[happy] Todo dia, um álbum novo. Igual pra todo mundo."
+    },
+    {
+      "cena": "sorteio",
+      "legenda": "Não curtiu? Sorteia outro, do rock ao pagode!",
+      "texto_para_voz": "[mischievously] Não curtiu? Sorteia outro, do rock ao pagode!"
+    },
+    {
+      "cena": "nota",
+      "legenda": "Dá sua nota e vê o que a galera achou.",
+      "texto_para_voz": "[warmly] Dá sua nota e vê o que a galera achou."
+    },
+    {
+      "cena": "paraquem",
+      "legenda": "Quer sair da bolha? O BeShuffle é pra você.",
+      "texto_para_voz": "[curious] Quer sair da bolha? [excited] O /biː ˈʃʌfəl/ é pra você."
+    },
+    {
+      "cena": "chamada",
+      "legenda": "É grátis! Entra lá e me conta…",
+      "texto_para_voz": "[excited] É grátis! [warmly] Entra lá e me conta…"
+    }
+  ]
+}
