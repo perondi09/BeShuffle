@@ -3,7 +3,7 @@ import { slide } from '@remotion/transitions/slide'
 import { wipe } from '@remotion/transitions/wipe'
 import { Audio } from '@remotion/media'
 import type { FC } from 'react'
-import { Sequence, staticFile } from 'remotion'
+import { interpolate, Sequence, staticFile } from 'remotion'
 import { Chamada } from './cenas/Chamada'
 import { Gancho } from './cenas/Gancho'
 import { Ideia } from './cenas/Ideia'
@@ -52,27 +52,55 @@ export const CENAS = ROTEIRO.map(({ cena, Componente, minimo }) => {
 /** As transições sobrepõem as cenas, então o vídeo é mais curto que a soma delas. */
 export const DURACAO_TOTAL = CENAS.reduce((total, cena) => total + cena.duracao, 0) - TRANSICAO * (CENAS.length - 1)
 
+/** Trechos (em quadros do vídeo) em que o narrador está falando. */
+const FALAS = CENAS.map((cena, i) => {
+  const comeco = CENAS.slice(0, i).reduce((total, c) => total + c.duracao, 0) - TRANSICAO * i
+  const inicio = comeco + Math.round(ATRASO_DA_VOZ * FPS)
+  return { inicio, fim: inicio + cena.fala.quadros }
+})
+
+const MUSICA_ALTA = 0.18
+const MUSICA_BAIXA = 0.07
+const RAMPA = 8
+
+/** Volume da música: baixo enquanto o narrador fala (ducking), um pouco mais alto nos intervalos. */
+function volumeDaMusica(quadro: number): number {
+  let falando = 0
+  for (const { inicio, fim } of FALAS) {
+    const v = interpolate(quadro, [inicio - RAMPA, inicio, fim, fim + RAMPA], [0, 1, 1, 0], {
+      extrapolateLeft: 'clamp',
+      extrapolateRight: 'clamp',
+    })
+    falando = Math.max(falando, v)
+  }
+  return MUSICA_ALTA - (MUSICA_ALTA - MUSICA_BAIXA) * falando
+}
+
 export const BeShuffleVideo = () => (
-  <TransitionSeries>
-    {CENAS.flatMap(({ Componente, duracao, arquivo, fala }, i) => {
-      const sequencia = (
-        <TransitionSeries.Sequence key={`cena-${i}`} durationInFrames={duracao}>
-          <Componente duracao={duracao} fala={fala} />
-          <Sequence from={Math.round(ATRASO_DA_VOZ * FPS)} layout="none">
-            <Audio src={staticFile(arquivo)} />
-          </Sequence>
-        </TransitionSeries.Sequence>
-      )
-      if (i === 0) return [sequencia]
-      const tempo = linearTiming({ durationInFrames: TRANSICAO })
-      // Alterna deslizar e cortina entre as cenas.
-      const transicao =
-        i % 2 ? (
-          <TransitionSeries.Transition key={`transicao-${i}`} presentation={slide({ direction: 'from-right' })} timing={tempo} />
-        ) : (
-          <TransitionSeries.Transition key={`transicao-${i}`} presentation={wipe({ direction: 'from-left' })} timing={tempo} />
+  <>
+    {/* Trilha original (scripts/compor-trilha.py), do tamanho exato do vídeo: emenda no loop. */}
+    <Audio src={staticFile('musica/trilha.wav')} volume={volumeDaMusica} />
+    <TransitionSeries>
+      {CENAS.flatMap(({ Componente, duracao, arquivo, fala }, i) => {
+        const sequencia = (
+          <TransitionSeries.Sequence key={`cena-${i}`} durationInFrames={duracao}>
+            <Componente duracao={duracao} fala={fala} />
+            <Sequence from={Math.round(ATRASO_DA_VOZ * FPS)} layout="none">
+              <Audio src={staticFile(arquivo)} />
+            </Sequence>
+          </TransitionSeries.Sequence>
         )
-      return [transicao, sequencia]
-    })}
-  </TransitionSeries>
+        if (i === 0) return [sequencia]
+        const tempo = linearTiming({ durationInFrames: TRANSICAO })
+        // Alterna deslizar e cortina entre as cenas.
+        const transicao =
+          i % 2 ? (
+            <TransitionSeries.Transition key={`transicao-${i}`} presentation={slide({ direction: 'from-right' })} timing={tempo} />
+          ) : (
+            <TransitionSeries.Transition key={`transicao-${i}`} presentation={wipe({ direction: 'from-left' })} timing={tempo} />
+          )
+        return [transicao, sequencia]
+      })}
+    </TransitionSeries>
+  </>
 )

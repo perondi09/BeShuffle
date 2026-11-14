@@ -36,6 +36,17 @@ ele vai como pronúncia fonética, `/biː ˈʃʌfəl/`, e a legenda continua esc
 Para trocar uma fala: gere o áudio de novo no ElevenLabs com o texto de `narracao.json`, salve por cima do MP3
 da cena e atualize os `segundos` em `src/narracao.json`.
 
+## Música
+
+A trilha é original, composta em código por `scripts/compor-trilha.py`: pop leve com violão dedilhado, baixo,
+bumbo, palmas e chimbal sobre C–G–Am–F. Não usa música de terceiros, então pode ir para qualquer rede social.
+
+- O andamento é calculado para que 16 compassos durem exatamente o vídeo, e as notas que soam no fim continuam
+  no começo: a música emenda sem corte no loop.
+- No vídeo ela fica baixa (18%) e abaixa mais (7%) enquanto o narrador fala (ducking, em
+  `src/BeShuffleVideo.tsx`).
+- Se a duração do vídeo mudar, gere de novo com os segundos novos: `python scripts/compor-trilha.py 34.4`.
+
 ## Comandos
 
 ```bash
