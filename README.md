@@ -4,6 +4,8 @@ Uma jukebox que sorteia álbuns do Spotify. Todo dia há um **Álbum do Dia**, i
 descobrir mais música sorteia outros discos, e quem cria conta escolhe estilos, vê o que a comunidade tirou no dia
 e dá nota ao Álbum do Dia. Tudo é grátis.
 
+**No ar:** https://d2uleu997pab30.cloudfront.net
+
 ![Arquitetura do BeShuffle na AWS e fluxo de DevOps](docs/arquitetura-aws.svg)
 
 ## O que dá para fazer
@@ -51,7 +53,7 @@ busca, que vem por relevância:
 | Local | Docker Compose: Postgres, API e site no nginx |
 | Nuvem | AWS: CloudFront, S3, EC2 Graviton, RDS, ECR, SSM, Secrets Manager, CloudWatch, Budgets |
 | Infraestrutura em código | Terraform (`infra/terraform`) |
-| CI/CD | GitHub Actions: testes, stack Docker de verdade e deploy na AWS por OIDC |
+| CI/CD | GitHub Actions: testes e stack Docker de verdade; deploy na AWS por script (OIDC pronto para o plano pago) |
 | Testes de endpoint | Bruno (coleção local, fora do repositório) |
 
 ## Arquitetura na AWS
@@ -66,8 +68,9 @@ busca, que vem por relevância:
   pela AWS e fica no Secrets Manager.
 - **Segredos:** as chaves do Spotify ficam no SSM Parameter Store. Nada de segredo vai para o código, para o estado do
   Terraform ou para o GitHub.
-- **Deploy:** o GitHub Actions assume uma role por OIDC (sem chave guardada) só a partir da `master`. Ele publica a
-  imagem ARM no ECR, atualiza o container pelo SSM, publica o site no S3 e limpa o cache do CloudFront.
+- **Deploy:** `infra/aws/deploy-manual.sh` publica a imagem ARM no ECR, atualiza o container pelo SSM, publica o
+  site no S3 e limpa o cache do CloudFront. O mesmo fluxo existe no GitHub Actions (role por OIDC, sem chave
+  guardada, só a partir da `master`), mas fica desligado: o plano Free da AWS não deixa criar o provedor OIDC.
 - **Custo:** cerca de US$ 30/mês, pagos pelos créditos do plano Free da AWS. Há um orçamento com alerta por e-mail.
 
 Passo a passo para criar e atualizar a infraestrutura: [infra/README.md](infra/README.md#aws).
@@ -149,6 +152,6 @@ docs ────┘
 - **Branch por área:** `backend`, `frontend`, `devops` (infra e CI) e `docs`.
 - **Tudo passa pela `test`:** cada mudança entra na `test` por pull request.
 - **`master` só depois dos testes:** o PR `test → master` só abre com o CI verde e a `test` testada. Cada merge na
-  `master` com CI verde dispara o deploy.
+  `master` com CI verde vai para a AWS pelo `infra/aws/deploy-manual.sh`.
 - **Commits:** [Conventional Commits](https://www.conventionalcommits.org/pt-br/), por exemplo `feat(frontend): ...`,
   `fix(backend): ...`, `ci: ...` ou `docs: ...`.

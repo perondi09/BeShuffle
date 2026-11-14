@@ -9,7 +9,7 @@ Contexto completo, problemas conhecidos e roadmap: [docs/CONTEXTO.md](docs/CONTE
 - Backend: `cd backend && ./mvnw clean verify` com **JDK 21** (o Lombok do Boot 4.0.3 não compila com JDK 27). Sem JDK 21 local:
   `docker run --rm -v "$PWD/backend:/ws" -v beshuffle-m2:/root/.m2 -w /ws maven:3.9.9-eclipse-temurin-21 mvn verify`
 - Frontend: `cd frontend && npm ci && npm run lint && npm test && npm run build`. Dev: `npm run dev` (proxy `/api` → :8080)
-- CI: `.github/workflows/ci.yml` (backend, frontend e stack Docker com health check); deploy: `.github/workflows/deploy.yml` (master com CI verde, OIDC). Dockerfiles e nginx em `infra/docker/`
+- CI: `.github/workflows/ci.yml` (backend, frontend e stack Docker com health check); deploy: `infra/aws/deploy-manual.sh` (o `.github/workflows/deploy.yml` por OIDC fica desligado: o plano Free da AWS nega provedores de identidade). Dockerfiles e nginx em `infra/docker/`
 - AWS: Terraform em `infra/terraform` (CloudFront + S3, EC2 t4g.small com Docker, RDS db.t4g.micro, ECR, SSM, Secrets Manager). Segredos de produção só no SSM/Secrets Manager; nunca no estado do Terraform. Diagrama: `docs/arquitetura-aws.svg`
 - Spotify: `spotify/SpotifyClient` (única porta para a Web API) + `spotify/SpotifyTokenProvider` (token em cache)
 - Sorteio: interface `services/AlbumPicker`; implementação atual `services/PopularPorAnoAlbumPicker`. Por estilo (logado): `services/EstiloAlbumPicker` + catálogo `services/Estilo` (por gênero: busca de faixas `genre:`; por artistas: lista testada, busca `artist:`)
