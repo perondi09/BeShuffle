@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 860" width="1300" height="860" font-family="Helvetica, Arial, sans-serif" role="img" aria-labelledby="titulo descricao">
   <title id="titulo">BeShuffle na AWS: arquitetura e entrega contínua</title>
-  <desc id="descricao">Código em branches por área que viram PR para test e depois master. O GitHub Actions roda o CI e, na master, faz o deploy por OIDC. Na AWS (us-east-1), o CloudFront serve o site do S3 e repassa /api para a API em Docker num EC2 t4g.small, que usa um RDS PostgreSQL, lê segredos do SSM e do Secrets Manager, puxa a imagem do ECR, manda logs ao CloudWatch e chama a Web API do Spotify.</desc>
+  <desc id="descricao">Código em branches por área que viram PR para test e depois master. O GitHub Actions roda o CI e, na master, faz o deploy por OIDC. Na AWS (us-east-2), o CloudFront serve o site do S3 e repassa /api para a API em Docker num EC2 t4g.small, que usa um RDS PostgreSQL, lê segredos do SSM e do Secrets Manager, puxa a imagem do ECR, manda logs ao CloudWatch e chama a Web API do Spotify.</desc>
   <defs>
     <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M0 0 L10 5 L0 10 z" fill="#1c1530"/>
@@ -22,7 +22,7 @@
   <!-- Fundo -->
   <rect width="1300" height="860" fill="#fbfaff"/>
   <text x="30" y="46" font-size="26" font-weight="800" fill="#1c1530">BeShuffle na AWS</text>
-  <text x="30" y="72" class="miudo">Arquitetura em nuvem e fluxo de DevOps (região us-east-1)</text>
+  <text x="30" y="72" class="miudo">Arquitetura em nuvem e fluxo de DevOps (região us-east-2, Ohio)</text>
 
   <!-- ===== Código e branches ===== -->
   <rect x="30" y="110" width="270" height="350" rx="20" fill="#f3eeff" stroke="#1c1530" stroke-width="2" stroke-dasharray="6 5"/>
@@ -89,7 +89,7 @@
 
   <!-- ===== AWS ===== -->
   <rect x="650" y="150" width="620" height="680" rx="22" fill="#f3eeff" stroke="#1c1530" stroke-width="2.5" stroke-dasharray="8 6"/>
-  <text x="670" y="178" class="secao">AWS · us-east-1</text>
+  <text x="670" y="178" class="secao">AWS · us-east-2 (Ohio)</text>
   <text x="670" y="196" class="miudo">VPC padrão, sem NAT Gateway</text>
 
   <path class="linha" d="M600 470 C 625 470, 625 420, 648 420"/>
