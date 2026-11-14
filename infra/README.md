@@ -70,15 +70,15 @@ O workflow `deploy.yml` faz o deploy na AWS depois que o CI passa na `master` (v
 | ECR | Imagem da API, guarda as 5 últimas, scan de vulnerabilidades | Registro privado perto do EC2 |
 | SSM e Secrets Manager | Chaves do Spotify (SecureString) e senha do RDS (gerada pela AWS) | Segredos fora do código, do estado do Terraform e do GitHub |
 | CloudWatch Logs | Logs do container, 14 dias | Ver erros sem entrar no servidor |
-| IAM | Role do EC2 com o mínimo; role de deploy por OIDC só para a `master` | Nenhuma chave de acesso guardada |
+| IAM | Role do EC2 com o mínimo; role de deploy por OIDC só para a `master` (opcional, ver abaixo) | Nenhuma chave de acesso guardada |
 | Budgets | Alerta em 80% do gasto real e 100% do previsto | Não estourar os créditos |
 
 Não há NAT Gateway nem VPC nova: tudo usa a VPC padrão. O banco não tem IP público e o EC2 só aceita o CloudFront.
 
 ### Criar a infraestrutura (uma vez)
 
-Pré-requisitos: AWS CLI logado (`aws login`) e Terraform 1.9+. Sem Terraform instalado, use a imagem Docker
-`hashicorp/terraform` com as credenciais de `aws configure export-credentials --format env`.
+Pré-requisitos: AWS CLI logado (`aws login`) e Terraform 1.9+. O provider lê a sessão do `aws login` direto do
+`~/.aws`. No Windows, rode os scripts pelo Git Bash.
 
 ```bash
 cd infra/terraform
@@ -93,9 +93,20 @@ Depois:
 1. **Segredos do Spotify no SSM:** `infra/aws/put-secrets.sh us-east-2` (lê o `infra/.env`).
 2. **Primeiro deploy:** `infra/aws/deploy-manual.sh`. Ele monta a imagem ARM, sobe o site e liga a API. O endereço
    aparece no fim (`terraform output site_url`).
-3. **Deploy automático:** crie as variáveis do repositório no GitHub com os valores do `terraform output`:
-   `AWS_REGION`, `AWS_DEPLOY_ROLE_ARN`, `ECR_REPOSITORY`, `SITE_BUCKET`, `CLOUDFRONT_DISTRIBUTION_ID` e
-   `EC2_INSTANCE_ID`. A partir daí, cada merge na `master` com CI verde faz o deploy.
+3. **Próximos deploys:** rode o `infra/aws/deploy-manual.sh` de novo depois de cada merge na `master`.
+
+#### Deploy automático pelo GitHub (só no plano pago)
+
+O plano Free da AWS nega a criação de provedores de identidade (`iam:*Provider*` no SCP do projeto), e o GitHub
+Actions precisa de um provedor OIDC para fazer deploy sem chave guardada. Por isso `github_deploy_enabled` vem
+`false` e o deploy é manual. Com o projeto no plano pago:
+
+1. Ponha `github_deploy_enabled = true` no `terraform.tfvars` e rode `terraform apply`.
+2. Crie as variáveis do repositório no GitHub com os valores do `terraform output`: `AWS_REGION`,
+   `AWS_DEPLOY_ROLE_ARN`, `ECR_REPOSITORY`, `SITE_BUCKET`, `CLOUDFRONT_DISTRIBUTION_ID` e `EC2_INSTANCE_ID`.
+
+A partir daí, cada merge na `master` com CI verde faz o deploy. Sem a variável `AWS_DEPLOY_ROLE_ARN`, o workflow
+`deploy.yml` é pulado sem erro.
 
 O estado do Terraform fica local (`terraform.tfstate`, ignorado pelo git) e não tem segredos.
 

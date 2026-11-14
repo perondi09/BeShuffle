@@ -68,18 +68,23 @@ resource "aws_iam_instance_profile" "app" {
 }
 
 # --- Deploy pelo GitHub Actions sem chave guardada (OIDC), só a partir da master deste repositório.
+# Desligado por padrão: o plano Free nega iam:*Provider* (SCP), então lá o deploy é pelo deploy-manual.sh.
 resource "aws_iam_openid_connect_provider" "github" {
+  count = var.github_deploy_enabled ? 1 : 0
+
   url            = "https://token.actions.githubusercontent.com"
   client_id_list = ["sts.amazonaws.com"]
 }
 
 resource "aws_iam_role" "deploy" {
+  count = var.github_deploy_enabled ? 1 : 0
+
   name = "${var.project}-github-deploy"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
       Effect    = "Allow"
-      Principal = { Federated = aws_iam_openid_connect_provider.github.arn }
+      Principal = { Federated = aws_iam_openid_connect_provider.github[0].arn }
       Action    = "sts:AssumeRoleWithWebIdentity"
       Condition = {
         StringEquals = {
@@ -92,8 +97,10 @@ resource "aws_iam_role" "deploy" {
 }
 
 resource "aws_iam_role_policy" "deploy" {
+  count = var.github_deploy_enabled ? 1 : 0
+
   name = "deploy-beshuffle"
-  role = aws_iam_role.deploy.id
+  role = aws_iam_role.deploy[0].id
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [

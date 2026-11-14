@@ -28,6 +28,12 @@ variable "db_deletion_protection" {
   default     = true
 }
 
+variable "github_deploy_enabled" {
+  description = "Cria o provedor OIDC e a role de deploy do GitHub Actions. O plano Free da AWS bloqueia provedores de identidade: ligue só no plano pago."
+  type        = bool
+  default     = false
+}
+
 variable "github_repository" {
   description = "Repositório (dono/nome) que pode fazer deploy pela role OIDC, só a partir da branch master."
   type        = string

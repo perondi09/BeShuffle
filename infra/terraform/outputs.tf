@@ -24,8 +24,8 @@ output "db_endpoint" {
 }
 
 output "deploy_role_arn" {
-  description = "Role que o GitHub Actions assume (variável AWS_DEPLOY_ROLE_ARN do repositório)."
-  value       = aws_iam_role.deploy.arn
+  description = "Role que o GitHub Actions assume (variável AWS_DEPLOY_ROLE_ARN). Vazio com github_deploy_enabled = false."
+  value       = var.github_deploy_enabled ? aws_iam_role.deploy[0].arn : ""
 }
 
 output "region" {

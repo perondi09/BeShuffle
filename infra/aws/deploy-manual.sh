@@ -4,8 +4,10 @@
 # Precisa de: aws CLI logado, Docker com buildx, Node 22 e o terraform output (rode de infra/terraform aplicado).
 # Uso: infra/aws/deploy-manual.sh
 set -euo pipefail
+# No Git Bash do Windows: argumentos como /* e /opt/... seguem sem conversão, e a raiz fica em C:/...
+export MSYS_NO_PATHCONV=1
 
-RAIZ="$(cd "$(dirname "$0")/../.." && pwd)"
+RAIZ="$(cd "$(dirname "$0")/../.." && (pwd -W 2>/dev/null || pwd))"
 saida() { terraform -chdir="$RAIZ/infra/terraform" output -raw "$1"; }
 
 REGIAO="$(saida region)"
@@ -15,7 +17,17 @@ DISTRIBUICAO="$(saida cloudfront_distribution_id)"
 INSTANCIA="$(saida instance_id)"
 TAG="manual-$(git -C "$RAIZ" rev-parse --short HEAD)"
 
-aws ecr get-login-password --region "$REGIAO" | docker login --username AWS --password-stdin "${ECR%%/*}"
+# Login no ECR numa config temporária do Docker: o token do ECR passa do limite do Gerenciador de Credenciais do
+# Windows, então ele fica num arquivo (credHelpers vazio para o registro) que é apagado no fim. ~/.docker não muda.
+REGISTRO="${ECR%%/*}"
+caminho() { if command -v cygpath >/dev/null 2>&1; then cygpath -m "$1"; else echo "$1"; fi; }
+DOCKER_TMP="$(mktemp -d)"
+trap 'rm -rf "$DOCKER_TMP"' EXIT
+cp -r "$HOME/.docker/contexts" "$HOME/.docker/buildx" "$DOCKER_TMP/" 2>/dev/null || true
+printf '{"cliPluginsExtraDirs":["%s"],"currentContext":"%s","credHelpers":{"%s":""}}' \
+  "$(caminho "$HOME/.docker/cli-plugins")" "$(docker context show)" "$REGISTRO" >"$DOCKER_TMP/config.json"
+export DOCKER_CONFIG="$(caminho "$DOCKER_TMP")"
+aws ecr get-login-password --region "$REGIAO" | docker login --username AWS --password-stdin "$REGISTRO"
 docker buildx build --platform linux/arm64 -f "$RAIZ/infra/docker/backend.Dockerfile" \
   -t "$ECR:$TAG" -t "$ECR:latest" --push "$RAIZ/backend"
 
