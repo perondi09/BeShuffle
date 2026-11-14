@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import perondi.BeShuffle.dtos.draws.AlbumSorteado;
+import perondi.BeShuffle.dtos.draws.MeuSorteio;
 import perondi.BeShuffle.dtos.draws.SorteioFeito;
 import perondi.BeShuffle.entity.Album;
 import perondi.BeShuffle.entity.Draw;
@@ -52,6 +53,14 @@ public class DrawService {
             allowanceService.devolver(dono, dia);
             throw e;
         }
+    }
+
+    /** Os sorteios que a própria conta fez hoje (página de perfil). */
+    public List<MeuSorteio> meusSorteiosDeHoje(Long userId) {
+        return drawRepository.findByUserIdAndDrawDateOrderByCreatedAtDesc(userId, LocalDate.now(clock)).stream()
+                .map(d -> new MeuSorteio(d.getSpotifyAlbumId(), d.getAlbumName(), d.getArtistName(), d.getImageUrl(),
+                        d.getCreatedAt()))
+                .toList();
     }
 
     public List<AlbumSorteado> sorteadosDeHoje() {
