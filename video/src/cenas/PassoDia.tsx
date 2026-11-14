@@ -1,14 +1,14 @@
 import { DISCOS } from '../componentes/Capa'
-import { Cena } from '../componentes/Cena'
+import { Cena, type PropsDaCena } from '../componentes/Cena'
 import { Selo } from '../componentes/Selo'
 import { Vitrola } from '../componentes/Vitrola'
 import { cor } from '../tema'
 
 /** Cena 4: o Álbum do Dia girando na vitrola. */
-export const PassoDia = ({ duracao }: { duracao: number }) => (
+export const PassoDia = ({ duracao, fala }: PropsDaCena) => (
   <Cena
     etiqueta="PASSO 1: O ÁLBUM DO DIA"
-    legenda="todo dia um álbum novo, igual para todo mundo"
+    fala={fala}
     duracao={duracao}
     mascote={{ pose: 'acena', x: 830, tamanho: 330 }}
   >

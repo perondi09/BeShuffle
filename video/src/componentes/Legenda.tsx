@@ -3,19 +3,19 @@ import { borda, cor, fonteTexto } from '../tema'
 
 interface LegendaProps {
   texto: string
-  /** Duração da cena em quadros: as palavras se espalham por ela. */
-  duracao: number
+  /** Quantos quadros a fala dura: as palavras se espalham por ela, no ritmo da voz. */
+  quadros: number
+  /** Quando a fala começa, em segundos. */
   inicio?: number
 }
 
 /** Legenda palavra por palavra, com a palavra da vez em destaque (como nos Shorts de referência). */
-export const Legenda = ({ texto, duracao, inicio = 0.35 }: LegendaProps) => {
+export const Legenda = ({ texto, quadros, inicio = 0.3 }: LegendaProps) => {
   const frame = useCurrentFrame()
   const { fps } = useVideoConfig()
   const palavras = texto.split(' ')
   const comeco = inicio * fps
-  const fim = duracao - 0.5 * fps
-  const passo = (fim - comeco) / palavras.length
+  const passo = (quadros * 0.9) / palavras.length
   const atual = Math.floor((frame - comeco) / passo)
 
   return (

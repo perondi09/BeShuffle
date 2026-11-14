@@ -1,16 +1,16 @@
 import { interpolate, useCurrentFrame } from 'remotion'
 import { useMola } from '../animacao'
-import { Cena } from '../componentes/Cena'
+import { Cena, type PropsDaCena } from '../componentes/Cena'
 import { Selo } from '../componentes/Selo'
 import { borda, cor, fonteDisplay, sombra } from '../tema'
 
 /** Cena 3: o BeShuffle entra em cena. */
-export const Ideia = ({ duracao }: { duracao: number }) => {
+export const Ideia = ({ duracao, fala }: PropsDaCena) => {
   const frame = useCurrentFrame()
   const logo = useMola(0.3, { damping: 8, stiffness: 160 })
   const disco = useMola(0.15, { damping: 12 })
   return (
-    <Cena etiqueta="CONHEÇA" legenda="o BeShuffle é uma jukebox que escolhe por você" duracao={duracao} mascote={{ pose: 'comemora', tamanho: 320 }}>
+    <Cena etiqueta="CONHEÇA" fala={fala} duracao={duracao} mascote={{ pose: 'comemora', tamanho: 320 }}>
       <div
         style={{
           position: 'absolute',

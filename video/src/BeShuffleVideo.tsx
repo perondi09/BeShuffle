@@ -1,7 +1,9 @@
 import { linearTiming, TransitionSeries } from '@remotion/transitions'
 import { slide } from '@remotion/transitions/slide'
 import { wipe } from '@remotion/transitions/wipe'
+import { Audio } from '@remotion/media'
 import type { FC } from 'react'
+import { Sequence, staticFile } from 'remotion'
 import { Chamada } from './cenas/Chamada'
 import { Gancho } from './cenas/Gancho'
 import { Ideia } from './cenas/Ideia'
@@ -10,33 +12,55 @@ import { PassoDia } from './cenas/PassoDia'
 import { PassoNota } from './cenas/PassoNota'
 import { PassoSorteio } from './cenas/PassoSorteio'
 import { Problema } from './cenas/Problema'
+import type { PropsDaCena } from './componentes/Cena'
+import narracao from './narracao.json'
+import { FPS } from './tema'
 
 const TRANSICAO = 12
 
-/**
- * Roteiro em loop: a última cena termina com o palco vazio e a frase "Entra lá e me conta:", que emenda na
- * pergunta da primeira cena. Cada cena tem a sua duração em quadros (30 por segundo).
- */
-export const CENAS: { Componente: FC<{ duracao: number }>; duracao: number }[] = [
-  { Componente: Gancho, duracao: 105 },
-  { Componente: Problema, duracao: 135 },
-  { Componente: Ideia, duracao: 125 },
-  { Componente: PassoDia, duracao: 135 },
-  { Componente: PassoSorteio, duracao: 165 },
-  { Componente: PassoNota, duracao: 135 },
-  { Componente: ParaQuem, duracao: 165 },
-  { Componente: Chamada, duracao: 140 },
+/** A voz entra um pouco depois do começo da cena, e a cena ainda respira um pouco depois que a fala acaba. */
+const ATRASO_DA_VOZ = 0.3
+const RESPIRO = 18
+/** Na última cena tudo some no fim (Chamada, saida={14}), deixando o palco vazio como no primeiro quadro. */
+const SAIDA_DA_CHAMADA = 14
+
+const ROTEIRO: { cena: string; Componente: FC<PropsDaCena>; minimo: number }[] = [
+  { cena: 'gancho', Componente: Gancho, minimo: 105 },
+  { cena: 'problema', Componente: Problema, minimo: 135 },
+  { cena: 'ideia', Componente: Ideia, minimo: 125 },
+  { cena: 'dia', Componente: PassoDia, minimo: 135 },
+  { cena: 'sorteio', Componente: PassoSorteio, minimo: 165 },
+  { cena: 'nota', Componente: PassoNota, minimo: 135 },
+  { cena: 'paraquem', Componente: ParaQuem, minimo: 165 },
+  { cena: 'chamada', Componente: Chamada, minimo: 140 },
 ]
+
+/**
+ * Roteiro em loop: a última cena termina com o palco vazio e a fala "Entra lá e me conta:", que emenda na
+ * pergunta da primeira cena. Cada cena dura pelo menos o tempo da sua fala (src/narracao.json, gerado por
+ * scripts/gerar-voz.ps1).
+ */
+export const CENAS = ROTEIRO.map(({ cena, Componente, minimo }) => {
+  const falada = narracao.find((item) => item.cena === cena)
+  if (!falada) throw new Error(`Falta a narração da cena ${cena} em src/narracao.json`)
+  const quadros = Math.ceil(falada.segundos * FPS)
+  const saida = cena === 'chamada' ? SAIDA_DA_CHAMADA : 0
+  const duracao = Math.max(minimo, Math.ceil(ATRASO_DA_VOZ * FPS) + quadros + RESPIRO + saida)
+  return { cena, Componente, duracao, fala: { texto: falada.texto, quadros } }
+})
 
 /** As transições sobrepõem as cenas, então o vídeo é mais curto que a soma delas. */
 export const DURACAO_TOTAL = CENAS.reduce((total, cena) => total + cena.duracao, 0) - TRANSICAO * (CENAS.length - 1)
 
 export const BeShuffleVideo = () => (
   <TransitionSeries>
-    {CENAS.flatMap(({ Componente, duracao }, i) => {
+    {CENAS.flatMap(({ cena, Componente, duracao, fala }, i) => {
       const sequencia = (
         <TransitionSeries.Sequence key={`cena-${i}`} durationInFrames={duracao}>
-          <Componente duracao={duracao} />
+          <Componente duracao={duracao} fala={fala} />
+          <Sequence from={Math.round(ATRASO_DA_VOZ * FPS)} layout="none">
+            <Audio src={staticFile(`voz/${cena}.wav`)} />
+          </Sequence>
         </TransitionSeries.Sequence>
       )
       if (i === 0) return [sequencia]

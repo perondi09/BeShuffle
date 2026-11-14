@@ -1,18 +1,18 @@
 import { interpolate, useCurrentFrame, useVideoConfig } from 'remotion'
 import { useMola } from '../animacao'
-import { Cena } from '../componentes/Cena'
+import { Cena, type PropsDaCena } from '../componentes/Cena'
 import { Selo } from '../componentes/Selo'
 import { borda, cor, fonteDisplay, sombra } from '../tema'
 
 /** Cena 8: o convite final com o endereço. */
-export const Chamada = ({ duracao }: { duracao: number }) => {
+export const Chamada = ({ duracao, fala }: PropsDaCena) => {
   const frame = useCurrentFrame()
   const { fps } = useVideoConfig()
   const url = useMola(0.3, { damping: 10, stiffness: 150 })
   const botao = useMola(0.8)
   const pulso = 1 + Math.sin((frame / fps) * Math.PI * 3) * 0.04
   return (
-    <Cena etiqueta="SORTEIE O SEU" legenda="é grátis. Entra lá e me conta:" duracao={duracao} mascote={{ pose: 'acena' }} saida={14}>
+    <Cena etiqueta="SORTEIE O SEU" fala={fala} duracao={duracao} mascote={{ pose: 'acena' }} saida={14}>
       <div
         style={{
           position: 'absolute',

@@ -2,7 +2,7 @@ import { useMola } from '../animacao'
 import { Capa, DISCOS } from '../componentes/Capa'
 import { Carimbo } from '../componentes/Carimbo'
 import { Cartao } from '../componentes/Cartao'
-import { Cena } from '../componentes/Cena'
+import { Cena, type PropsDaCena } from '../componentes/Cena'
 import { borda, cor, fonteDisplay, fonteTexto } from '../tema'
 
 const Linha = ({ indice }: { indice: number }) => {
@@ -31,10 +31,10 @@ const Linha = ({ indice }: { indice: number }) => {
 }
 
 /** Cena 2: por que o projeto existe. */
-export const Problema = ({ duracao }: { duracao: number }) => (
+export const Problema = ({ duracao, fala }: PropsDaCena) => (
   <Cena
     etiqueta="SEMPRE O MESMO?"
-    legenda="cansou de ouvir sempre os mesmos discos?"
+    fala={fala}
     duracao={duracao}
     mascote={{ pose: 'surpreso', x: 820, tamanho: 330 }}
   >

@@ -1,6 +1,6 @@
 # Vídeo de apresentação
 
-Vídeo vertical (1080×1920, 34 segundos) que apresenta o BeShuffle, feito em código com
+Vídeo vertical (1080×1920, 37 segundos, narrado) que apresenta o BeShuffle, feito em código com
 [Remotion](https://www.remotion.dev/). Usa as cores, as fontes e o vinil do site, e um mascote próprio: o
 Radinho, um rádio retrô de desenho animado.
 
@@ -21,6 +21,19 @@ recomeçar, o vídeo não tem corte, então quem assiste tende a ver de novo.
 | Chamada | beshuffle.com.br, e tudo sai de cena até o palco ficar vazio |
 
 As capas de disco são inventadas (formas e cores), sem capas reais com direitos autorais.
+
+## Narração
+
+A voz é a Microsoft Maria (pt-BR), que vem com o Windows, então não tem custo nem serviço externo. O texto de
+cada cena está em `narracao.json`, e ele é ao mesmo tempo a fala e a legenda.
+
+1. Edite `narracao.json`.
+2. No PowerShell, dentro de `video/`, rode `.\scripts\gerar-voz.ps1`. Ele grava um WAV por cena em `public/voz/`
+   e a duração de cada fala em `src/narracao.json`.
+3. Cada cena dura pelo menos o tempo da sua fala, e as palavras da legenda acompanham o ritmo da voz.
+
+Para uma voz mais natural, troque os WAVs por gravações suas (ou de um serviço de voz) com os mesmos nomes e
+ajuste os `segundos` em `src/narracao.json`.
 
 ## Comandos
 

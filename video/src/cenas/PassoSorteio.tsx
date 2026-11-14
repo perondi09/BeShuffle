@@ -3,14 +3,14 @@ import { useMola } from '../animacao'
 import { Capa, DISCOS } from '../componentes/Capa'
 import { Carimbo } from '../componentes/Carimbo'
 import { Cartao } from '../componentes/Cartao'
-import { Cena } from '../componentes/Cena'
+import { Cena, type PropsDaCena } from '../componentes/Cena'
 import { borda, cor, fonteDisplay, fonteTexto, sombra } from '../tema'
 
 const ESTILOS = ['Rock', 'Jazz', 'Pagode', 'Funk', 'Indie', 'MPB']
 const ESCOLHIDOS: Record<string, number> = { Rock: 0.7, Pagode: 1.0 }
 
 /** Cena 5: escolher estilos, sortear e ver o disco cair. */
-export const PassoSorteio = ({ duracao }: { duracao: number }) => {
+export const PassoSorteio = ({ duracao, fala }: PropsDaCena) => {
   const frame = useCurrentFrame()
   const { fps } = useVideoConfig()
   const t = frame / fps
@@ -23,7 +23,7 @@ export const PassoSorteio = ({ duracao }: { duracao: number }) => {
   return (
     <Cena
       etiqueta="PASSO 2: SORTEIE"
-      legenda="não curtiu? sorteie outro, do rock ao pagode"
+      fala={fala}
       duracao={duracao}
       mascote={{ pose: t > 3 ? 'comemora' : 'feliz', x: 880, tamanho: 280 }}
     >

@@ -1,0 +1,42 @@
+[
+    {
+        "cena":  "gancho",
+        "texto":  "Qual disco você vai ouvir hoje?",
+        "segundos":  3.01
+    },
+    {
+        "cena":  "problema",
+        "texto":  "Cansou de ouvir sempre os mesmos discos?",
+        "segundos":  3.68
+    },
+    {
+        "cena":  "ideia",
+        "texto":  "O BeShuffle é uma jukebox que escolhe por você.",
+        "segundos":  4.16
+    },
+    {
+        "cena":  "dia",
+        "texto":  "Todo dia um álbum novo, igual para todo mundo.",
+        "segundos":  4.32
+    },
+    {
+        "cena":  "sorteio",
+        "texto":  "Não curtiu? Sorteie outro, do rock ao pagode.",
+        "segundos":  5.11
+    },
+    {
+        "cena":  "nota",
+        "texto":  "Dê sua nota e veja o que a galera achou.",
+        "segundos":  3.6
+    },
+    {
+        "cena":  "paraquem",
+        "texto":  "Se você quer sair da bolha, o BeShuffle é pra você.",
+        "segundos":  4.52
+    },
+    {
+        "cena":  "chamada",
+        "texto":  "É grátis. Entra lá e me conta:",
+        "segundos":  3.85
+    }
+]

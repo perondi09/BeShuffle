@@ -1,7 +1,7 @@
 import { useMola } from '../animacao'
 import { Carimbo } from '../componentes/Carimbo'
 import { Cartao } from '../componentes/Cartao'
-import { Cena } from '../componentes/Cena'
+import { Cena, type PropsDaCena } from '../componentes/Cena'
 import { borda, cor, fonteDisplay, fonteTexto } from '../tema'
 
 const PESSOAS = [
@@ -43,8 +43,8 @@ const Pessoa = ({ indice, texto, detalhe }: { indice: number; texto: string; det
 }
 
 /** Cena 7: para quem o BeShuffle é bom. */
-export const ParaQuem = ({ duracao }: { duracao: number }) => (
-  <Cena etiqueta="PRA QUEM É?" legenda="se você é assim, o BeShuffle é pra você" duracao={duracao} mascote={{ pose: 'comemora', x: 850, tamanho: 300 }}>
+export const ParaQuem = ({ duracao, fala }: PropsDaCena) => (
+  <Cena etiqueta="PRA QUEM É?" fala={fala} duracao={duracao} mascote={{ pose: 'comemora', x: 850, tamanho: 300 }}>
     <Cartao atraso={0.15} style={{ left: 70, right: 70, top: 330, padding: '44px 40px', display: 'grid', gap: 34 }}>
       {PESSOAS.map(([texto, detalhe], i) => (
         <Pessoa key={texto} indice={i} texto={texto} detalhe={detalhe} />

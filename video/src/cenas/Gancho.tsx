@@ -1,6 +1,6 @@
 import { interpolate, useCurrentFrame, useVideoConfig } from 'remotion'
 import { molaManual, useMola } from '../animacao'
-import { Cena } from '../componentes/Cena'
+import { Cena, type PropsDaCena } from '../componentes/Cena'
 import { borda, cor, fonteDisplay, sombra } from '../tema'
 
 const PALAVRAS = ['Qual', 'disco', 'você', 'vai', 'ouvir', 'hoje?']
@@ -11,13 +11,13 @@ const INTERROGACOES = [
 ]
 
 /** Cena 1: a pergunta que abre o vídeo. */
-export const Gancho = ({ duracao }: { duracao: number }) => {
+export const Gancho = ({ duracao, fala }: PropsDaCena) => {
   const frame = useCurrentFrame()
   const { fps } = useVideoConfig()
   const t = frame / fps
   const caixa = useMola(0.1, { damping: 12 })
   return (
-    <Cena legenda="e se uma jukebox escolhesse por você?" duracao={duracao} mascote={{ pose: 'pensando', y: 1540 }}>
+    <Cena fala={fala} duracao={duracao} mascote={{ pose: 'pensando', y: 1540 }}>
       <div
         style={{
           position: 'absolute',

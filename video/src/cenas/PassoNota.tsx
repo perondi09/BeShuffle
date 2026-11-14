@@ -2,13 +2,13 @@ import { useCurrentFrame, useVideoConfig } from 'remotion'
 import { Capa, DISCOS } from '../componentes/Capa'
 import { Carimbo } from '../componentes/Carimbo'
 import { Cartao } from '../componentes/Cartao'
-import { Cena } from '../componentes/Cena'
+import { Cena, type PropsDaCena } from '../componentes/Cena'
 import { borda, cor, fonteDisplay, fonteTexto } from '../tema'
 
 const COMENTARIO = 'Que disco! Ouvi duas vezes seguidas.'
 
 /** Cena 6: dar nota com os discos de vinil e comentar. */
-export const PassoNota = ({ duracao }: { duracao: number }) => {
+export const PassoNota = ({ duracao, fala }: PropsDaCena) => {
   const frame = useCurrentFrame()
   const { fps } = useVideoConfig()
   const t = frame / fps
@@ -19,7 +19,7 @@ export const PassoNota = ({ duracao }: { duracao: number }) => {
   return (
     <Cena
       etiqueta="PASSO 3: DÊ SUA NOTA"
-      legenda="dê sua nota e veja o que a galera achou"
+      fala={fala}
       duracao={duracao}
       mascote={{ pose: t > 2.6 ? 'comemora' : 'feliz', x: 830, tamanho: 320 }}
     >
