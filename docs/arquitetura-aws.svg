@@ -1,182 +1,135 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 860" width="1300" height="860" font-family="Helvetica, Arial, sans-serif" role="img" aria-labelledby="titulo descricao">
-  <title id="titulo">BeShuffle na AWS: arquitetura e entrega contínua</title>
-  <desc id="descricao">Código em branches por área que viram PR para test e depois master. O GitHub Actions roda o CI e, na master, faz o deploy por OIDC. Na AWS (us-east-2), o CloudFront serve o site do S3 e repassa /api para a API em Docker num EC2 t4g.small, que usa um RDS PostgreSQL, lê segredos do SSM e do Secrets Manager, puxa a imagem do ECR, manda logs ao CloudWatch e chama a Web API do Spotify.</desc>
-  <defs>
-    <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0 0 L10 5 L0 10 z" fill="#1c1530"/>
-    </marker>
-    <style>
-      .caixa { fill: #ffffff; stroke: #1c1530; stroke-width: 3; }
-      .sombra { fill: #1c1530; }
-      .titulo { font-size: 17px; font-weight: 700; fill: #1c1530; }
-      .texto { font-size: 13px; fill: #1c1530; }
-      .miudo { font-size: 12px; fill: #4a4166; }
-      .secao { font-size: 14px; font-weight: 700; fill: #1c1530; letter-spacing: 0.5px; }
-      .linha { stroke: #1c1530; stroke-width: 2.5; fill: none; marker-end: url(#seta); }
-      .tracejada { stroke: #1c1530; stroke-width: 2; fill: none; stroke-dasharray: 6 5; marker-end: url(#seta); }
-      .rotulo { font-size: 12px; fill: #1c1530; font-weight: 600; }
-      .branco { fill: #ffffff; }
-    </style>
-  </defs>
-
-  <!-- Fundo -->
-  <rect width="1300" height="860" fill="#fbfaff"/>
-  <text x="30" y="46" font-size="26" font-weight="800" fill="#1c1530">BeShuffle na AWS</text>
-  <text x="30" y="72" class="miudo">Arquitetura em nuvem e fluxo de DevOps (região us-east-2, Ohio)</text>
-
-  <!-- ===== Código e branches ===== -->
-  <rect x="30" y="110" width="270" height="350" rx="20" fill="#f3eeff" stroke="#1c1530" stroke-width="2" stroke-dasharray="6 5"/>
-  <text x="48" y="138" class="secao">GitHub: código e branches</text>
-
-  <rect x="48" y="160" width="110" height="34" rx="17" fill="#ff8fc7" stroke="#1c1530" stroke-width="2.5"/>
-  <text x="103" y="182" class="texto" text-anchor="middle" font-weight="600">backend</text>
-  <rect x="48" y="206" width="110" height="34" rx="17" fill="#ff8fc7" stroke="#1c1530" stroke-width="2.5"/>
-  <text x="103" y="228" class="texto" text-anchor="middle" font-weight="600">frontend</text>
-  <rect x="48" y="252" width="110" height="34" rx="17" fill="#ff8fc7" stroke="#1c1530" stroke-width="2.5"/>
-  <text x="103" y="274" class="texto" text-anchor="middle" font-weight="600">devops</text>
-  <rect x="48" y="298" width="110" height="34" rx="17" fill="#ff8fc7" stroke="#1c1530" stroke-width="2.5"/>
-  <text x="103" y="320" class="texto" text-anchor="middle" font-weight="600">docs</text>
-
-  <rect x="196" y="229" width="86" height="34" rx="17" fill="#ffc93c" stroke="#1c1530" stroke-width="2.5"/>
-  <text x="239" y="251" class="texto" text-anchor="middle" font-weight="700">test</text>
-  <rect x="196" y="370" width="86" height="34" rx="17" fill="#3ddc97" stroke="#1c1530" stroke-width="2.5"/>
-  <text x="239" y="392" class="texto" text-anchor="middle" font-weight="700">master</text>
-
-  <path class="linha" d="M158 177 L194 238"/>
-  <path class="linha" d="M158 223 L194 242"/>
-  <path class="linha" d="M158 269 L194 250"/>
-  <path class="linha" d="M158 315 L194 256"/>
-  <path class="linha" d="M239 263 L239 368"/>
-  <text x="48" y="362" class="miudo">PR por área,</text>
-  <text x="48" y="378" class="miudo">merge com CI verde</text>
-  <text x="248" y="320" class="miudo">PR</text>
-  <text x="48" y="432" class="miudo">Conventional Commits,</text>
-  <text x="48" y="448" class="miudo">nada direto em test/master</text>
-
-  <!-- ===== GitHub Actions ===== -->
-  <rect x="336" y="116" width="270" height="200" rx="18" class="sombra"/>
-  <rect x="330" y="110" width="270" height="200" rx="18" class="caixa"/>
-  <text x="350" y="140" class="titulo">CI (todo PR e push)</text>
-  <text x="350" y="168" class="texto">• Backend: Java 21, testes</text>
-  <text x="350" y="192" class="texto">• Frontend: lint, testes, build</text>
-  <text x="350" y="216" class="texto">• Stack Docker: Postgres +</text>
-  <text x="364" y="236" class="texto">migrations + API + nginx,</text>
-  <text x="364" y="256" class="texto">confere a saúde da API</text>
-  <text x="350" y="290" class="miudo">GitHub Actions</text>
-
-  <rect x="336" y="356" width="270" height="250" rx="18" class="sombra"/>
-  <rect x="330" y="350" width="270" height="250" rx="18" fill="#ffc93c" stroke="#1c1530" stroke-width="3"/>
-  <text x="350" y="380" class="titulo">Deploy AWS</text>
-  <text x="350" y="400" class="miudo">master com CI verde, runner ARM</text>
-  <text x="350" y="430" class="texto">0. Login por OIDC (sem chave</text>
-  <text x="364" y="450" class="texto">guardada no GitHub)</text>
-  <text x="350" y="476" class="texto">1. Imagem ARM da API → ECR</text>
-  <text x="350" y="502" class="texto">2. EC2 troca o container</text>
-  <text x="364" y="522" class="texto">(SSM Run Command)</text>
-  <text x="350" y="548" class="texto">3. Site (Vite) → S3</text>
-  <text x="350" y="574" class="texto">4. Limpa o cache do CloudFront</text>
-
-  <path class="linha" d="M282 380 C 305 380, 305 220, 328 220"/>
-  <path class="linha" d="M282 392 C 305 392, 305 470, 328 470"/>
-
-  <!-- ===== Docker local ===== -->
-  <rect x="36" y="666" width="570" height="130" rx="18" class="sombra"/>
-  <rect x="30" y="660" width="570" height="130" rx="18" fill="#3ddc97" stroke="#1c1530" stroke-width="3"/>
-  <text x="50" y="690" class="titulo">Desenvolvimento local (infra/docker-compose.yml)</text>
-  <text x="50" y="718" class="texto">Postgres 16 (127.0.0.1:5435) + API Spring Boot (:8080) + site no nginx (:3000)</text>
-  <text x="50" y="742" class="texto">Segredos só em infra/.env (gitignored). Testes de endpoint no Bruno.</text>
-  <text x="50" y="766" class="texto">O mesmo Dockerfile da API vai para o ECR, em ARM.</text>
-
-  <!-- ===== AWS ===== -->
-  <rect x="650" y="150" width="620" height="680" rx="22" fill="#f3eeff" stroke="#1c1530" stroke-width="2.5" stroke-dasharray="8 6"/>
-  <text x="670" y="178" class="secao">AWS · us-east-2 (Ohio)</text>
-  <text x="670" y="196" class="miudo">VPC padrão, sem NAT Gateway</text>
-
-  <path class="linha" d="M600 470 C 625 470, 625 420, 648 420"/>
-  <text x="604" y="500" class="rotulo">OIDC</text>
-
-  <!-- Usuários -->
-  <rect x="845" y="84" width="230" height="44" rx="22" fill="#ff8fc7" stroke="#1c1530" stroke-width="3"/>
-  <text x="960" y="112" class="texto" text-anchor="middle" font-weight="700">Usuários (navegador)</text>
-  <path class="linha" d="M960 128 L960 196"/>
-  <text x="968" y="146" class="rotulo">HTTPS</text>
-
-  <!-- Spotify -->
-  <rect x="1112" y="84" width="160" height="44" rx="22" fill="#3ddc97" stroke="#1c1530" stroke-width="3"/>
-  <text x="1192" y="104" class="texto" text-anchor="middle" font-weight="700">Spotify Web API</text>
-  <text x="1192" y="120" class="miudo" text-anchor="middle">fora da AWS</text>
-
-  <!-- CloudFront -->
-  <rect x="806" y="204" width="320" height="78" rx="16" class="sombra"/>
-  <rect x="800" y="198" width="320" height="78" rx="16" fill="#ff5a36" stroke="#1c1530" stroke-width="3"/>
-  <text x="820" y="226" class="titulo branco">CloudFront</text>
-  <text x="820" y="248" class="texto branco">HTTPS, cache na borda, headers de segurança,</text>
-  <text x="820" y="266" class="texto branco">rotas do React voltam para o index.html</text>
-
-  <!-- S3 -->
-  <rect x="686" y="346" width="200" height="92" rx="16" class="sombra"/>
-  <rect x="680" y="340" width="200" height="92" rx="16" class="caixa"/>
-  <text x="698" y="368" class="titulo">S3</text>
-  <text x="698" y="390" class="texto">Site React (build do Vite)</text>
-  <text x="698" y="410" class="miudo">bucket privado, só o</text>
-  <text x="698" y="425" class="miudo">CloudFront lê (OAC)</text>
-  <path class="linha" d="M860 276 L800 338"/>
-  <text x="772" y="304" class="rotulo">/ (site)</text>
-
-  <!-- EC2 -->
-  <rect x="1006" y="346" width="250" height="150" rx="16" class="sombra"/>
-  <rect x="1000" y="340" width="250" height="150" rx="16" fill="#ffc93c" stroke="#1c1530" stroke-width="3"/>
-  <text x="1018" y="368" class="titulo">EC2 t4g.small (ARM)</text>
-  <text x="1018" y="392" class="texto">Docker: API Spring Boot 4</text>
-  <text x="1018" y="412" class="texto">Java 21, porta 8080</text>
-  <text x="1018" y="436" class="miudo">só aceita o CloudFront (prefix list)</text>
-  <text x="1018" y="454" class="miudo">sem SSH: Session Manager</text>
-  <text x="1018" y="472" class="miudo">IP fixo (Elastic IP), IMDSv2</text>
-  <path class="linha" d="M1060 276 L1100 338"/>
-  <text x="1092" y="304" class="rotulo">/api/*</text>
-  <path class="linha" d="M1236 338 C 1262 290, 1262 180, 1212 130"/>
-  <text x="1196" y="300" class="rotulo">busca</text>
-  <text x="1196" y="316" class="rotulo">álbuns</text>
-
-  <!-- RDS -->
-  <rect x="1006" y="576" width="250" height="92" rx="16" class="sombra"/>
-  <rect x="1000" y="570" width="250" height="92" rx="16" fill="#3ddc97" stroke="#1c1530" stroke-width="3"/>
-  <text x="1018" y="598" class="titulo">RDS PostgreSQL 16</text>
-  <text x="1018" y="620" class="texto">db.t4g.micro, Single-AZ</text>
-  <text x="1018" y="640" class="miudo">privado, criptografado, backup diário,</text>
-  <text x="1018" y="655" class="miudo">sessões de login (Spring Session)</text>
-  <path class="linha" d="M1125 490 L1125 568"/>
-  <text x="1134" y="534" class="rotulo">5432 (Flyway)</text>
-
-  <!-- Serviços de apoio -->
-  <rect x="680" y="470" width="270" height="56" rx="14" class="caixa"/>
-  <text x="698" y="494" class="titulo" font-size="15">ECR</text>
-  <text x="698" y="514" class="miudo">imagem da API (5 últimas, scan)</text>
-  <rect x="680" y="540" width="270" height="56" rx="14" class="caixa"/>
-  <text x="698" y="564" class="titulo" font-size="15">SSM Parameter Store</text>
-  <text x="698" y="584" class="miudo">chaves do Spotify (SecureString)</text>
-  <rect x="680" y="610" width="270" height="56" rx="14" class="caixa"/>
-  <text x="698" y="634" class="titulo" font-size="15">Secrets Manager</text>
-  <text x="698" y="654" class="miudo">senha do RDS, gerada pela AWS</text>
-  <rect x="680" y="680" width="270" height="56" rx="14" class="caixa"/>
-  <text x="698" y="704" class="titulo" font-size="15">CloudWatch Logs</text>
-  <text x="698" y="724" class="miudo">logs do container, 14 dias</text>
-  <rect x="680" y="750" width="270" height="56" rx="14" class="caixa"/>
-  <text x="698" y="774" class="titulo" font-size="15">AWS Budgets</text>
-  <text x="698" y="794" class="miudo">alerta por e-mail antes do teto</text>
-
-  <path class="tracejada" d="M952 498 C 975 498, 975 430, 998 430"/>
-  <path class="tracejada" d="M952 568 C 980 568, 980 450, 998 450"/>
-  <path class="tracejada" d="M952 638 C 985 638, 985 470, 998 470"/>
-  <path class="tracejada" d="M998 485 C 975 600, 975 708, 952 708"/>
-
-  <!-- Legenda -->
-  <rect x="1000" y="700" width="250" height="110" rx="14" fill="#ffffff" stroke="#1c1530" stroke-width="2"/>
-  <text x="1018" y="724" class="secao">Custo estimado</text>
-  <text x="1018" y="746" class="texto">~US$ 30/mês, pago pelos</text>
-  <text x="1018" y="764" class="texto">créditos do plano Free</text>
-  <path class="linha" d="M1018 788 L1060 788"/>
-  <text x="1068" y="792" class="miudo">tráfego</text>
-  <path class="tracejada" d="M1140 788 L1182 788"/>
-  <text x="1190" y="792" class="miudo">IAM role</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 940" width="1400" height="940" font-family="Helvetica, Arial, sans-serif" role="img" aria-labelledby="titulo descricao">
+<title id="titulo">BeShuffle na AWS: arquitetura e entrega</title>
+<desc id="descricao">O navegador resolve beshuffle.com.br no Route 53 e fala em HTTPS com o CloudFront, que usa um certificado do ACM. O CloudFront serve o site do S3 e repassa /api para a API em Docker num EC2 t4g.small em us-east-2, que usa um RDS PostgreSQL privado, lê segredos do SSM e do Secrets Manager, puxa a imagem do ECR, manda logs ao CloudWatch e chama a Web API do Spotify. O código passa por branches, test e master com CI no GitHub Actions e vai para a AWS pelo script deploy-manual.sh.</desc>
+<defs><marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#1c1530"/></marker></defs>
+<rect width="1400" height="940" fill="#fbfaff"/>
+<text x="30" y="50" font-size="28" font-weight="800" fill="#1c1530">BeShuffle na AWS</text>
+<text x="30" y="76" font-size="14" fill="#4a4166">https://beshuffle.com.br: um álbum do Spotify por dia, sorteios e notas. Arquitetura em nuvem e caminho do código até o ar.</text>
+<rect x="36" y="156" width="165" height="110" rx="16" fill="#1c1530"/>
+<rect x="30" y="150" width="165" height="110" rx="16" fill="#ffffff" stroke="#1c1530" stroke-width="3"/>
+<text x="46" y="178" font-size="17" font-weight="700" fill="#1c1530">Navegador</text>
+<text x="46" y="202" font-size="13" fill="#1c1530">visitante ou conta</text>
+<text x="46" y="221" font-size="13" fill="#1c1530">site em React</text>
+<rect x="250" y="110" width="300" height="450" rx="22" fill="#f3eeff" stroke="#1c1530" stroke-width="2" stroke-dasharray="7 6"/>
+<text x="270" y="140" font-size="15" font-weight="800" fill="#1c1530">Borda global da AWS</text>
+<text x="270" y="160" font-size="12" fill="#4a4166">CloudFront, certificados e DNS</text>
+<rect x="276" y="176" width="260" height="150" rx="16" fill="#1c1530"/>
+<rect x="270" y="170" width="260" height="150" rx="16" fill="#c9b8ff" stroke="#1c1530" stroke-width="3"/>
+<text x="286" y="198" font-size="17" font-weight="700" fill="#1c1530">CloudFront</text>
+<text x="286" y="222" font-size="13" fill="#1c1530">HTTPS, TLS 1.2 no mínimo</text>
+<text x="286" y="241" font-size="13" fill="#1c1530">/api/*: para a API, sem cache</text>
+<text x="286" y="260" font-size="13" fill="#1c1530">resto: site do S3, com cache</text>
+<text x="286" y="279" font-size="13" fill="#1c1530">função: rotas do React e www</text>
+<rect x="276" y="351" width="260" height="88" rx="16" fill="#1c1530"/>
+<rect x="270" y="345" width="260" height="88" rx="16" fill="#ffffff" stroke="#1c1530" stroke-width="3"/>
+<text x="286" y="373" font-size="17" font-weight="700" fill="#1c1530">ACM (us-east-1)</text>
+<text x="286" y="397" font-size="13" fill="#1c1530">certificado do domínio</text>
+<text x="286" y="416" font-size="13" fill="#1c1530">renovação automática</text>
+<rect x="276" y="461" width="260" height="85" rx="16" fill="#1c1530"/>
+<rect x="270" y="455" width="260" height="85" rx="16" fill="#ffffff" stroke="#1c1530" stroke-width="3"/>
+<text x="286" y="483" font-size="17" font-weight="700" fill="#1c1530">Route 53</text>
+<text x="286" y="507" font-size="13" fill="#1c1530">beshuffle.com.br e www</text>
+<text x="286" y="526" font-size="13" fill="#1c1530">ALIAS para o CloudFront</text>
+<rect x="580" y="110" width="560" height="450" rx="22" fill="#f3eeff" stroke="#1c1530" stroke-width="2" stroke-dasharray="7 6"/>
+<text x="600" y="140" font-size="15" font-weight="800" fill="#1c1530">Região us-east-2 (Ohio)</text>
+<text x="600" y="160" font-size="12" fill="#4a4166">VPC padrão, sem NAT Gateway</text>
+<rect x="606" y="176" width="240" height="85" rx="16" fill="#1c1530"/>
+<rect x="600" y="170" width="240" height="85" rx="16" fill="#3ddc97" stroke="#1c1530" stroke-width="3"/>
+<text x="616" y="198" font-size="17" font-weight="700" fill="#1c1530">S3</text>
+<text x="616" y="222" font-size="13" fill="#1c1530">build do site (Vite)</text>
+<text x="616" y="241" font-size="13" fill="#1c1530">privado: só o CloudFront lê</text>
+<rect x="606" y="286" width="240" height="130" rx="16" fill="#1c1530"/>
+<rect x="600" y="280" width="240" height="130" rx="16" fill="#ffc93c" stroke="#1c1530" stroke-width="3"/>
+<text x="616" y="308" font-size="17" font-weight="700" fill="#1c1530">EC2 t4g.small</text>
+<text x="616" y="332" font-size="13" fill="#1c1530">Graviton ARM, Amazon Linux</text>
+<text x="616" y="351" font-size="13" fill="#1c1530">API Spring Boot em Docker</text>
+<text x="616" y="370" font-size="13" fill="#1c1530">8080 aceita só o CloudFront</text>
+<text x="616" y="389" font-size="13" fill="#1c1530">sem SSH: Session Manager</text>
+<rect x="606" y="446" width="240" height="100" rx="16" fill="#1c1530"/>
+<rect x="600" y="440" width="240" height="100" rx="16" fill="#ff8fc7" stroke="#1c1530" stroke-width="3"/>
+<text x="616" y="468" font-size="17" font-weight="700" fill="#1c1530">RDS PostgreSQL 16</text>
+<text x="616" y="492" font-size="13" fill="#1c1530">db.t4g.micro, sem IP público</text>
+<text x="616" y="511" font-size="13" fill="#1c1530">criptografado, backup diário</text>
+<rect x="876" y="176" width="250" height="70" rx="16" fill="#1c1530"/>
+<rect x="870" y="170" width="250" height="70" rx="16" fill="#ffffff" stroke="#1c1530" stroke-width="3"/>
+<text x="886" y="198" font-size="17" font-weight="700" fill="#1c1530">ECR</text>
+<text x="886" y="222" font-size="13" fill="#1c1530">imagem ARM da API, 5 últimas</text>
+<rect x="876" y="271" width="250" height="85" rx="16" fill="#1c1530"/>
+<rect x="870" y="265" width="250" height="85" rx="16" fill="#ffffff" stroke="#1c1530" stroke-width="3"/>
+<text x="886" y="293" font-size="17" font-weight="700" fill="#1c1530">SSM e Secrets Manager</text>
+<text x="886" y="317" font-size="13" fill="#1c1530">chaves do Spotify (SecureString)</text>
+<text x="886" y="336" font-size="13" fill="#1c1530">senha do banco, gerada pela AWS</text>
+<rect x="876" y="391" width="250" height="70" rx="16" fill="#1c1530"/>
+<rect x="870" y="385" width="250" height="70" rx="16" fill="#ffffff" stroke="#1c1530" stroke-width="3"/>
+<text x="886" y="413" font-size="17" font-weight="700" fill="#1c1530">CloudWatch Logs</text>
+<text x="886" y="437" font-size="13" fill="#1c1530">logs do container, 14 dias</text>
+<rect x="876" y="486" width="250" height="60" rx="16" fill="#1c1530"/>
+<rect x="870" y="480" width="250" height="60" rx="16" fill="#ffffff" stroke="#1c1530" stroke-width="3"/>
+<text x="886" y="508" font-size="16" font-weight="700" fill="#1c1530">IAM</text>
+<text x="886" y="532" font-size="13" fill="#1c1530">role do EC2 com o mínimo</text>
+<rect x="1176" y="326" width="200" height="95" rx="16" fill="#1c1530"/>
+<rect x="1170" y="320" width="200" height="95" rx="16" fill="#ffffff" stroke="#1c1530" stroke-width="3"/>
+<text x="1186" y="348" font-size="17" font-weight="700" fill="#1c1530">Spotify Web API</text>
+<text x="1186" y="372" font-size="13" fill="#1c1530">busca de álbuns e token</text>
+<text x="1186" y="391" font-size="13" fill="#1c1530">chamada só pela API</text>
+<path d="M195 205 L268 205" fill="none" stroke="#1c1530" stroke-width="2.5" marker-end="url(#seta)"/>
+<text x="210" y="197" font-size="12" font-weight="700" fill="#1c1530" text-anchor="start">HTTPS</text>
+<path d="M112 260 L112 497 L268 497" fill="none" stroke="#1c1530" stroke-width="2.5" stroke-dasharray="7 6" marker-end="url(#seta)"/>
+<text x="120" y="380" font-size="12" font-weight="700" fill="#1c1530" text-anchor="start">DNS</text>
+<path d="M400 345 L400 323" fill="none" stroke="#1c1530" stroke-width="2.5" marker-end="url(#seta)"/>
+<text x="408" y="338" font-size="12" font-weight="700" fill="#1c1530" text-anchor="start">certificado</text>
+<path d="M530 212 L598 212" fill="none" stroke="#1c1530" stroke-width="2.5" marker-end="url(#seta)"/>
+<text x="548" y="204" font-size="12" font-weight="700" fill="#1c1530" text-anchor="start">site</text>
+<path d="M530 290 L565 290 L565 330 L598 330" fill="none" stroke="#1c1530" stroke-width="2.5" marker-end="url(#seta)"/>
+<text x="538" y="282" font-size="12" font-weight="700" fill="#1c1530" text-anchor="start">/api/*</text>
+<text x="538" y="352" font-size="11" fill="#4a4166">HTTP 8080</text>
+<path d="M720 410 L720 438" fill="none" stroke="#1c1530" stroke-width="2.5" marker-end="url(#seta)"/>
+<text x="728" y="428" font-size="12" font-weight="700" fill="#1c1530" text-anchor="start">JDBC</text>
+<path d="M840 295 L852 295 L852 205 L868 205" fill="none" stroke="#1c1530" stroke-width="2.5" marker-end="url(#seta)"/>
+<text x="856" y="255" font-size="12" font-weight="700" fill="#1c1530" text-anchor="start">imagem</text>
+<path d="M840 312 L868 312" fill="none" stroke="#1c1530" stroke-width="2.5" marker-end="url(#seta)"/>
+<path d="M840 400 L856 400 L856 420 L868 420" fill="none" stroke="#1c1530" stroke-width="2.5" marker-end="url(#seta)"/>
+<path d="M840 370 L1168 370" fill="none" stroke="#1c1530" stroke-width="2.5" marker-end="url(#seta)"/>
+<rect x="30" y="600" width="1340" height="280" rx="22" fill="#fff7e0" stroke="#1c1530" stroke-width="2" stroke-dasharray="7 6"/>
+<text x="50" y="630" font-size="15" font-weight="800" fill="#1c1530">Entrega: do commit até o ar</text>
+<rect x="56" y="656" width="210" height="120" rx="16" fill="#1c1530"/>
+<rect x="50" y="650" width="210" height="120" rx="16" fill="#ff8fc7" stroke="#1c1530" stroke-width="3"/>
+<text x="66" y="678" font-size="17" font-weight="700" fill="#1c1530">Branches por área</text>
+<text x="66" y="702" font-size="13" fill="#1c1530">backend, frontend,</text>
+<text x="66" y="721" font-size="13" fill="#1c1530">devops e docs</text>
+<text x="66" y="740" font-size="13" fill="#1c1530">Conventional Commits</text>
+<rect x="306" y="656" width="180" height="120" rx="16" fill="#1c1530"/>
+<rect x="300" y="650" width="180" height="120" rx="16" fill="#ffc93c" stroke="#1c1530" stroke-width="3"/>
+<text x="316" y="678" font-size="17" font-weight="700" fill="#1c1530">test</text>
+<text x="316" y="702" font-size="13" fill="#1c1530">PR de cada branch</text>
+<text x="316" y="721" font-size="13" fill="#1c1530">CI verde para entrar</text>
+<rect x="526" y="656" width="180" height="120" rx="16" fill="#1c1530"/>
+<rect x="520" y="650" width="180" height="120" rx="16" fill="#3ddc97" stroke="#1c1530" stroke-width="3"/>
+<text x="536" y="678" font-size="17" font-weight="700" fill="#1c1530">master</text>
+<text x="536" y="702" font-size="13" fill="#1c1530">PR test para master</text>
+<text x="536" y="721" font-size="13" fill="#1c1530">depois dos testes</text>
+<rect x="746" y="656" width="230" height="120" rx="16" fill="#1c1530"/>
+<rect x="740" y="650" width="230" height="120" rx="16" fill="#ffffff" stroke="#1c1530" stroke-width="3"/>
+<text x="756" y="678" font-size="17" font-weight="700" fill="#1c1530">GitHub Actions (CI)</text>
+<text x="756" y="702" font-size="13" fill="#1c1530">testes do backend (Java 21)</text>
+<text x="756" y="721" font-size="13" fill="#1c1530">lint, testes e build do site</text>
+<text x="756" y="740" font-size="13" fill="#1c1530">stack Docker com health check</text>
+<rect x="1016" y="656" width="340" height="120" rx="16" fill="#1c1530"/>
+<rect x="1010" y="650" width="340" height="120" rx="16" fill="#c9b8ff" stroke="#1c1530" stroke-width="3"/>
+<text x="1026" y="678" font-size="17" font-weight="700" fill="#1c1530">infra/aws/deploy-manual.sh</text>
+<text x="1026" y="702" font-size="13" fill="#1c1530">imagem ARM no ECR, site no S3</text>
+<text x="1026" y="721" font-size="13" fill="#1c1530">EC2 troca o container pelo SSM</text>
+<text x="1026" y="740" font-size="13" fill="#1c1530">limpa o cache do CloudFront</text>
+<path d="M260 710 L298 710" fill="none" stroke="#1c1530" stroke-width="2.5" marker-end="url(#seta)"/>
+<path d="M480 710 L518 710" fill="none" stroke="#1c1530" stroke-width="2.5" marker-end="url(#seta)"/>
+<path d="M700 710 L738 710" fill="none" stroke="#1c1530" stroke-width="2.5" marker-end="url(#seta)"/>
+<path d="M970 710 L1008 710" fill="none" stroke="#1c1530" stroke-width="2.5" marker-end="url(#seta)"/>
+<rect x="50" y="800" width="1300" height="58" rx="14" fill="none" stroke="#1c1530" stroke-width="2" stroke-dasharray="2 5"/>
+<text x="70" y="824" font-size="13" font-weight="700" fill="#1c1530">Infraestrutura em Terraform (infra/terraform). Segredos só no SSM e no Secrets Manager, nunca no código nem no GitHub.</text>
+<text x="70" y="845" font-size="13" fill="#4a4166">Deploy automático pelo GitHub Actions por OIDC: pronto no código, desligado porque o plano Free da AWS não permite criar o provedor de identidade.</text>
+<path d="M30 910 L80 910" stroke="#1c1530" stroke-width="2.5" marker-end="url(#seta)"/>
+<text x="90" y="914" font-size="12" fill="#1c1530">requisição</text>
+<path d="M190 910 L240 910" stroke="#1c1530" stroke-width="2.5" stroke-dasharray="7 6" marker-end="url(#seta)"/>
+<text x="250" y="914" font-size="12" fill="#1c1530">consulta de DNS</text>
+<text x="1370" y="914" font-size="12" fill="#4a4166" text-anchor="end">Custo: cerca de US$ 30 por mês, pagos pelos créditos do plano Free</text>
 </svg>

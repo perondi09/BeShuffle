@@ -271,7 +271,8 @@ aceitável para 1 sorteio grátis.
 >   Lambda foi descartada: o EC2 é pago por hora e a Lambda precisaria de NAT Gateway (~US$ 32/mês) para falar com o
 >   banco e o Spotify. Diagrama em `docs/arquitetura-aws.svg`.
 >
-> **No ar na AWS (14/11/2026):** https://d2uleu997pab30.cloudfront.net, projeto no plano Free, região us-east-2.
+> **No ar na AWS (14/11/2026):** https://beshuffle.com.br (antes `d2uleu997pab30.cloudfront.net`), projeto no plano
+> Free, região us-east-2. Domínio comprado na HostGator com o DNS no Route 53 e certificado do ACM em us-east-1.
 > - O SCP do plano Free nega `iam:*Provider*`, então o provedor OIDC do GitHub não pode ser criado. A parte de deploy
 >   automático ficou atrás de `github_deploy_enabled` (desligada) e o deploy é pelo `infra/aws/deploy-manual.sh`.
 > - O mesmo SCP só deixa criar EC2 na região do projeto (us-east-2).
@@ -283,7 +284,6 @@ aceitável para 1 sorteio grátis.
 > - os `RestClient` não usam o `RestClient.Builder` do Boot (sem métricas);
 > - `baseline-on-migrate` pode sair (o primeiro deploy já foi feito);
 > - sem limite de tentativas de login (força bruta);
-> - domínio próprio (Route 53 + certificado no ACM) no lugar do endereço `*.cloudfront.net`;
 > - deploy automático pelo GitHub depende de passar o projeto para o plano pago (ou de aceitar uma chave IAM).
 
 1. Localizar/commitar o código de cadastro; criar branch `feature/auth`.
