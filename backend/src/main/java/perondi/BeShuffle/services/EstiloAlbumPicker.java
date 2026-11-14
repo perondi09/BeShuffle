@@ -10,8 +10,9 @@ import java.util.List;
 import java.util.random.RandomGenerator;
 
 /**
- * Sorteio por estilo musical: escolhe um dos estilos pedidos, busca faixas daquele gênero numa página
- * aleatória entre as mais relevantes e sorteia um dos álbuns dessas faixas que o {@link FiltroDeAlbum} aceita.
+ * Sorteio por estilo musical: escolhe um dos estilos pedidos e sorteia um álbum que o {@link FiltroDeAlbum}
+ * aceita. Estilo por gênero: busca faixas {@code genre:"..."} numa página aleatória entre as mais relevantes.
+ * Estilo por artistas: sorteia um artista da lista e busca os álbuns dele ({@code artist:"..."}).
  */
 @Slf4j
 @Service
@@ -40,20 +41,16 @@ public class EstiloAlbumPicker {
         }
         for (int tentativa = 1; tentativa <= props.tentativas(); tentativa++) {
             Estilo estilo = estilos.get(random.nextInt(estilos.size()));
-            int offset = random.nextInt(PAGINAS) * props.tamanhoPagina();
             try {
-                List<AlbumSearchItem> candidatos = spotifyClient
-                        .searchTrackAlbums(estilo.consulta(), props.mercado(), props.tamanhoPagina(), offset).stream()
-                        .filter(filtro::aceita)
-                        .toList();
+                List<AlbumSearchItem> candidatos = estilo.porArtistas() ? deUmArtista(estilo) : deUmGenero(estilo);
                 if (!candidatos.isEmpty()) {
                     AlbumSearchItem escolhido = candidatos.get(random.nextInt(candidatos.size()));
-                    log.info("Álbum sorteado por estilo {}: {} ({}), offset {}, tentativa {}",
-                            estilo.id(), escolhido.name(), escolhido.id(), offset, tentativa);
+                    log.info("Álbum sorteado por estilo {}: {} ({}), tentativa {}",
+                            estilo.id(), escolhido.name(), escolhido.id(), tentativa);
                     return escolhido.id();
                 }
-                log.info("Nenhum álbum aprovado no estilo {} offset {} (tentativa {} de {})",
-                        estilo.id(), offset, tentativa, props.tentativas());
+                log.info("Nenhum álbum aprovado no estilo {} (tentativa {} de {})",
+                        estilo.id(), tentativa, props.tentativas());
             } catch (Exception e) {
                 log.warn("Erro ao buscar o estilo {} no Spotify (tentativa {} de {})",
                         estilo.id(), tentativa, props.tentativas(), e);
@@ -61,5 +58,32 @@ public class EstiloAlbumPicker {
         }
         log.error("Nenhum álbum sorteado nos estilos {} depois de {} tentativas", estilos, props.tentativas());
         return null;
+    }
+
+    /** Faixas do gênero numa página aleatória entre as mais relevantes; devolve os álbuns aceitos. */
+    private List<AlbumSearchItem> deUmGenero(Estilo estilo) {
+        int offset = random.nextInt(PAGINAS) * props.tamanhoPagina();
+        return spotifyClient.searchTrackAlbums(estilo.consulta(), props.mercado(), props.tamanhoPagina(), offset)
+                .stream()
+                .filter(filtro::aceita)
+                .toList();
+    }
+
+    /**
+     * Álbuns de um artista sorteado da lista do estilo. Só valem álbuns em que ele é um dos artistas: a busca
+     * {@code artist:"..."} também traz discos de quem só participou ou tem nome parecido.
+     */
+    private List<AlbumSearchItem> deUmArtista(Estilo estilo) {
+        String artista = estilo.artistas().get(random.nextInt(estilo.artistas().size()));
+        return spotifyClient.searchAlbums("artist:\"" + artista + "\"", props.mercado(), props.tamanhoPagina(), 0)
+                .stream()
+                .filter(filtro::aceita)
+                .filter(album -> ehDoArtista(album, artista))
+                .toList();
+    }
+
+    private static boolean ehDoArtista(AlbumSearchItem album, String artista) {
+        return album.artists() != null && album.artists().stream()
+                .anyMatch(a -> a != null && a.name() != null && a.name().equalsIgnoreCase(artista));
     }
 }
