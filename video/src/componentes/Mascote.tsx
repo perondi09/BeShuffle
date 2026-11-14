@@ -2,7 +2,11 @@ import { interpolate, useCurrentFrame, useVideoConfig } from 'remotion'
 import { useMola } from '../animacao'
 import { cor } from '../tema'
 
-export type Pose = 'feliz' | 'acena' | 'pensando' | 'surpreso' | 'comemora'
+/**
+ * Poses das imagens de divulgação: `apoiado` encosta na logo (braço esquerdo em cima dela, pernas cruzadas) e `ola`
+ * acena com a mão bem para cima.
+ */
+export type Pose = 'feliz' | 'acena' | 'pensando' | 'surpreso' | 'comemora' | 'apoiado' | 'ola'
 
 interface MascoteProps {
   pose?: Pose
@@ -25,19 +29,20 @@ export const Mascote = ({ pose = 'feliz', x = 540, y = 1520, tamanho = 400, atra
   const frame = useCurrentFrame()
   const { fps } = useVideoConfig()
   const t = frame / fps
+  const apoiado = pose === 'apoiado'
   const entrada = useMola(atraso, { damping: 9, stiffness: 140 })
   const pulo = pose === 'comemora' ? -Math.abs(Math.sin(t * Math.PI * 2.4)) * 26 : Math.sin(t * Math.PI * 2) * 6
   const piscando = frame % 70 < 4 ? 0.12 : 1
   const bracoDir =
-    pose === 'acena' ? -40 + Math.sin(t * Math.PI * 5) * 28 : pose === 'comemora' ? -70 + Math.sin(t * Math.PI * 6) * 12 : 0
-  const bracoEsq = pose === 'comemora' ? 70 - Math.sin(t * Math.PI * 6) * 12 : pose === 'pensando' ? 60 : 0
-  const olhar = pose === 'pensando' ? { x: 4, y: -5 } : { x: 1, y: 1 }
+    pose === 'acena' ? -40 + Math.sin(t * Math.PI * 5) * 28 : pose === 'ola' ? -98 + Math.sin(t * Math.PI * 4) * 10 : pose === 'comemora' ? -70 + Math.sin(t * Math.PI * 6) * 12 : apoiado ? -18 : 0
+  const bracoEsq = pose === 'comemora' ? 70 - Math.sin(t * Math.PI * 6) * 12 : pose === 'pensando' ? 60 : apoiado ? 72 : 0
+  const olhar = pose === 'pensando' ? { x: 4, y: -5 } : apoiado ? { x: -3, y: 0 } : { x: 1, y: 1 }
   const altura = tamanho * 1.2
-  const inclinacao = interpolate(Math.sin(t * Math.PI), [-1, 1], [-3, 3])
+  const inclinacao = apoiado ? -7 : interpolate(Math.sin(t * Math.PI), [-1, 1], [-3, 3])
   const ponteiro = 60 + Math.sin(t * Math.PI * 0.9) * 26
   const botao = frame * 4
   const nota = (t * 0.8) % 1
-  const sorriso = pose === 'comemora' || pose === 'acena'
+  const sorriso = pose === 'comemora' || pose === 'acena' || pose === 'ola' || apoiado
 
   return (
     <svg
@@ -55,10 +60,27 @@ export const Mascote = ({ pose = 'feliz', x = 540, y = 1520, tamanho = 400, atra
     >
       <ellipse cx="100" cy="234" rx="62" ry="9" fill="rgba(28,21,48,0.22)" />
       {/* pernas e tênis */}
-      <path d="M74 170 Q70 196 68 222" stroke={cor.tinta} strokeWidth="8" fill="none" strokeLinecap="round" />
-      <path d="M124 170 Q128 196 132 222" stroke={cor.tinta} strokeWidth="8" fill="none" strokeLinecap="round" />
-      <path d="M48 226 Q50 212 68 212 Q84 212 86 226 Z" fill={cor.tomate} stroke={cor.tinta} strokeWidth="4" strokeLinejoin="round" />
-      <path d="M114 226 Q116 212 132 212 Q150 212 152 226 Z" fill={cor.tomate} stroke={cor.tinta} strokeWidth="4" strokeLinejoin="round" />
+      <path
+        d={apoiado ? 'M74 170 Q92 198 108 222' : 'M74 170 Q70 196 68 222'}
+        stroke={cor.tinta}
+        strokeWidth="8"
+        fill="none"
+        strokeLinecap="round"
+      />
+      <path
+        d={apoiado ? 'M124 170 Q106 198 90 222' : 'M124 170 Q128 196 132 222'}
+        stroke={cor.tinta}
+        strokeWidth="8"
+        fill="none"
+        strokeLinecap="round"
+      />
+      {/* tênis; com as pernas cruzadas, cada um troca de lado */}
+      <g transform={`translate(${apoiado ? 40 : 0} 0)`}>
+        <path d="M48 226 Q50 212 68 212 Q84 212 86 226 Z" fill={cor.tomate} stroke={cor.tinta} strokeWidth="4" strokeLinejoin="round" />
+      </g>
+      <g transform={`translate(${apoiado ? -42 : 0} 0)`}>
+        <path d="M114 226 Q116 212 132 212 Q150 212 152 226 Z" fill={cor.tomate} stroke={cor.tinta} strokeWidth="4" strokeLinejoin="round" />
+      </g>
       {/* braços de mangueira com mãos amarelas */}
       <g transform={`rotate(${bracoEsq} 24 118)`}>
         <path d="M24 118 Q4 128 6 152" stroke={cor.tinta} strokeWidth="8" fill="none" strokeLinecap="round" />
