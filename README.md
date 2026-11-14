@@ -143,6 +143,7 @@ Detalhes e códigos de erro: [backend/README.md](backend/README.md#endpoints).
 | `infra/` | Docker Compose, Dockerfiles, nginx, Terraform da AWS e scripts de deploy | [infra/README.md](infra/README.md) |
 | `.github/workflows/` | CI (`ci.yml`) e deploy na AWS (`deploy.yml`) | [infra/README.md](infra/README.md#ci) |
 | `docs/` | Contexto, roadmap, diagrama da arquitetura e proposta visual | [docs/CONTEXTO.md](docs/CONTEXTO.md) |
+| `video/` | Vídeo de apresentação feito em código (Remotion) | [video/README.md](video/README.md) |
 
 ## Fluxo de branches
 
