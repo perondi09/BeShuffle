@@ -17,6 +17,10 @@ export interface MyReview {
 export interface TodayReviews {
   albumId: string
   albumName: string
+  albumArtist?: string | null
+  albumImageUrl?: string | null
+  /** Dia do Álbum do Dia, no formato aaaa-mm-dd. */
+  date?: string | null
   /** null enquanto ninguém deu nota. */
   average: number | null
   count: number

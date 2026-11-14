@@ -44,7 +44,7 @@ describe('LoginPage', () => {
     type('Senha', 'segredo-de-teste')
     fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
 
-    expect(await screen.findByRole('button', { name: 'Sortear álbum' })).toBeInTheDocument()
+    expect(await screen.findByRole('tab', { name: 'Sorteio' })).toBeInTheDocument()
   })
 
   it('leva para o cadastro', () => {

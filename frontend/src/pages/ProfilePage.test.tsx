@@ -7,6 +7,9 @@ const resetsAt = '2026-11-15T03:00:00Z'
 const notas = {
   albumId: 'daily-1',
   albumName: 'Clube da Esquina',
+  albumArtist: 'Milton Nascimento',
+  albumImageUrl: 'https://img/clube.jpg',
+  date: '2026-11-14',
   average: 4,
   count: 1,
   mine: { rating: 4, comment: 'Lindo demais', updatedAt: resetsAt },
@@ -45,6 +48,9 @@ describe('ProfilePage', () => {
 
     const nota = within(screen.getByRole('region', { name: 'Sua nota de hoje' }))
     expect(await nota.findByText('Lindo demais')).toBeInTheDocument()
+    expect(nota.getByText('Álbum do Dia de sábado, 14 de novembro')).toBeInTheDocument()
+    expect(nota.getByRole('img', { name: 'Capa de Clube da Esquina' })).toHaveAttribute('src', 'https://img/clube.jpg')
+    expect(nota.getByText('4 de 5')).toBeInTheDocument()
     expect(nota.getByRole('link', { name: 'Mudar a nota' })).toHaveAttribute('href', '/')
   })
 
