@@ -48,6 +48,7 @@ resource "aws_cloudfront_distribution" "this" {
   enabled             = true
   is_ipv6_enabled     = true
   comment             = "BeShuffle: site no S3 e /api no EC2"
+  aliases             = local.nomes_do_site
   default_root_object = "index.html"
   # Inclui as bordas da América do Sul; o plano Free cobre 1 TB/mês de saída.
   price_class = "PriceClass_All"
@@ -103,7 +104,12 @@ resource "aws_cloudfront_distribution" "this" {
     }
   }
 
+  # Com domínio próprio: certificado do ACM e TLS 1.2 no mínimo (prefere 1.3). Sem domínio: o certificado padrão
+  # do *.cloudfront.net, que só aceita a política TLSv1.
   viewer_certificate {
-    cloudfront_default_certificate = true
+    cloudfront_default_certificate = !local.dominio_ativo
+    acm_certificate_arn            = local.dominio_ativo ? aws_acm_certificate_validation.site[0].certificate_arn : null
+    ssl_support_method             = local.dominio_ativo ? "sni-only" : null
+    minimum_protocol_version       = local.dominio_ativo ? "TLSv1.2_2021" : "TLSv1"
   }
 }

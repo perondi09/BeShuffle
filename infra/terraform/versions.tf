@@ -19,3 +19,16 @@ provider "aws" {
     }
   }
 }
+
+# Só para o certificado do CloudFront, que precisa estar em us-east-1 (o resto fica na região do projeto).
+provider "aws" {
+  alias  = "us_east_1"
+  region = "us-east-1"
+
+  default_tags {
+    tags = {
+      Project   = "BeShuffle"
+      ManagedBy = "Terraform"
+    }
+  }
+}

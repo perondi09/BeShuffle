@@ -5,3 +5,7 @@ monthly_budget_usd = 35
 
 # Deploy automático pelo GitHub (OIDC). O plano Free da AWS bloqueia; ligue só no plano pago.
 github_deploy_enabled = false
+
+# Domínio próprio (DNS no Route 53). Fase 2: ligue depois de trocar os nameservers no registrador.
+# domain_name                  = "beshuffle.com.br"
+# domain_nameservers_delegated = true
