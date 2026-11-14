@@ -36,12 +36,13 @@ resource "aws_cloudfront_origin_access_control" "site" {
   signing_protocol                  = "sigv4"
 }
 
-# Rotas do React (/perfil, /entrar...) não são arquivos: devolvem o index.html.
+# Rotas do React (/perfil, /entrar...) não são arquivos: devolvem o index.html. O www vira o domínio sem www.
+# O replace tira o CRLF que o Git do Windows põe no checkout; sem ele, todo plan quer atualizar a função.
 resource "aws_cloudfront_function" "spa" {
   name    = "${var.project}-spa"
   runtime = "cloudfront-js-2.0"
   publish = true
-  code    = file("${path.module}/spa.js")
+  code    = replace(file("${path.module}/spa.js"), "\r\n", "\n")
 }
 
 resource "aws_cloudfront_distribution" "this" {
