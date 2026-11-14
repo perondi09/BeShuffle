@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from 'react-router'
+import { Link, useLocation, useNavigate } from 'react-router'
 import { TokenBadge } from '../../features/draw/TokenBadge'
 import { useSession } from '../../features/session/session'
 import { Button } from '../ui'
@@ -28,7 +28,9 @@ export function Header() {
           <TokenBadge />
           {user ? (
             <>
-              <span className={styles.user}>Oi, {user.displayName}</span>
+              <Link to="/perfil" className={styles.user}>
+                Oi, {user.displayName}
+              </Link>
               <Button variant="papel" onClick={handleSignOut}>
                 Sair
               </Button>

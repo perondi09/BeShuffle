@@ -11,6 +11,9 @@ import java.util.List;
 
 public interface DrawRepository extends JpaRepository<Draw, Long> {
 
+    /** Sorteios de uma conta no dia, do mais recente para o mais antigo. */
+    List<Draw> findByUserIdAndDrawDateOrderByCreatedAtDesc(Long userId, LocalDate drawDate);
+
     /** Álbuns sorteados no dia, um por álbum, do mais recente para o mais antigo. */
     @Query("""
             select new perondi.BeShuffle.dtos.draws.AlbumSorteado(

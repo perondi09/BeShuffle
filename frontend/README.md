@@ -9,6 +9,7 @@ Telas:
 | `/` | Home: Álbum do Dia, sorteio (1 ficha por dia para visitante, 10 e escolha de estilos para conta logada), sorteados de hoje e nota do Álbum do Dia (trancados para visitante) |
 | `/entrar` | Login |
 | `/cadastro` | Cadastro |
+| `/perfil` | Perfil da conta logada: fichas de hoje, sorteios do dia, nota do Álbum do Dia e Sair (sem login, vai para `/entrar`) |
 | qualquer outra | Página 404 |
 
 Login e cadastro validam os campos e chamam `POST /api/auth/login` e `POST /api/auth/register`. A sessão fica

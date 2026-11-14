@@ -94,4 +94,57 @@ class EstiloAlbumPickerTest {
     void exigeEstilo() {
         assertThrows(IllegalArgumentException.class, () -> picker.pickAlbumId(List.of()));
     }
+
+    @Test
+    @DisplayName("Estilo por artistas busca artist:\"...\" de um artista da lista, sem passar pela busca de gênero")
+    void estiloPorArtistas() {
+        // Devolve sempre um álbum do próprio artista buscado, para cada sorteio fazer uma busca só.
+        when(spotifyClient.searchAlbums(anyString(), anyString(), anyInt(), anyInt())).thenAnswer(chamada -> {
+            String query = chamada.getArgument(0);
+            String artista = query.substring("artist:\"".length(), query.length() - 1);
+            return List.of(new AlbumSearchItem("ok", "Disco", "album", 12, List.of(new ArtistRef("a", artista))));
+        });
+
+        for (int i = 0; i < 50; i++) {
+            assertEquals("ok", picker.pickAlbumId(List.of(Estilo.SERTANEJO)));
+        }
+
+        ArgumentCaptor<String> query = ArgumentCaptor.forClass(String.class);
+        verify(spotifyClient, times(50)).searchAlbums(query.capture(), eq("BR"), eq(10), eq(0));
+        Set<String> esperadas = new HashSet<>();
+        Estilo.SERTANEJO.artistas().forEach(a -> esperadas.add("artist:\"" + a + "\""));
+        assertTrue(esperadas.containsAll(query.getAllValues()), "só artistas da lista: " + query.getAllValues());
+        verify(spotifyClient, times(0)).searchTrackAlbums(anyString(), anyString(), anyInt(), anyInt());
+    }
+
+    @Test
+    @DisplayName("Estilo por artistas só aceita álbuns em que o artista sorteado é um dos artistas")
+    void soAlbunsDoArtista() {
+        when(spotifyClient.searchAlbums(anyString(), anyString(), anyInt(), anyInt())).thenAnswer(chamada -> {
+            String query = chamada.getArgument(0);
+            String artista = query.substring("artist:\"".length(), query.length() - 1);
+            return List.of(
+                    new AlbumSearchItem("outro", "Participação", "album", 12, List.of(new ArtistRef("x", "Outra Banda"))),
+                    new AlbumSearchItem("dele", "Disco Dele", "album", 12, List.of(new ArtistRef("y", artista.toUpperCase()))));
+        });
+
+        for (int i = 0; i < 20; i++) {
+            assertEquals("dele", picker.pickAlbumId(List.of(Estilo.PAGODE)));
+        }
+    }
+
+    @Test
+    @DisplayName("Todo estilo é por gênero ou por artistas, e os ids são únicos")
+    void catalogoConsistente() {
+        Set<String> ids = new HashSet<>();
+        for (Estilo e : Estilo.values()) {
+            assertTrue(ids.add(e.id()), "id repetido: " + e.id());
+            if (e.porArtistas()) {
+                assertThrows(IllegalStateException.class, e::consulta);
+            } else {
+                assertTrue(e.consulta().startsWith("genre:\""), e.id());
+            }
+        }
+        assertTrue(Estilo.FUNK.porArtistas() && Estilo.HIP_HOP.porArtistas() && !Estilo.ROCK.porArtistas());
+    }
 }

@@ -39,4 +39,15 @@ export const drawAlbum = (genres: string[] = []) =>
 
 export const fetchDrawnToday = () => getJson<DrawnToday[]>('/api/draws/today')
 
+/** Um sorteio da própria conta hoje (GET /api/draws/mine). */
+export interface MyDraw {
+  id: string
+  name: string
+  artist?: string | null
+  imageUrl?: string | null
+  drawnAt: string
+}
+
+export const fetchMyDraws = () => getJson<MyDraw[]>('/api/draws/mine')
+
 export const fetchGenres = () => getJson<Genre[]>('/api/genres')

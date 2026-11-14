@@ -259,13 +259,32 @@ aceitável para 1 sorteio grátis.
 > - Erros esperados (4xx) agora são uma linha de aviso no log, sem stack trace.
 > - Planos pagos (fichas avulsas, mensalidade, grupos de gêneros) foram descartados em 12/11/2026.
 >
-> Ficou para a fase 3 (deploy):
+> **Fase 4, parte 3 e deploy preparado (14/11/2026):**
+> - Estilos por artistas: funk, sertanejo, pagode, piseiro, rap nacional e hip hop sorteiam um artista de uma lista
+>   testada contra a API, porque a busca por gênero quase não traz nada para eles.
+> - Teto de 20 sorteios de visitante por rede (IP, guardado só como hash com sal) contra quem apaga cookies.
+> - Página de perfil (`/perfil`) com `GET /api/draws/mine`.
+> - Sessão no Postgres (Spring Session JDBC, V4): deploy não desloga ninguém.
+> - CI sobe a stack Docker de verdade e confere a saúde da API.
+> - AWS em Terraform (`infra/terraform`): CloudFront + S3 (site), EC2 `t4g.small` com Docker (API), RDS
+>   `db.t4g.micro`, ECR, SSM, Secrets Manager, CloudWatch, Budgets e deploy por OIDC (`.github/workflows/deploy.yml`).
+>   Lambda foi descartada: o EC2 é pago por hora e a Lambda precisaria de NAT Gateway (~US$ 32/mês) para falar com o
+>   banco e o Spotify. Diagrama em `docs/arquitetura-aws.svg`.
+>
+> **No ar na AWS (14/11/2026):** https://d2uleu997pab30.cloudfront.net, projeto no plano Free, região us-east-2.
+> - O SCP do plano Free nega `iam:*Provider*`, então o provedor OIDC do GitHub não pode ser criado. A parte de deploy
+>   automático ficou atrás de `github_deploy_enabled` (desligada) e o deploy é pelo `infra/aws/deploy-manual.sh`.
+> - O mesmo SCP só deixa criar EC2 na região do projeto (us-east-2).
+> - Teste de fumaça pelo CloudFront passou: sorteio de visitante e limite, cadastro, estilos, fichas, notas, cookie
+>   de sessão `Secure`, porta do EC2 fechada para a internet. O Bruno tem o ambiente `aws`.
+>
+> Ainda pendente:
 > - o token é renovado dentro de um lock que espera a chamada HTTP;
 > - os `RestClient` não usam o `RestClient.Builder` do Boot (sem métricas);
-> - `baseline-on-migrate` deve sair depois do primeiro deploy;
-> - sessões ficam na memória da API (reinício desloga todo mundo; não escala para 2 instâncias): Spring Session JDBC;
+> - `baseline-on-migrate` pode sair (o primeiro deploy já foi feito);
 > - sem limite de tentativas de login (força bruta);
-> - o job de Docker do CI só gera as imagens; ele deveria subir a API e checar o `/actuator/health`.
+> - domínio próprio (Route 53 + certificado no ACM) no lugar do endereço `*.cloudfront.net`;
+> - deploy automático pelo GitHub depende de passar o projeto para o plano pago (ou de aceitar uma chave IAM).
 
 1. Localizar/commitar o código de cadastro; criar branch `feature/auth`.
 2. Refatoração sem mudar comportamento (`/ecc:orch-refine-code`): unificar cliente Spotify, cache de token,

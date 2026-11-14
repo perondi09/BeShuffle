@@ -200,6 +200,49 @@ class DrawIntegrationTest {
                 .andExpect(jsonPath("$[0].name").value("Rock"));
     }
 
+    @Test
+    @DisplayName("Teto por rede: a mesma rede tem até 20 sorteios de visitante por dia, mesmo trocando o cookie")
+    void tetoPorRede() throws Exception {
+        for (int i = 1; i <= 20; i++) {
+            mvc.perform(post("/api/draws").header("X-Forwarded-For", "200.1.2.3").with(ApiDeTeste.csrf(mvc)))
+                    .andExpect(status().isOk());
+        }
+        var resposta = mvc.perform(post("/api/draws").header("X-Forwarded-For", "200.1.2.3")
+                        .with(ApiDeTeste.csrf(mvc)))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("desta rede")))
+                .andReturn().getResponse();
+
+        // O 21º visitante não perdeu a ficha dele: o saldo mostra 0 por causa da rede, mas noutra rede ele sorteia.
+        Cookie anon = resposta.getCookie("bs_anon");
+        assertNotNull(anon);
+        mvc.perform(get("/api/draws/allowance").cookie(anon).header("X-Forwarded-For", "200.1.2.3"))
+                .andExpect(jsonPath("$.remaining").value(0));
+        mvc.perform(post("/api/draws").cookie(anon).header("X-Forwarded-For", "200.9.9.9").with(ApiDeTeste.csrf(mvc)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Meus sorteios de hoje: exige login e lista só os da própria conta, do mais recente ao mais antigo")
+    void meusSorteios() throws Exception {
+        mvc.perform(get("/api/draws/mine")).andExpect(status().isUnauthorized());
+
+        mvc.perform(post("/api/draws").with(ApiDeTeste.csrf(mvc))).andExpect(status().isOk());
+        MockHttpSession sessao = ApiDeTeste.logar(mvc, "Eva", "eva@beshuffle.dev");
+        mvc.perform(post("/api/draws").session(sessao).with(ApiDeTeste.csrf(mvc))).andExpect(status().isOk());
+        mvc.perform(post("/api/draws").session(sessao).with(ApiDeTeste.csrf(mvc))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"genres\":[\"rock\"]}"))
+                .andExpect(status().isOk());
+
+        mvc.perform(get("/api/draws/mine").session(sessao))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].id").value("alb2"))
+                .andExpect(jsonPath("$[0].name").value("Disco de Rock"))
+                .andExpect(jsonPath("$[1].id").value("alb1"))
+                .andExpect(jsonPath("$[1].drawnAt").exists());
+    }
+
     private static Album album(String id, String nome, String artista) {
         Album album = new Album();
         album.setId(id);
