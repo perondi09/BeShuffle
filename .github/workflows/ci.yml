@@ -62,15 +62,31 @@ jobs:
         run: npm run build
 
   docker:
-    name: Imagens Docker
+    name: Stack Docker
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: [backend, frontend]
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build da imagem da API
-        run: docker build -f infra/docker/backend.Dockerfile backend
+      # Sobe Postgres, API e site como no Docker local: pega migration quebrada, API que não sobe e proxy errado.
+      # Senha aleatória só para este banco descartável; chaves do Spotify falsas (a API sobe sem chamar o Spotify).
+      - name: Subir a stack
+        working-directory: infra
+        run: |
+          SENHA="$(openssl rand -hex 16)"
+          echo "::add-mask::$SENHA"
+          echo "DB_PASSWORD=$SENHA" >> "$GITHUB_ENV"
+          DB_PASSWORD="$SENHA" SPOTIFY_CLIENT_ID=ci SPOTIFY_CLIENT_SECRET=ci \
+            docker compose up -d --build --wait --wait-timeout 240
 
-      - name: Build da imagem do site
-        run: docker build -f infra/docker/frontend.Dockerfile .
+      - name: Conferir a API pelo site
+        run: |
+          curl -fsS http://localhost:8080/actuator/health
+          curl -fsS http://localhost:3000/api/draws/allowance | grep -q '"plan":"VISITANTE"'
+          curl -fsS -o /dev/null http://localhost:3000/perfil
+
+      - name: Logs da stack (se falhar)
+        if: failure()
+        working-directory: infra
+        run: SPOTIFY_CLIENT_ID=ci SPOTIFY_CLIENT_SECRET=ci docker compose logs --tail 200

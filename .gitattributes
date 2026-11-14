@@ -1,2 +1,5 @@
 /backend/mvnw text eol=lf
 *.cmd text eol=crlf
+# Scripts que rodam em Linux (EC2, CI) precisam de LF mesmo quando o checkout é no Windows.
+*.sh text eol=lf
+*.tftpl text eol=lf

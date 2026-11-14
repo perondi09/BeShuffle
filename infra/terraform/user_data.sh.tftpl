@@ -1,0 +1,25 @@
+#!/bin/bash
+# Primeiro boot do EC2: Docker, swap, script de deploy. A API sobe no primeiro deploy (infra/aws/deploy.sh
+# ou o workflow "Deploy AWS"), quando já existe imagem no ECR.
+set -euxo pipefail
+
+dnf install -y docker jq
+systemctl enable --now docker
+
+# 1 GB de swap: folga para a JVM em picos, sem trocar de tipo de instância.
+if [ ! -f /swapfile ]; then
+  dd if=/dev/zero of=/swapfile bs=1M count=1024
+  chmod 600 /swapfile
+  mkswap /swapfile
+  swapon /swapfile
+  echo "/swapfile swap swap defaults 0 0" >> /etc/fstab
+fi
+
+mkdir -p /opt/beshuffle
+echo "${deploy_conf_b64}" | base64 -d > /opt/beshuffle/deploy.conf
+echo "${deploy_sh_b64}" | base64 -d > /opt/beshuffle/deploy.sh
+chmod 700 /opt/beshuffle/deploy.sh
+chmod 600 /opt/beshuffle/deploy.conf
+
+# Se já houver imagem (EC2 recriado), sobe a API sozinho.
+/opt/beshuffle/deploy.sh latest || echo "Ainda sem imagem no ECR; a API sobe no primeiro deploy."
