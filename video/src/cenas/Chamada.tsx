@@ -12,7 +12,7 @@ export const Chamada = ({ duracao }: { duracao: number }) => {
   const botao = useMola(0.8)
   const pulso = 1 + Math.sin((frame / fps) * Math.PI * 3) * 0.04
   return (
-    <Cena etiqueta="SORTEIE O SEU" legenda="descubra seu próximo disco favorito" duracao={duracao} mascote={{ pose: 'acena' }}>
+    <Cena etiqueta="SORTEIE O SEU" legenda="é grátis. Entra lá e me conta:" duracao={duracao} mascote={{ pose: 'acena' }} saida={14}>
       <div
         style={{
           position: 'absolute',

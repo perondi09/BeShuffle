@@ -19,7 +19,7 @@ export const PassoNota = ({ duracao }: { duracao: number }) => {
   return (
     <Cena
       etiqueta="PASSO 3: DÊ SUA NOTA"
-      legenda="dê nota e comente o Álbum do Dia"
+      legenda="dê sua nota e veja o que a galera achou"
       duracao={duracao}
       mascote={{ pose: t > 2.6 ? 'comemora' : 'feliz', x: 830, tamanho: 320 }}
     >

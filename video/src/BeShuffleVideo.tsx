@@ -5,24 +5,27 @@ import type { FC } from 'react'
 import { Chamada } from './cenas/Chamada'
 import { Gancho } from './cenas/Gancho'
 import { Ideia } from './cenas/Ideia'
+import { ParaQuem } from './cenas/ParaQuem'
 import { PassoDia } from './cenas/PassoDia'
 import { PassoNota } from './cenas/PassoNota'
 import { PassoSorteio } from './cenas/PassoSorteio'
-import { PorTras } from './cenas/PorTras'
 import { Problema } from './cenas/Problema'
 
 const TRANSICAO = 12
 
-/** Roteiro: cada cena com a sua duração em quadros (30 por segundo). */
+/**
+ * Roteiro em loop: a última cena termina com o palco vazio e a frase "Entra lá e me conta:", que emenda na
+ * pergunta da primeira cena. Cada cena tem a sua duração em quadros (30 por segundo).
+ */
 export const CENAS: { Componente: FC<{ duracao: number }>; duracao: number }[] = [
-  { Componente: Gancho, duracao: 120 },
-  { Componente: Problema, duracao: 150 },
-  { Componente: Ideia, duracao: 120 },
-  { Componente: PassoDia, duracao: 150 },
-  { Componente: PassoSorteio, duracao: 180 },
-  { Componente: PassoNota, duracao: 150 },
-  { Componente: PorTras, duracao: 180 },
-  { Componente: Chamada, duracao: 150 },
+  { Componente: Gancho, duracao: 105 },
+  { Componente: Problema, duracao: 135 },
+  { Componente: Ideia, duracao: 125 },
+  { Componente: PassoDia, duracao: 135 },
+  { Componente: PassoSorteio, duracao: 165 },
+  { Componente: PassoNota, duracao: 135 },
+  { Componente: ParaQuem, duracao: 165 },
+  { Componente: Chamada, duracao: 140 },
 ]
 
 /** As transições sobrepõem as cenas, então o vídeo é mais curto que a soma delas. */

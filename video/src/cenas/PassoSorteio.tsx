@@ -23,7 +23,7 @@ export const PassoSorteio = ({ duracao }: { duracao: number }) => {
   return (
     <Cena
       etiqueta="PASSO 2: SORTEIE"
-      legenda="escolha os estilos e sorteie até 10 discos por dia"
+      legenda="não curtiu? sorteie outro, do rock ao pagode"
       duracao={duracao}
       mascote={{ pose: t > 3 ? 'comemora' : 'feliz', x: 880, tamanho: 280 }}
     >

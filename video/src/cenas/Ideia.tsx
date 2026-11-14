@@ -10,7 +10,7 @@ export const Ideia = ({ duracao }: { duracao: number }) => {
   const logo = useMola(0.3, { damping: 8, stiffness: 160 })
   const disco = useMola(0.15, { damping: 12 })
   return (
-    <Cena etiqueta="A IDEIA" legenda="então eu criei o BeShuffle" duracao={duracao} mascote={{ pose: 'comemora', tamanho: 320 }}>
+    <Cena etiqueta="CONHEÇA" legenda="o BeShuffle é uma jukebox que escolhe por você" duracao={duracao} mascote={{ pose: 'comemora', tamanho: 320 }}>
       <div
         style={{
           position: 'absolute',

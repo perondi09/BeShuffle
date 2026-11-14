@@ -33,8 +33,8 @@ const Linha = ({ indice }: { indice: number }) => {
 /** Cena 2: por que o projeto existe. */
 export const Problema = ({ duracao }: { duracao: number }) => (
   <Cena
-    etiqueta="O PROBLEMA"
-    legenda="eu sempre acabava ouvindo os mesmos discos"
+    etiqueta="SEMPRE O MESMO?"
+    legenda="cansou de ouvir sempre os mesmos discos?"
     duracao={duracao}
     mascote={{ pose: 'surpreso', x: 820, tamanho: 330 }}
   >
