@@ -1,0 +1,182 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 860" width="1300" height="860" font-family="Helvetica, Arial, sans-serif" role="img" aria-labelledby="titulo descricao">
+  <title id="titulo">BeShuffle na AWS: arquitetura e entrega contínua</title>
+  <desc id="descricao">Código em branches por área que viram PR para test e depois master. O GitHub Actions roda o CI e, na master, faz o deploy por OIDC. Na AWS (us-east-2), o CloudFront serve o site do S3 e repassa /api para a API em Docker num EC2 t4g.small, que usa um RDS PostgreSQL, lê segredos do SSM e do Secrets Manager, puxa a imagem do ECR, manda logs ao CloudWatch e chama a Web API do Spotify.</desc>
+  <defs>
+    <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#1c1530"/>
+    </marker>
+    <style>
+      .caixa { fill: #ffffff; stroke: #1c1530; stroke-width: 3; }
+      .sombra { fill: #1c1530; }
+      .titulo { font-size: 17px; font-weight: 700; fill: #1c1530; }
+      .texto { font-size: 13px; fill: #1c1530; }
+      .miudo { font-size: 12px; fill: #4a4166; }
+      .secao { font-size: 14px; font-weight: 700; fill: #1c1530; letter-spacing: 0.5px; }
+      .linha { stroke: #1c1530; stroke-width: 2.5; fill: none; marker-end: url(#seta); }
+      .tracejada { stroke: #1c1530; stroke-width: 2; fill: none; stroke-dasharray: 6 5; marker-end: url(#seta); }
+      .rotulo { font-size: 12px; fill: #1c1530; font-weight: 600; }
+      .branco { fill: #ffffff; }
+    </style>
+  </defs>
+
+  <!-- Fundo -->
+  <rect width="1300" height="860" fill="#fbfaff"/>
+  <text x="30" y="46" font-size="26" font-weight="800" fill="#1c1530">BeShuffle na AWS</text>
+  <text x="30" y="72" class="miudo">Arquitetura em nuvem e fluxo de DevOps (região us-east-2, Ohio)</text>
+
+  <!-- ===== Código e branches ===== -->
+  <rect x="30" y="110" width="270" height="350" rx="20" fill="#f3eeff" stroke="#1c1530" stroke-width="2" stroke-dasharray="6 5"/>
+  <text x="48" y="138" class="secao">GitHub: código e branches</text>
+
+  <rect x="48" y="160" width="110" height="34" rx="17" fill="#ff8fc7" stroke="#1c1530" stroke-width="2.5"/>
+  <text x="103" y="182" class="texto" text-anchor="middle" font-weight="600">backend</text>
+  <rect x="48" y="206" width="110" height="34" rx="17" fill="#ff8fc7" stroke="#1c1530" stroke-width="2.5"/>
+  <text x="103" y="228" class="texto" text-anchor="middle" font-weight="600">frontend</text>
+  <rect x="48" y="252" width="110" height="34" rx="17" fill="#ff8fc7" stroke="#1c1530" stroke-width="2.5"/>
+  <text x="103" y="274" class="texto" text-anchor="middle" font-weight="600">devops</text>
+  <rect x="48" y="298" width="110" height="34" rx="17" fill="#ff8fc7" stroke="#1c1530" stroke-width="2.5"/>
+  <text x="103" y="320" class="texto" text-anchor="middle" font-weight="600">docs</text>
+
+  <rect x="196" y="229" width="86" height="34" rx="17" fill="#ffc93c" stroke="#1c1530" stroke-width="2.5"/>
+  <text x="239" y="251" class="texto" text-anchor="middle" font-weight="700">test</text>
+  <rect x="196" y="370" width="86" height="34" rx="17" fill="#3ddc97" stroke="#1c1530" stroke-width="2.5"/>
+  <text x="239" y="392" class="texto" text-anchor="middle" font-weight="700">master</text>
+
+  <path class="linha" d="M158 177 L194 238"/>
+  <path class="linha" d="M158 223 L194 242"/>
+  <path class="linha" d="M158 269 L194 250"/>
+  <path class="linha" d="M158 315 L194 256"/>
+  <path class="linha" d="M239 263 L239 368"/>
+  <text x="48" y="362" class="miudo">PR por área,</text>
+  <text x="48" y="378" class="miudo">merge com CI verde</text>
+  <text x="248" y="320" class="miudo">PR</text>
+  <text x="48" y="432" class="miudo">Conventional Commits,</text>
+  <text x="48" y="448" class="miudo">nada direto em test/master</text>
+
+  <!-- ===== GitHub Actions ===== -->
+  <rect x="336" y="116" width="270" height="200" rx="18" class="sombra"/>
+  <rect x="330" y="110" width="270" height="200" rx="18" class="caixa"/>
+  <text x="350" y="140" class="titulo">CI (todo PR e push)</text>
+  <text x="350" y="168" class="texto">• Backend: Java 21, testes</text>
+  <text x="350" y="192" class="texto">• Frontend: lint, testes, build</text>
+  <text x="350" y="216" class="texto">• Stack Docker: Postgres +</text>
+  <text x="364" y="236" class="texto">migrations + API + nginx,</text>
+  <text x="364" y="256" class="texto">confere a saúde da API</text>
+  <text x="350" y="290" class="miudo">GitHub Actions</text>
+
+  <rect x="336" y="356" width="270" height="250" rx="18" class="sombra"/>
+  <rect x="330" y="350" width="270" height="250" rx="18" fill="#ffc93c" stroke="#1c1530" stroke-width="3"/>
+  <text x="350" y="380" class="titulo">Deploy AWS</text>
+  <text x="350" y="400" class="miudo">master com CI verde, runner ARM</text>
+  <text x="350" y="430" class="texto">0. Login por OIDC (sem chave</text>
+  <text x="364" y="450" class="texto">guardada no GitHub)</text>
+  <text x="350" y="476" class="texto">1. Imagem ARM da API → ECR</text>
+  <text x="350" y="502" class="texto">2. EC2 troca o container</text>
+  <text x="364" y="522" class="texto">(SSM Run Command)</text>
+  <text x="350" y="548" class="texto">3. Site (Vite) → S3</text>
+  <text x="350" y="574" class="texto">4. Limpa o cache do CloudFront</text>
+
+  <path class="linha" d="M282 380 C 305 380, 305 220, 328 220"/>
+  <path class="linha" d="M282 392 C 305 392, 305 470, 328 470"/>
+
+  <!-- ===== Docker local ===== -->
+  <rect x="36" y="666" width="570" height="130" rx="18" class="sombra"/>
+  <rect x="30" y="660" width="570" height="130" rx="18" fill="#3ddc97" stroke="#1c1530" stroke-width="3"/>
+  <text x="50" y="690" class="titulo">Desenvolvimento local (infra/docker-compose.yml)</text>
+  <text x="50" y="718" class="texto">Postgres 16 (127.0.0.1:5435) + API Spring Boot (:8080) + site no nginx (:3000)</text>
+  <text x="50" y="742" class="texto">Segredos só em infra/.env (gitignored). Testes de endpoint no Bruno.</text>
+  <text x="50" y="766" class="texto">O mesmo Dockerfile da API vai para o ECR, em ARM.</text>
+
+  <!-- ===== AWS ===== -->
+  <rect x="650" y="150" width="620" height="680" rx="22" fill="#f3eeff" stroke="#1c1530" stroke-width="2.5" stroke-dasharray="8 6"/>
+  <text x="670" y="178" class="secao">AWS · us-east-2 (Ohio)</text>
+  <text x="670" y="196" class="miudo">VPC padrão, sem NAT Gateway</text>
+
+  <path class="linha" d="M600 470 C 625 470, 625 420, 648 420"/>
+  <text x="604" y="500" class="rotulo">OIDC</text>
+
+  <!-- Usuários -->
+  <rect x="845" y="84" width="230" height="44" rx="22" fill="#ff8fc7" stroke="#1c1530" stroke-width="3"/>
+  <text x="960" y="112" class="texto" text-anchor="middle" font-weight="700">Usuários (navegador)</text>
+  <path class="linha" d="M960 128 L960 196"/>
+  <text x="968" y="146" class="rotulo">HTTPS</text>
+
+  <!-- Spotify -->
+  <rect x="1112" y="84" width="160" height="44" rx="22" fill="#3ddc97" stroke="#1c1530" stroke-width="3"/>
+  <text x="1192" y="104" class="texto" text-anchor="middle" font-weight="700">Spotify Web API</text>
+  <text x="1192" y="120" class="miudo" text-anchor="middle">fora da AWS</text>
+
+  <!-- CloudFront -->
+  <rect x="806" y="204" width="320" height="78" rx="16" class="sombra"/>
+  <rect x="800" y="198" width="320" height="78" rx="16" fill="#ff5a36" stroke="#1c1530" stroke-width="3"/>
+  <text x="820" y="226" class="titulo branco">CloudFront</text>
+  <text x="820" y="248" class="texto branco">HTTPS, cache na borda, headers de segurança,</text>
+  <text x="820" y="266" class="texto branco">rotas do React voltam para o index.html</text>
+
+  <!-- S3 -->
+  <rect x="686" y="346" width="200" height="92" rx="16" class="sombra"/>
+  <rect x="680" y="340" width="200" height="92" rx="16" class="caixa"/>
+  <text x="698" y="368" class="titulo">S3</text>
+  <text x="698" y="390" class="texto">Site React (build do Vite)</text>
+  <text x="698" y="410" class="miudo">bucket privado, só o</text>
+  <text x="698" y="425" class="miudo">CloudFront lê (OAC)</text>
+  <path class="linha" d="M860 276 L800 338"/>
+  <text x="772" y="304" class="rotulo">/ (site)</text>
+
+  <!-- EC2 -->
+  <rect x="1006" y="346" width="250" height="150" rx="16" class="sombra"/>
+  <rect x="1000" y="340" width="250" height="150" rx="16" fill="#ffc93c" stroke="#1c1530" stroke-width="3"/>
+  <text x="1018" y="368" class="titulo">EC2 t4g.small (ARM)</text>
+  <text x="1018" y="392" class="texto">Docker: API Spring Boot 4</text>
+  <text x="1018" y="412" class="texto">Java 21, porta 8080</text>
+  <text x="1018" y="436" class="miudo">só aceita o CloudFront (prefix list)</text>
+  <text x="1018" y="454" class="miudo">sem SSH: Session Manager</text>
+  <text x="1018" y="472" class="miudo">IP fixo (Elastic IP), IMDSv2</text>
+  <path class="linha" d="M1060 276 L1100 338"/>
+  <text x="1092" y="304" class="rotulo">/api/*</text>
+  <path class="linha" d="M1236 338 C 1262 290, 1262 180, 1212 130"/>
+  <text x="1196" y="300" class="rotulo">busca</text>
+  <text x="1196" y="316" class="rotulo">álbuns</text>
+
+  <!-- RDS -->
+  <rect x="1006" y="576" width="250" height="92" rx="16" class="sombra"/>
+  <rect x="1000" y="570" width="250" height="92" rx="16" fill="#3ddc97" stroke="#1c1530" stroke-width="3"/>
+  <text x="1018" y="598" class="titulo">RDS PostgreSQL 16</text>
+  <text x="1018" y="620" class="texto">db.t4g.micro, Single-AZ</text>
+  <text x="1018" y="640" class="miudo">privado, criptografado, backup diário,</text>
+  <text x="1018" y="655" class="miudo">sessões de login (Spring Session)</text>
+  <path class="linha" d="M1125 490 L1125 568"/>
+  <text x="1134" y="534" class="rotulo">5432 (Flyway)</text>
+
+  <!-- Serviços de apoio -->
+  <rect x="680" y="470" width="270" height="56" rx="14" class="caixa"/>
+  <text x="698" y="494" class="titulo" font-size="15">ECR</text>
+  <text x="698" y="514" class="miudo">imagem da API (5 últimas, scan)</text>
+  <rect x="680" y="540" width="270" height="56" rx="14" class="caixa"/>
+  <text x="698" y="564" class="titulo" font-size="15">SSM Parameter Store</text>
+  <text x="698" y="584" class="miudo">chaves do Spotify (SecureString)</text>
+  <rect x="680" y="610" width="270" height="56" rx="14" class="caixa"/>
+  <text x="698" y="634" class="titulo" font-size="15">Secrets Manager</text>
+  <text x="698" y="654" class="miudo">senha do RDS, gerada pela AWS</text>
+  <rect x="680" y="680" width="270" height="56" rx="14" class="caixa"/>
+  <text x="698" y="704" class="titulo" font-size="15">CloudWatch Logs</text>
+  <text x="698" y="724" class="miudo">logs do container, 14 dias</text>
+  <rect x="680" y="750" width="270" height="56" rx="14" class="caixa"/>
+  <text x="698" y="774" class="titulo" font-size="15">AWS Budgets</text>
+  <text x="698" y="794" class="miudo">alerta por e-mail antes do teto</text>
+
+  <path class="tracejada" d="M952 498 C 975 498, 975 430, 998 430"/>
+  <path class="tracejada" d="M952 568 C 980 568, 980 450, 998 450"/>
+  <path class="tracejada" d="M952 638 C 985 638, 985 470, 998 470"/>
+  <path class="tracejada" d="M998 485 C 975 600, 975 708, 952 708"/>
+
+  <!-- Legenda -->
+  <rect x="1000" y="700" width="250" height="110" rx="14" fill="#ffffff" stroke="#1c1530" stroke-width="2"/>
+  <text x="1018" y="724" class="secao">Custo estimado</text>
+  <text x="1018" y="746" class="texto">~US$ 30/mês, pago pelos</text>
+  <text x="1018" y="764" class="texto">créditos do plano Free</text>
+  <path class="linha" d="M1018 788 L1060 788"/>
+  <text x="1068" y="792" class="miudo">tráfego</text>
+  <path class="tracejada" d="M1140 788 L1182 788"/>
+  <text x="1190" y="792" class="miudo">IAM role</text>
+</svg>

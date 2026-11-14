@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import perondi.BeShuffle.dtos.auth.UsuarioLogado;
 import perondi.BeShuffle.dtos.draws.AlbumSorteado;
+import perondi.BeShuffle.dtos.draws.MeuSorteio;
 import perondi.BeShuffle.dtos.draws.SaldoDeFichas;
 import perondi.BeShuffle.dtos.draws.SorteioFeito;
 import perondi.BeShuffle.dtos.draws.SorteioRequest;
@@ -24,7 +25,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Sorteios com limite diário no servidor: visitante 1 por dia (cookie bs_anon), conta logada 10 por dia
+ * Sorteios com limite diário no servidor: visitante 1 por dia (cookie bs_anon, com teto por rede), conta logada 10 por dia
  * e com estilos musicais. O Álbum do Dia (GET /api/albums/daily) é à parte e não gasta sorteio.
  */
 @RestController
@@ -35,6 +36,7 @@ public class DrawController {
     private final DrawService drawService;
     private final DrawAllowanceService allowanceService;
     private final VisitanteCookie visitanteCookie;
+    private final IpDoVisitante ipDoVisitante;
 
     @PostMapping
     public SorteioFeito sortear(@RequestBody(required = false) SorteioRequest body,
@@ -43,7 +45,7 @@ public class DrawController {
         List<Estilo> estilos = estilos(body);
         Dono dono = usuario != null
                 ? Dono.usuario(usuario.id())
-                : Dono.visitante(visitanteCookie.lerOuCriar(request, response));
+                : Dono.visitante(visitanteCookie.lerOuCriar(request, response), ipDoVisitante.hash(request));
         return drawService.sortear(dono, estilos);
     }
 
@@ -52,8 +54,15 @@ public class DrawController {
     public SaldoDeFichas saldo(@AuthenticationPrincipal UsuarioLogado usuario, HttpServletRequest request) {
         Dono dono = usuario != null
                 ? Dono.usuario(usuario.id())
-                : Dono.visitante(visitanteCookie.ler(request).orElseGet(() -> UUID.randomUUID().toString()));
+                : Dono.visitante(visitanteCookie.ler(request).orElseGet(() -> UUID.randomUUID().toString()),
+                        ipDoVisitante.hash(request));
         return allowanceService.consultar(dono);
+    }
+
+    /** Os sorteios que a própria conta fez hoje (só para conta logada, ver SecurityConfig). */
+    @GetMapping("/mine")
+    public List<MeuSorteio> meusSorteios(@AuthenticationPrincipal UsuarioLogado usuario) {
+        return drawService.meusSorteiosDeHoje(usuario.id());
     }
 
     /** Sorteados de hoje por toda a comunidade (só para conta logada, ver SecurityConfig). */

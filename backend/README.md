@@ -40,6 +40,7 @@ Os testes usam H2 e chaves falsas (`src/test/resources/application-test.properti
 | `POST` | `/api/draws` | Sorteia gastando uma ficha do dia; devolve `{album, allowance}`. Corpo opcional `{"genres":["rock"]}` (só logado; visitante com estilos 401). Sem fichas 429 `DAILY_LIMIT_REACHED`; Spotify fora 503 e a ficha volta |
 | `GET` | `/api/draws/allowance` | Fichas de hoje `{plan, remaining, dailyLimit, resetsAt}` |
 | `GET` | `/api/draws/today` | Sorteados de hoje por todo mundo, com quantas vezes cada álbum saiu (login) |
+| `GET` | `/api/draws/mine` | Os sorteios da própria conta hoje, do mais recente ao mais antigo (login) |
 | `GET` | `/api/genres` | Estilos que podem ser escolhidos no sorteio `[{id, name}]` |
 | `GET` | `/api/reviews/today` | Notas do Álbum do Dia: média, total, a sua e as 50 mais recentes (login) |
 | `PUT` | `/api/reviews/today` | Cria ou edita a sua nota `{rating 1-5, comment até 500}` (login) |
@@ -50,8 +51,10 @@ Os testes usam H2 e chaves falsas (`src/test/resources/application-test.properti
   `COOKIE_SECURE=true`.
 - Todo `POST` e `PUT` exige o token CSRF: a API manda o cookie `XSRF-TOKEN` em qualquer resposta e o site devolve o
   valor no header `X-XSRF-TOKEN`. No Bruno, a pasta "Auth" faz isso sozinha.
-- Exigem login: `/api/me`, `/api/draws/today` e `/api/reviews/**`. O resto é público.
-- A sessão vive na memória da API: reiniciar desloga todo mundo (Spring Session JDBC fica para o deploy).
+- Exigem login: `/api/me`, `/api/draws/today`, `/api/draws/mine` e `/api/reviews/**`. O resto é público.
+- A sessão fica no Postgres (Spring Session JDBC, tabelas da migration V4): reiniciar ou fazer deploy não desloga
+  ninguém. O cookie continua `JSESSIONID` (`config/SessaoConfig`). Nos testes a sessão fica na memória, exceto no
+  `SessaoJdbcIntegrationTest`.
 
 ## Fichas do dia (tudo grátis)
 
@@ -61,8 +64,10 @@ Os testes usam H2 e chaves falsas (`src/test/resources/application-test.properti
 | Conta logada | 10 | sim | sim (notas só no Álbum do Dia) |
 
 - O Álbum do Dia é à parte: é o mesmo para todo mundo e não gasta ficha.
-- O visitante é contado pelo cookie `bs_anon` (UUID aleatório, HttpOnly, 1 ano). Apagar os cookies dá outra ficha;
-  para 1 sorteio grátis isso é aceitável.
+- O visitante é contado pelo cookie `bs_anon` (UUID aleatório, HttpOnly, 1 ano). Além disso, cada rede tem um teto
+  de 20 sorteios de visitante por dia (`Plano.VISITANTES_POR_REDE`), para quem apaga os cookies não sortear sem limite.
+  O IP vem do último item do `X-Forwarded-For` (que o nginx e o CloudFront acrescentam) e só é guardado como hash
+  SHA-256 com sal aleatório (`controller/IpDoVisitante`).
 - A tabela `draw_quota` tem uma linha por dono (`u:<id>` ou `a:<uuid>`) e dia. A ficha é gasta com um `UPDATE`
   condicional (`used < limite`), então dois cliques ao mesmo tempo não passam do limite.
 - Os limites ficam em `services/Plano`; o "dia" segue `beshuffle.timezone`.
@@ -83,11 +88,16 @@ Tudo é configurável em `beshuffle.sorteio.*` (ver `application.properties`).
 
 ### Sorteio por estilo (conta logada)
 
-A busca de álbuns do Spotify ignora `genre:`, mas a de faixas aceita. O `EstiloAlbumPicker` sorteia um dos estilos
-pedidos, busca faixas `genre:"..."` numa das 10 primeiras páginas e sorteia um dos álbuns dessas faixas que o
-`FiltroDeAlbum` aceita. O catálogo (`services/Estilo`) só tem gêneros testados contra a API (12/11/2026) que trazem
-álbuns de verdade: rock, indie, metal, punk, pop, dance, hip hop, jazz, blues, soul, reggae, folk, country, música
-latina, MPB, samba, forró, gospel e clássica. Funk, sertanejo, pagode e piseiro quase não têm resultado e ficaram de fora.
+O `EstiloAlbumPicker` sorteia um dos estilos pedidos. Há dois tipos de estilo (`services/Estilo`):
+
+- **Por gênero** (rock, indie, metal, punk, pop, dance, jazz, blues, soul, reggae, folk, country, música latina, MPB,
+  samba, forró, gospel, clássica): a busca de álbuns ignora `genre:`, mas a de faixas aceita. Busca faixas
+  `genre:"..."` numa das 10 primeiras páginas e sorteia um dos álbuns dessas faixas que o `FiltroDeAlbum` aceita.
+- **Por artistas** (funk, sertanejo, pagode, piseiro, rap nacional, hip hop): a busca por gênero quase não traz nada
+  para eles. Sorteia um artista de uma lista nossa e busca `artist:"..."`, ficando só com álbuns em que ele é um dos
+  artistas.
+
+Todos os gêneros e artistas foram testados contra a API (12 e 13/11/2026) e trazem álbuns de verdade no mercado BR.
 
 ## Onde está cada coisa
 
@@ -99,6 +109,8 @@ latina, MPB, samba, forró, gospel e clássica. Funk, sertanejo, pagode e piseir
 | `services/EstiloAlbumPicker` e `services/Estilo` | Sorteio por estilo musical e o catálogo de estilos |
 | `controller/DrawController`, `services/DrawService` e `services/DrawAllowanceService` | Sorteios com fichas do dia e sorteados de hoje |
 | `repository/DrawQuotaRepository` | Fichas gastas por dono e dia (SQL direto, gasto atômico) |
+| `controller/IpDoVisitante` | Hash do IP do visitante para o teto por rede |
+| `config/SessaoConfig` | Cookie da sessão no banco (Spring Session JDBC) |
 | `controller/ReviewController` e `services/ReviewService` | Notas e comentários do Álbum do Dia |
 | `config/SecurityConfig` | Rotas públicas e protegidas, CSRF, logout e erros 401/403 em JSON |
 | `controller/AuthController` e `services/AuthService` | Cadastro, login e `/api/me`; senha com BCrypt |

@@ -1,0 +1,4 @@
+# Copie para terraform.tfvars (ignorado pelo git) e ajuste.
+region             = "us-east-2"
+budget_email       = "voce@exemplo.com"
+monthly_budget_usd = 35
