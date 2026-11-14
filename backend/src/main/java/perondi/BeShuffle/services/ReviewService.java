@@ -68,7 +68,8 @@ public class ReviewService {
                 .orElse(null);
         Double media = resumo.average() == null ? null : Math.round(resumo.average() * 10) / 10.0;
         long total = resumo.count() == null ? 0 : resumo.count();
-        return new NotasDoDia(album.getSpotifyAlbumId(), album.getAlbumName(), media, total, minha,
+        return new NotasDoDia(album.getSpotifyAlbumId(), album.getAlbumName(), album.getArtistName(),
+                album.getImageUrl(), album.getDisplayDate(), media, total, minha,
                 reviewRepository.recentes(album.getId(), PageRequest.of(0, MAX_NOTAS_LISTADAS)));
     }
 

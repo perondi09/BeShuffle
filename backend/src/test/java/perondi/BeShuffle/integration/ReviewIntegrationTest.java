@@ -54,6 +54,7 @@ class ReviewIntegrationTest {
         hoje.setSpotifyAlbumId("album-do-dia");
         hoje.setAlbumName("Clube da Esquina");
         hoje.setArtistName("Milton Nascimento");
+        hoje.setImageUrl("https://i.scdn.co/image/clube");
         hoje.setDisplayDate(LocalDate.now(clock));
         hoje.setFullAlbumJson("{\"id\":\"album-do-dia\",\"name\":\"Clube da Esquina\"}");
         dailyAlbumRepository.save(hoje);
@@ -82,6 +83,9 @@ class ReviewIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.albumId").value("album-do-dia"))
                 .andExpect(jsonPath("$.albumName").value("Clube da Esquina"))
+                .andExpect(jsonPath("$.albumArtist").value("Milton Nascimento"))
+                .andExpect(jsonPath("$.albumImageUrl").value("https://i.scdn.co/image/clube"))
+                .andExpect(jsonPath("$.date").value(LocalDate.now(clock).toString()))
                 .andExpect(jsonPath("$.average").doesNotExist())
                 .andExpect(jsonPath("$.count").value(0))
                 .andExpect(jsonPath("$.mine").doesNotExist());
