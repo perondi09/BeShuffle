@@ -6,10 +6,10 @@ Telas:
 
 | Rota | Tela |
 | --- | --- |
-| `/` | Home: Álbum do Dia, sorteio (1 ficha por dia para visitante, 10 e escolha de estilos para conta logada), sorteados de hoje e nota do Álbum do Dia (trancados para visitante) |
+| `/` | Home em duas abas: Álbum do Dia (fixo) e Sorteio (último disco sorteado, guardado até a meia-noite; 1 ficha por dia para visitante, 10 e escolha de estilos para conta logada). Abaixo, sorteados de hoje e nota do Álbum do Dia com capa e dia (trancados para visitante). Se a API não responde, mostra a tela de fora do ar |
 | `/entrar` | Login |
 | `/cadastro` | Cadastro |
-| `/perfil` | Perfil da conta logada: fichas de hoje, sorteios do dia, nota do Álbum do Dia e Sair (sem login, vai para `/entrar`) |
+| `/perfil` | Perfil da conta logada: fichas de hoje, sorteios do dia, nota do Álbum do Dia (capa, dia, nota e comentário) e Sair (sem login, vai para `/entrar`) |
 | qualquer outra | Página 404 |
 
 Login e cadastro validam os campos e chamam `POST /api/auth/login` e `POST /api/auth/register`. A sessão fica
@@ -62,7 +62,7 @@ O frontend não guarda chave nem senha: as chamadas ao Spotify são feitas pela 
 | `src/styles/global.css` | Reset, fundo de bolinhas, foco e a classe `.display` (fonte de títulos) |
 | `src/components/ui/` | Componentes base: `Button`, `Card`, `Sticker`, `Tag`, `TextField`, `LockedOverlay`, `VinylDisc` |
 | `src/components/layout/` | `AppLayout`, `Header`, `Brand`, `MobileNav` |
-| `src/features/draw/` | Sorteio: palco, vitrola, detalhes do álbum, fichas do dia (`AllowanceProvider`) e estilos (`StylePicker`) |
+| `src/features/draw/` | Palco em abas (`DrawStage`), último sorteio guardado (`lastDraw`), tela de fora do ar (`ServiceDown`), vitrola, detalhes do álbum, fichas do dia (`AllowanceProvider`) e estilos (`StylePicker`) |
 | `src/features/community/` | Cartões "Sorteados de hoje" e "Sua nota" (trancados para visitante) |
 | `src/features/auth/` | Moldura, formulários e validação de login/cadastro |
 | `src/pages/` | Uma página por rota, só compondo features |
