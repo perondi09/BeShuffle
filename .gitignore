@@ -37,3 +37,6 @@ build/
 ### Claude Code ###
 # Preferências pessoais; .claude/launch.json é compartilhado (servidores de desenvolvimento)
 .claude/settings.local.json
+
+# Vídeos renderizados e referências (ficam só na máquina; o código do vídeo está em video/)
+videos/

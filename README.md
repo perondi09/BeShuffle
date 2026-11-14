@@ -1,5 +1,7 @@
 # BeShuffle
 
+![BeShuffle: a jukebox que escolhe por você, com o mascote Radinho](docs/imagens/beshuffle-banner.png)
+
 Uma jukebox que sorteia álbuns do Spotify. Todo dia há um **Álbum do Dia**, igual para todo mundo. Quem quiser
 descobrir mais música sorteia outros discos, e quem cria conta escolhe estilos, vê o que a comunidade tirou no dia
 e dá nota ao Álbum do Dia. Tudo é grátis.

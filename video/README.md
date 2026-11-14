@@ -47,6 +47,16 @@ bumbo, palmas e chimbal sobre C–G–Am–F. Não usa música de terceiros, ent
   `src/BeShuffleVideo.tsx`).
 - Se a duração do vídeo mudar, gere de novo com os segundos novos: `python scripts/compor-trilha.py 34.4`.
 
+## Imagens de divulgação
+
+O mesmo projeto gera duas imagens estáticas com o Radinho, em `docs/imagens/`:
+
+- `beshuffle-banner.png` (1400×940, a proporção do diagrama da arquitetura): a placa do BeShuffle com o Radinho
+  apoiado nela. É o banner do README.
+- `beshuffle-radinho.png` (1080×1350, formato de feed): só a logo e o Radinho acenando, para divulgação.
+
+Para gerar de novo: `npm run imagens` (composições `Banner` e `Retrato`, em `src/divulgacao/`).
+
 ## Comandos
 
 ```bash
