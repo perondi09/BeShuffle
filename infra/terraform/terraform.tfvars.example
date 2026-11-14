@@ -2,3 +2,6 @@
 region             = "us-east-2"
 budget_email       = "voce@exemplo.com"
 monthly_budget_usd = 35
+
+# Deploy automático pelo GitHub (OIDC). O plano Free da AWS bloqueia; ligue só no plano pago.
+github_deploy_enabled = false

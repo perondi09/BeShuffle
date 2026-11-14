@@ -3,6 +3,8 @@
 # A senha do banco não passa por aqui: o RDS gera e guarda no Secrets Manager.
 # Uso: infra/aws/put-secrets.sh [região]
 set -euo pipefail
+# No Git Bash do Windows, impede que /beshuffle/... vire caminho do Windows ao chamar o aws.exe.
+export MSYS_NO_PATHCONV=1
 
 REGIAO="${1:-us-east-2}"
 ENV_FILE="$(dirname "$0")/../.env"
