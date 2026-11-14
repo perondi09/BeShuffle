@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router'
+import { NavLink } from 'react-router'
 import { useSession } from '../../features/session/session'
 import styles from './MobileNav.module.css'
 
@@ -9,15 +9,9 @@ const personIcon = (
   </svg>
 )
 
-/** Navegação inferior, só no celular. A última aba é Entrar (visitante) ou Sair (conta logada). */
+/** Navegação inferior, só no celular. A última aba é Entrar (visitante) ou Perfil (conta logada). */
 export function MobileNav() {
-  const { user, signOut } = useSession()
-  const navigate = useNavigate()
-
-  async function handleSignOut() {
-    await signOut()
-    navigate('/', { replace: true })
-  }
+  const { user } = useSession()
 
   return (
     <nav className={styles.nav} aria-label="Principal">
@@ -38,10 +32,10 @@ export function MobileNav() {
         Hoje
       </a>
       {user ? (
-        <button type="button" className={styles.link} onClick={handleSignOut}>
+        <NavLink to="/perfil" className={styles.link}>
           {personIcon}
-          Sair
-        </button>
+          Perfil
+        </NavLink>
       ) : (
         <NavLink to="/entrar" className={styles.link}>
           {personIcon}
