@@ -32,7 +32,7 @@ public class IpDoVisitante {
         return hash(ip(request));
     }
 
-    static String ip(HttpServletRequest request) {
+    public static String ip(HttpServletRequest request) {
         String encaminhado = request.getHeader("X-Forwarded-For");
         if (encaminhado != null && !encaminhado.isBlank()) {
             String[] partes = encaminhado.split(",");
