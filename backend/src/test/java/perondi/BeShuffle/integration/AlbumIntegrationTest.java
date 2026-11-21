@@ -3,17 +3,23 @@ package perondi.BeShuffle.integration;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import perondi.BeShuffle.controller.AlbumController;
 import perondi.BeShuffle.entity.Album;
 import perondi.BeShuffle.entity.AlbumImage;
 import perondi.BeShuffle.entity.Artist;
+import perondi.BeShuffle.services.AcessoService;
 import perondi.BeShuffle.services.DailyAlbumService;
 
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -23,13 +29,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AlbumIntegrationTest {
 
     private final DailyAlbumService dailyAlbumService = mock(DailyAlbumService.class);
+    private final AcessoService acessoService = mock(AcessoService.class);
 
     private final MockMvc mockMvc = MockMvcBuilders.standaloneSetup(
-            new AlbumController(dailyAlbumService)
-    ).build();
+            new AlbumController(dailyAlbumService, acessoService)
+    ).setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver()).build();
 
     @Test
-    @DisplayName("Deve retornar o álbum do dia")
+    @DisplayName("Deve retornar o álbum do dia e contar o acesso como área de música")
     void shouldReturnDailyAlbum() throws Exception {
         Album album = createAlbum();
         when(dailyAlbumService.getAlbumDoDia()).thenReturn(album);
@@ -38,6 +45,7 @@ class AlbumIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value("123"))
                 .andExpect(jsonPath("$.artists[0].name").value("Artist Name"));
+        verify(acessoService).registrar(any(), isNull(), eq(AcessoService.MUSICA));
     }
 
     @Test
