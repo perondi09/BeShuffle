@@ -6,10 +6,12 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import perondi.BeShuffle.config.AdminEmails;
 import perondi.BeShuffle.dtos.auth.LoginRequest;
 import perondi.BeShuffle.dtos.auth.RegisterRequest;
 import perondi.BeShuffle.dtos.auth.UsuarioLogado;
 import perondi.BeShuffle.entity.AppUser;
+import perondi.BeShuffle.exceptions.ContaSuspensaException;
 import perondi.BeShuffle.exceptions.CredenciaisInvalidasException;
 import perondi.BeShuffle.exceptions.EmailJaCadastradoException;
 import perondi.BeShuffle.exceptions.ValidationException;
@@ -21,6 +23,7 @@ import java.time.ZoneOffset;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -43,7 +46,8 @@ class AuthServiceTest {
     void setUp() {
         repository = mock(AppUserRepository.class);
         encoder = new BCryptPasswordEncoder(4); // custo baixo só para o teste ficar rápido
-        service = new AuthService(repository, encoder, Clock.fixed(AGORA, ZoneOffset.UTC));
+        service = new AuthService(repository, encoder, Clock.fixed(AGORA, ZoneOffset.UTC),
+                new AdminEmails(" Chefe@Exemplo.com , outro@exemplo.com"));
         when(repository.save(any(AppUser.class))).thenAnswer(inv -> {
             AppUser u = inv.getArgument(0);
             u.setId(1L);
@@ -137,5 +141,37 @@ class AuthServiceTest {
     void loginVazio() {
         assertThrows(CredenciaisInvalidasException.class, () -> service.login(new LoginRequest(null, "x")));
         assertThrows(CredenciaisInvalidasException.class, () -> service.login(new LoginRequest("ana@exemplo.com", null)));
+    }
+
+    @Test
+    @DisplayName("Conta banida com a senha certa recebe 403 de conta suspensa; com a senha errada, o 401 de sempre")
+    void contaBanida() {
+        AppUser banida = salvo("ana@exemplo.com", "senha-forte-1");
+        banida.setBannedAt(AGORA);
+        when(repository.findByEmail("ana@exemplo.com")).thenReturn(Optional.of(banida));
+
+        ContaSuspensaException suspensa = assertThrows(ContaSuspensaException.class,
+                () -> service.login(new LoginRequest("ana@exemplo.com", "senha-forte-1")));
+        assertEquals(403, suspensa.getHttpStatus());
+        // Sem a senha certa ninguém descobre que a conta existe e foi banida.
+        assertThrows(CredenciaisInvalidasException.class,
+                () -> service.login(new LoginRequest("ana@exemplo.com", "outra-senha")));
+    }
+
+    @Test
+    @DisplayName("E-mail da lista ADMIN_EMAILS vira admin no cadastro e no login; os outros não")
+    void promoveAdmin() {
+        when(repository.existsByEmail("chefe@exemplo.com")).thenReturn(false);
+        UsuarioLogado novo = service.register(new RegisterRequest("Chefe", "CHEFE@exemplo.com", "senha-forte-1"));
+        assertTrue(novo.admin());
+
+        AppUser antigo = salvo("outro@exemplo.com", "senha-forte-1");
+        when(repository.findByEmail("outro@exemplo.com")).thenReturn(Optional.of(antigo));
+        UsuarioLogado logado = service.login(new LoginRequest("outro@exemplo.com", "senha-forte-1"));
+        assertTrue(logado.admin());
+        assertEquals(AppUser.ADMIN, antigo.getRole());
+
+        when(repository.findByEmail("ana@exemplo.com")).thenReturn(Optional.of(salvo("ana@exemplo.com", "senha-forte-1")));
+        assertFalse(service.login(new LoginRequest("ana@exemplo.com", "senha-forte-1")).admin());
     }
 }

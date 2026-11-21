@@ -4,7 +4,12 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import perondi.BeShuffle.dtos.auth.UsuarioLogado;
+import perondi.BeShuffle.repository.AppUserRepository;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -26,7 +31,8 @@ import java.util.Map;
 
 /**
  * Sessão por cookie (JSESSIONID, HttpOnly) no mesmo domínio do site, que chega à API pelo proxy /api.
- * Exigem login: /api/me, /api/draws/today, /api/draws/mine e /api/reviews/**; o resto é público. CSRF no modo SPA: o cookie XSRF-TOKEN é legível
+ * Exigem login: /api/me, /api/draws/today, /api/draws/mine e /api/reviews/**; /api/admin/** exige conta admin; o resto
+ * é público. Conta banida perde a sessão na próxima requisição (ContaBanidaFilter). CSRF no modo SPA: o cookie XSRF-TOKEN é legível
  * pelo site, que devolve o valor no header X-XSRF-TOKEN em todo POST.
  */
 @Configuration
@@ -45,15 +51,17 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, SecurityContextRepository contextRepository,
-                                                   ObjectMapper objectMapper) throws Exception {
+                                                   ObjectMapper objectMapper, AppUserRepository users) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/me", "/api/draws/today", "/api/draws/mine", "/api/reviews/**").authenticated()
                         .anyRequest().permitAll())
                 .securityContext(ctx -> ctx.securityContextRepository(contextRepository))
                 .csrf(csrf -> csrf.spa())
                 // O token é "preguiçoso": sem isto o cookie só sairia quando alguém lesse o token.
                 .addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)
+                .addFilterAfter(new ContaBanidaFilter(users, objectMapper), CsrfCookieFilter.class)
                 .sessionManagement(s -> s.sessionFixation(f -> f.changeSessionId()))
                 // Sem tela de login para "voltar depois": guardar o pedido criaria uma sessão a cada visitante.
                 .requestCache(cache -> cache.disable())
@@ -93,6 +101,38 @@ public class SecurityConfig {
             CsrfToken token = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
             if (token != null) {
                 token.getToken();
+            }
+            chain.doFilter(request, response);
+        }
+    }
+
+    /**
+     * Conta banida perde o acesso na próxima requisição: a sessão é apagada e a resposta é 401. Assim o
+     * banimento vale mesmo para quem já estava logado, em qualquer aparelho, sem esperar a sessão expirar.
+     */
+    static final class ContaBanidaFilter extends OncePerRequestFilter {
+
+        private final AppUserRepository users;
+        private final ObjectMapper objectMapper;
+
+        ContaBanidaFilter(AppUserRepository users, ObjectMapper objectMapper) {
+            this.users = users;
+            this.objectMapper = objectMapper;
+        }
+
+        @Override
+        protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+                throws ServletException, IOException {
+            Authentication autenticacao = SecurityContextHolder.getContext().getAuthentication();
+            if (autenticacao != null && autenticacao.getPrincipal() instanceof UsuarioLogado usuario
+                    && users.existsByIdAndBannedAtIsNotNull(usuario.id())) {
+                HttpSession sessao = request.getSession(false);
+                if (sessao != null) {
+                    sessao.invalidate();
+                }
+                SecurityContextHolder.clearContext();
+                escreverErro(response, objectMapper, 401, "ACCOUNT_SUSPENDED", "Sua conta foi suspensa");
+                return;
             }
             chain.doFilter(request, response);
         }
