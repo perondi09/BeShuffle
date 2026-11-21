@@ -3,10 +3,12 @@ package perondi.BeShuffle.services;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import perondi.BeShuffle.config.AdminEmails;
 import perondi.BeShuffle.dtos.auth.LoginRequest;
 import perondi.BeShuffle.dtos.auth.RegisterRequest;
 import perondi.BeShuffle.dtos.auth.UsuarioLogado;
 import perondi.BeShuffle.entity.AppUser;
+import perondi.BeShuffle.exceptions.ContaSuspensaException;
 import perondi.BeShuffle.exceptions.CredenciaisInvalidasException;
 import perondi.BeShuffle.exceptions.EmailJaCadastradoException;
 import perondi.BeShuffle.exceptions.ValidationException;
@@ -33,13 +35,16 @@ public class AuthService {
     private final AppUserRepository repository;
     private final PasswordEncoder passwordEncoder;
     private final Clock clock;
+    private final AdminEmails adminEmails;
     /** Comparado quando o e-mail não existe, para o tempo de resposta não revelar quais e-mails têm conta. */
     private final String hashFalso;
 
-    public AuthService(AppUserRepository repository, PasswordEncoder passwordEncoder, Clock clock) {
+    public AuthService(AppUserRepository repository, PasswordEncoder passwordEncoder, Clock clock,
+                       AdminEmails adminEmails) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
         this.clock = clock;
+        this.adminEmails = adminEmails;
         this.hashFalso = passwordEncoder.encode("senha-que-nenhuma-conta-tem");
     }
 
@@ -69,8 +74,11 @@ public class AuthService {
         user.setDisplayName(nome);
         user.setPasswordHash(passwordEncoder.encode(senha));
         user.setCreatedAt(clock.instant());
+        if (adminEmails.contem(email)) {
+            user.setRole(AppUser.ADMIN);
+        }
         AppUser salvo = repository.save(user);
-        log.info("Conta criada: id {}", salvo.getId());
+        log.info("Conta criada: id {}{}", salvo.getId(), salvo.isAdmin() ? " (admin por ADMIN_EMAILS)" : "");
         return paraLogado(salvo);
     }
 
@@ -86,6 +94,15 @@ public class AuthService {
             log.info("Login recusado");
             throw new CredenciaisInvalidasException();
         }
+        if (user.isBanida()) {
+            log.info("Login de conta suspensa recusado: id {}", user.getId());
+            throw new ContaSuspensaException();
+        }
+        if (!user.isAdmin() && adminEmails.contem(email)) {
+            user.setRole(AppUser.ADMIN);
+            user = repository.save(user);
+            log.info("Conta {} promovida a admin por ADMIN_EMAILS", user.getId());
+        }
         return paraLogado(user);
     }
 
@@ -94,6 +111,6 @@ public class AuthService {
     }
 
     private static UsuarioLogado paraLogado(AppUser user) {
-        return new UsuarioLogado(user.getId(), user.getEmail(), user.getDisplayName());
+        return new UsuarioLogado(user.getId(), user.getEmail(), user.getDisplayName(), user.isAdmin());
     }
 }
