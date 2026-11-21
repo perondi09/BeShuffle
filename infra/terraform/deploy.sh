@@ -12,6 +12,9 @@ param() {
     --query Parameter.Value --output text
 }
 
+# Opcional: sem o parâmetro admin-emails no SSM, ninguém é admin (a API sobe normalmente).
+ADMIN_EMAILS=$(param admin-emails 2>/dev/null || true)
+
 SEGREDO_DB=$(aws secretsmanager get-secret-value --region "$REGION" --secret-id "$DB_SECRET_ARN" \
   --query SecretString --output text)
 
@@ -27,6 +30,7 @@ umask 077
   echo "SPOTIFY_CLIENT_SECRET=$(param spotify-client-secret)"
   echo "COOKIE_SECURE=true"
   echo "SESSION_TIMEOUT=7d"
+  echo "ADMIN_EMAILS=$ADMIN_EMAILS"
   echo "JAVA_OPTS=-XX:MaxRAMPercentage=70"
 } > /opt/beshuffle/app.env
 
