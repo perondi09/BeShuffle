@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { type ComentarioAdmin, type Pagina, fetchComentarios, removerComentario } from '../../api/admin'
 import { Button, Card } from '../../components/ui'
 import { cx } from '../../lib/cx'
+import { formatRating } from '../../lib/rating'
 import styles from './admin.module.css'
 import { dataCurta, mensagemDeErro, nomeDaArea, quando } from './format'
 import { Paginacao } from './Paginacao'
@@ -79,7 +80,7 @@ export function AdminModeration() {
                     <span className={cx(styles.etiqueta, comentario.area === 'musica' ? styles.etiquetaMusica : styles.etiquetaFilmes)}>
                       {nomeDaArea(comentario.area)}
                     </span>{' '}
-                    <strong>{comentario.displayName}</strong> · nota {comentario.rating} de 5
+                    <strong>{comentario.displayName}</strong> · nota {formatRating(comentario.rating)} de 5
                   </span>
                   <p className={styles.comentarioTexto}>{comentario.comment}</p>
                   <small className={styles.comentarioMeta}>

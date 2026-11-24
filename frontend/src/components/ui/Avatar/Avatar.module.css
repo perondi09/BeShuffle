@@ -1,0 +1,37 @@
+.avatar {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: var(--borda-fina);
+  border-radius: 50%;
+  font-weight: var(--peso-forte);
+  line-height: 1;
+}
+
+.g {
+  width: 96px;
+  height: 96px;
+  border: var(--borda);
+  box-shadow: var(--sombra);
+  font-family: var(--fonte-display);
+  font-size: 44px;
+  font-weight: var(--peso-normal);
+}
+
+.rosa {
+  background: var(--cor-rosa);
+}
+
+.menta {
+  background: var(--cor-menta);
+}
+
+.gema {
+  background: var(--cor-gema);
+}
+
+.lilas {
+  background: var(--cor-lilas);
+}

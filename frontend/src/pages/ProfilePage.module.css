@@ -20,6 +20,9 @@
 }
 
 .email {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-1) var(--espaco-3);
   font-size: var(--texto-m);
 }
 

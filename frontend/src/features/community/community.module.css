@@ -46,7 +46,6 @@
   height: 42px;
   border-radius: 50%;
   border: var(--borda);
-  cursor: pointer;
   background: repeating-radial-gradient(
     circle,
     var(--cor-vinil-apagado-1) 0 2px,
@@ -63,12 +62,107 @@
   background: var(--cor-papel);
 }
 
+/* Disco pequeno só para mostrar a nota de alguém (RatingValue). Vem antes de .ratingOn para a cor "ligado" valer. */
+.value {
+  display: inline-flex;
+  gap: 3px;
+  vertical-align: middle;
+}
+
+.valueDisc {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: var(--espessura-fina) solid var(--cor-tinta);
+  background: repeating-radial-gradient(
+    circle,
+    var(--cor-vinil-apagado-1) 0 2px,
+    var(--cor-vinil-apagado-2) 2px 4px
+  );
+}
+
+.valueDisc::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  border: 1.5px solid var(--cor-tinta);
+  background: var(--cor-papel);
+}
+
 .ratingOn {
   background: var(--fundo-vinil);
 }
 
 .ratingOn::after {
   background: var(--cor-tomate);
+}
+
+/* Meio disco: a metade esquerda toca (vinil escuro) e a direita fica apagada, como um disco sem nota. */
+.ratingHalf {
+  background: var(--fundo-vinil);
+}
+
+.ratingHalf::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 0 50%;
+  border-radius: 0 999px 999px 0;
+  background: repeating-radial-gradient(
+    circle at 0 50%,
+    var(--cor-vinil-apagado-1) 0 2px,
+    var(--cor-vinil-apagado-2) 2px 4px
+  );
+}
+
+.ratingHalf::after {
+  background: var(--cor-tomate);
+}
+
+/* As duas metades clicáveis de cada disco: a esquerda vale x,5 e a direita vale x inteiro. */
+.discWrap {
+  position: relative;
+  width: 42px;
+  height: 42px;
+}
+
+.discHalf {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.discHalfLeft {
+  left: 0;
+  border-radius: 21px 0 0 21px;
+}
+
+.discHalfRight {
+  right: 0;
+  border-radius: 0 21px 21px 0;
+}
+
+.discHalf:focus-visible {
+  outline: var(--foco);
+  outline-offset: 2px;
+}
+
+/* Cabeçalho de cada nota da comunidade: avatar, nome (link para o perfil) e a nota. */
+.reviewHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espaco-2);
+}
+
+.authorLink {
+  font-weight: var(--peso-forte);
 }
 
 .comment {

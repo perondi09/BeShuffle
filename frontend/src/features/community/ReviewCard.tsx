@@ -1,11 +1,14 @@
 import { type FormEvent, useEffect, useState } from 'react'
+import { Link } from 'react-router'
 import { ApiError } from '../../api/http'
 import { fetchTodayReviews, saveReview, type TodayReviews } from '../../api/reviews'
-import { Button, Card, LockedOverlay } from '../../components/ui'
+import { Avatar, Button, Card, LockedOverlay } from '../../components/ui'
+import { formatRating } from '../../lib/rating'
 import { useSession } from '../session/session'
 import { DailyAlbumBadge } from './DailyAlbumBadge'
 import styles from './community.module.css'
 import { RatingDiscs } from './RatingDiscs'
+import { RatingValue } from './RatingValue'
 
 const MAX_COMMENT = 500
 const SHOWN_REVIEWS = 5
@@ -42,7 +45,7 @@ function ReviewForm() {
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
     if (rating === 0) {
-      setMessage({ ok: false, text: 'Escolha uma nota de 1 a 5.' })
+      setMessage({ ok: false, text: 'Escolha uma nota de 0,5 a 5.' })
       return
     }
     setSaving(true)
@@ -88,8 +91,18 @@ function ReviewForm() {
       {data && data.reviews.length > 0 ? (
         <ul className={styles.reviews} aria-label="Notas da comunidade">
           {data.reviews.slice(0, SHOWN_REVIEWS).map((review) => (
-            <li key={`${review.author}-${review.updatedAt}`}>
-              <strong>{review.author}</strong> <span className={styles.score}>{review.rating}/5</span>
+            <li key={`${review.handle ?? review.author}-${review.updatedAt}`}>
+              <div className={styles.reviewHead}>
+                <Avatar name={review.author} color={review.avatar} />
+                {review.handle ? (
+                  <Link to={`/u/${review.handle}`} className={styles.authorLink}>
+                    {review.author}
+                  </Link>
+                ) : (
+                  <strong>{review.author}</strong>
+                )}
+                <RatingValue value={review.rating} />
+              </div>
               {review.comment ? <p>{review.comment}</p> : null}
             </li>
           ))}
@@ -103,7 +116,7 @@ function summary(data: TodayReviews | null): string {
   if (!data) return 'Carregando notas…'
   if (data.count === 0 || data.average === null) return 'Seja a primeira pessoa a dar nota.'
   const notas = data.count === 1 ? '1 nota' : `${data.count} notas`
-  return `Média ${data.average.toLocaleString('pt-BR')} de 5, ${notas}`
+  return `Média ${formatRating(data.average)} de 5, ${notas}`
 }
 
 function LockedReview() {
