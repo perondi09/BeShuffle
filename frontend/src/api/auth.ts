@@ -1,4 +1,4 @@
-import { ApiError, getJson, postJson } from './http'
+import { ApiError, getJson, postJson, putJson } from './http'
 
 /* Rotas de conta da API (backend/README.md). A sessão fica num cookie HttpOnly que o navegador manda sozinho. */
 
@@ -9,6 +9,17 @@ export interface SessionUser {
   displayName: string
   /** Conta de admin (vê o painel /admin). A API sempre manda; ausente é tratado como false. */
   admin?: boolean
+  /** O "@nick" do perfil (minúsculo, único). */
+  handle?: string
+  /** Cor do avatar: rosa, menta, gema ou lilas. */
+  avatar?: string
+}
+
+/** Corpo de PUT /api/me; o que não for enviado fica como está. */
+export interface ProfileInput {
+  displayName?: string
+  handle?: string
+  avatar?: string
 }
 
 export interface LoginInput {
@@ -28,6 +39,9 @@ export const register = (input: RegisterInput) =>
   postJson<SessionUser>('/api/auth/register', { displayName: input.name, email: input.email, password: input.password })
 
 export const me = () => getJson<SessionUser>('/api/me')
+
+/** Muda nome, nick e/ou avatar da própria conta. 409 quando o nick já é de outra pessoa. */
+export const updateProfile = (input: ProfileInput) => putJson<SessionUser>('/api/me', input)
 
 export const logout = () => postJson<void>('/api/auth/logout', {})
 

@@ -1,3 +1,6 @@
+export { Avatar } from './Avatar/Avatar'
+export { AVATAR_COLORS, avatarColor } from './Avatar/avatarColors'
+export type { AvatarColor } from './Avatar/avatarColors'
 export { Button } from './Button/Button'
 export type { ButtonProps, ButtonVariant } from './Button/Button'
 export { Card } from './Card/Card'

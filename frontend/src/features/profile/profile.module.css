@@ -1,0 +1,54 @@
+.title {
+  margin-bottom: var(--espaco-3);
+  font-size: var(--titulo-card);
+}
+
+.form {
+  display: grid;
+  gap: var(--espaco-4);
+  max-width: 520px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.label {
+  font-weight: var(--peso-forte);
+}
+
+.avatars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-3);
+}
+
+/* Cada cor de avatar é um botão de rádio; a escolhida ganha o contorno e o fundo de gema. */
+.avatarOption {
+  padding: 4px;
+  border: var(--espessura-fina) solid transparent;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+}
+
+.avatarOption[aria-checked='true'] {
+  border-color: var(--cor-tinta);
+  background: var(--cor-gema);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-3);
+}
+
+.ok {
+  font-weight: var(--peso-forte);
+}
+
+.error {
+  font-weight: var(--peso-forte);
+  color: var(--cor-erro);
+}

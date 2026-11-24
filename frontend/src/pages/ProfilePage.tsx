@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router'
 import { fetchMyDraws, type MyDraw } from '../api/draws'
 import { fetchTodayReviews, type TodayReviews } from '../api/reviews'
-import { Button, Card, Sticker } from '../components/ui'
+import { Avatar, Button, Card, Sticker } from '../components/ui'
+import { formatRating } from '../lib/rating'
+import { EditProfileCard } from '../features/profile/EditProfileCard'
 import { DailyAlbumBadge } from '../features/community/DailyAlbumBadge'
 import { useAllowance } from '../features/draw/allowance'
 import { useSession } from '../features/session/session'
@@ -34,21 +36,31 @@ export function ProfilePage() {
   return (
     <div className={styles.page}>
       <Card size="palco" className={styles.hero} aria-labelledby="perfil-titulo">
+        <Avatar name={user.displayName} color={user.avatar} size="g" />
         <Sticker color="rosa">Seu perfil</Sticker>
         <h1 id="perfil-titulo" className={`display ${styles.name}`}>
           {user.displayName}
         </h1>
-        <p className={styles.email}>{user.email}</p>
+        <p className={styles.email}>
+          {user.handle ? <span>@{user.handle}</span> : null}
+          <span>{user.email}</span>
+        </p>
         <Tokens />
         <div className={styles.actions}>
           <Button variant="tomate" display to="/">
             Ir sortear
           </Button>
+          {user.handle ? (
+            <Button variant="gema" to={`/u/${user.handle}`}>
+              Ver meu diário
+            </Button>
+          ) : null}
           <Button variant="papel" onClick={handleSignOut}>
             Sair da conta
           </Button>
         </div>
       </Card>
+      <EditProfileCard />
       <div className={styles.duo}>
         <MyDrawsCard />
         <MyReviewCard />
@@ -144,7 +156,7 @@ function MyReviewCard() {
         <>
           <DailyAlbumBadge data={data} />
           <p>
-            Você deu <strong>{data.mine.rating} de 5</strong>.
+            Você deu <strong>{formatRating(data.mine.rating)} de 5</strong>.
           </p>
           {data.mine.comment ? <blockquote className={styles.quote}>{data.mine.comment}</blockquote> : null}
           <Button variant="gema" to="/">

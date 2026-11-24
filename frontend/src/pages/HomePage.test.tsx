@@ -349,6 +349,6 @@ describe('HomePage (conta logada)', () => {
     await card.findByText('Seja a primeira pessoa a dar nota.')
     fireEvent.click(card.getByRole('button', { name: 'Publicar' }))
 
-    expect(card.getByRole('alert')).toHaveTextContent('Escolha uma nota de 1 a 5.')
+    expect(card.getByRole('alert')).toHaveTextContent('Escolha uma nota de 0,5 a 5.')
   })
 })

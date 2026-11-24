@@ -2,6 +2,10 @@ import { getJson, putJson } from './http'
 
 export interface Review {
   author: string
+  /** Nick e avatar de quem avaliou, para linkar o perfil. */
+  handle?: string
+  avatar?: string
+  /** Em estrelas, de 0,5 a 5 de meia em meia. */
   rating: number
   comment?: string | null
   updatedAt: string
