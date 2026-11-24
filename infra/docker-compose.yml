@@ -46,6 +46,8 @@ services:
       # Cookie de sessão só por HTTPS; true em produção, false em localhost
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
       SESSION_TIMEOUT: ${SESSION_TIMEOUT:-7d}
+      # E-mails (vírgula) que viram admin ao entrar; vazio = ninguém é admin
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-}
     ports:
       - "${SERVER_PORT:-8080}:${SERVER_PORT:-8080}"
     healthcheck:

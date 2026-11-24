@@ -1,0 +1,10 @@
+[Unit]
+Description=BeShuffle: reinicia a API se o RDS trocou a senha do banco
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/beshuffle/vigia-senha-db.sh
+# O deploy (docker pull + subir a API) leva até uns 3 minutos
+TimeoutStartSec=600

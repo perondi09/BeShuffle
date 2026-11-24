@@ -30,4 +30,26 @@ public class AppUser {
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
+
+    /** USER ou ADMIN (ver {@link #ADMIN}). */
+    @Column(nullable = false, length = 10)
+    private String role = USER;
+
+    /** Quando a conta foi banida; nulo se ela está ativa. */
+    @Column(name = "banned_at")
+    private Instant bannedAt;
+
+    @Column(name = "banned_reason", length = 300)
+    private String bannedReason;
+
+    public static final String USER = "USER";
+    public static final String ADMIN = "ADMIN";
+
+    public boolean isAdmin() {
+        return ADMIN.equals(role);
+    }
+
+    public boolean isBanida() {
+        return bannedAt != null;
+    }
 }

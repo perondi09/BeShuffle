@@ -59,8 +59,10 @@ public class AuthController {
         if (request.getSession(false) != null) {
             request.changeSessionId();
         }
-        var autenticacao = UsernamePasswordAuthenticationToken.authenticated(
-                usuario, null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
+        var permissoes = usuario.admin()
+                ? List.of(new SimpleGrantedAuthority("ROLE_USER"), new SimpleGrantedAuthority("ROLE_ADMIN"))
+                : List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        var autenticacao = UsernamePasswordAuthenticationToken.authenticated(usuario, null, permissoes);
         SecurityContext contexto = contextHolder.createEmptyContext();
         contexto.setAuthentication(autenticacao);
         contextHolder.setContext(contexto);

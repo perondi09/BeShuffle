@@ -46,8 +46,10 @@ final class ApiDeTeste {
         return (MockHttpSession) r.getRequest().getSession(false);
     }
 
-    /** Apaga o que os testes de sorteio e nota gravam (filhos antes dos pais). */
+    /** Apaga o que os testes de sorteio, nota e admin gravam (filhos antes dos pais). */
     static void limparBanco(JdbcTemplate jdbc) {
+        jdbc.update("DELETE FROM admin_actions");
+        jdbc.update("DELETE FROM daily_visits");
         jdbc.update("DELETE FROM reviews");
         jdbc.update("DELETE FROM draws");
         jdbc.update("DELETE FROM draw_quota");
