@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { ApiError, getJson, postJson, putJson } from './http'
+import { ApiError, deleteJson, getJson, postJson, putJson } from './http'
 
 const ok = () => new Response(null, { status: 204 })
 
@@ -40,6 +40,19 @@ describe('http', () => {
 
     const headers = fetchMock.mock.calls[0][1]?.headers as Record<string, string>
     expect(headers).not.toHaveProperty('X-XSRF-TOKEN')
+  })
+
+  it('DELETE manda o token CSRF, não leva corpo e aceita a resposta 204', async () => {
+    setCookie('XSRF-TOKEN=del-1; path=/')
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(ok())
+
+    await expect(deleteJson('/api/admin/comments/9')).resolves.toBeUndefined()
+
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(url).toBe('/api/admin/comments/9')
+    expect(init?.method).toBe('DELETE')
+    expect(init?.body).toBeUndefined()
+    expect((init?.headers as Record<string, string>)['X-XSRF-TOKEN']).toBe('del-1')
   })
 
   it('PUT também manda o token CSRF', async () => {

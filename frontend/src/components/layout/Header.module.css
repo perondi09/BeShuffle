@@ -11,6 +11,17 @@
   flex: 1;
 }
 
+/* Link do painel, só para conta admin: pílula pequena de gema, como o resto dos adesivos. */
+.admin {
+  padding: 2px var(--espaco-3);
+  border: var(--espessura-fina) solid var(--cor-tinta);
+  border-radius: var(--raio-pilula);
+  background: var(--cor-gema);
+  font-weight: var(--peso-forte);
+  text-decoration: none;
+  box-shadow: var(--sombra-p);
+}
+
 .user {
   font-weight: 600;
   white-space: nowrap;
@@ -21,12 +32,15 @@
 
 @media (max-width: 560px) {
   .header {
+    /* Conta logada tem logo, fichas, nome e Sair: em 375px não cabem em uma linha e alargavam a página toda. */
+    flex-wrap: wrap;
     gap: 10px;
     padding: var(--espaco-3) var(--espaco-4);
   }
 
-  /* No celular o Entrar fica na navegação inferior (Perfil). */
-  .login {
+  /* No celular o Entrar fica na navegação inferior (Perfil), e o Admin também (aba Admin). */
+  .login,
+  .admin {
     display: none;
   }
 }
