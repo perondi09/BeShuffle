@@ -1,0 +1,548 @@
+/* Painel de admin: tema neutro (docs/DESIGN-SYSTEM.md). Mesmo traço do site; cor de área só nos dados. */
+
+.secao {
+  display: grid;
+  gap: var(--espaco-5);
+}
+
+.barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espaco-3);
+}
+
+.barraFim {
+  margin-left: auto;
+}
+
+/* ---------- filtro em pílula */
+
+.segmentado {
+  display: inline-flex;
+  gap: var(--espaco-1);
+  padding: 5px;
+  border: var(--borda);
+  border-radius: var(--raio-pilula);
+  background: var(--cor-papel);
+  box-shadow: var(--sombra-p);
+}
+
+.segmento {
+  padding: 6px 14px;
+  border: var(--espessura-fina) solid transparent;
+  border-radius: var(--raio-pilula);
+  background: none;
+  font-weight: var(--peso-forte);
+  cursor: pointer;
+}
+
+.segmentoOn {
+  background: var(--cor-tinta);
+  color: var(--cor-papel);
+}
+
+/* ---------- métricas */
+
+.metricas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--espaco-4);
+  padding: 0;
+  list-style: none;
+}
+
+.metrica {
+  display: grid;
+  gap: 2px;
+  padding: var(--espaco-4) 20px;
+  border: var(--borda);
+  border-radius: var(--raio-g);
+  background: var(--cor-papel);
+  box-shadow: var(--sombra);
+}
+
+.metricaRosa {
+  background: var(--cor-rosa);
+}
+
+.metricaTitulo {
+  font-size: var(--texto-p);
+  font-weight: var(--peso-forte);
+}
+
+.metricaValor {
+  font-size: 40px;
+  line-height: 1.05;
+}
+
+.metricaDetalhe {
+  font-size: var(--texto-p);
+}
+
+.metricasPequenas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-3) var(--espaco-5);
+  font-size: var(--texto-m);
+}
+
+.metricasPequenas strong {
+  font-weight: var(--peso-forte);
+}
+
+/* ---------- duas colunas */
+
+.duo {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: var(--espaco-5);
+}
+
+.tituloCard {
+  margin-bottom: var(--espaco-2);
+  font-size: var(--titulo-card);
+}
+
+.legenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-2) var(--espaco-4);
+  margin-bottom: var(--espaco-3);
+  font-size: var(--texto-p);
+  font-weight: var(--peso-forte);
+}
+
+.legendaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.amostra {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: var(--espessura-fina) solid var(--cor-tinta);
+  border-radius: 4px;
+  background: var(--cor-papel);
+}
+
+.amostraMusica {
+  background: var(--cor-area-musica);
+}
+
+.amostraFilmes {
+  background: var(--cor-area-filmes);
+}
+
+.amostraConta {
+  background: var(--cor-gema);
+  border-radius: 50%;
+}
+
+/* ---------- gráfico */
+
+.grafico {
+  width: 100%;
+  height: auto;
+}
+
+.barraAcesso {
+  fill: var(--cor-papel);
+  stroke: var(--cor-tinta);
+  stroke-width: 2;
+}
+
+.barraHoje {
+  fill: var(--cor-tomate);
+}
+
+.linhaContas {
+  fill: none;
+  stroke: var(--cor-tinta);
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+
+.pontoConta {
+  fill: var(--cor-gema);
+  stroke: var(--cor-tinta);
+  stroke-width: 1.5;
+}
+
+.chao {
+  stroke: var(--cor-tinta);
+  stroke-width: 3;
+}
+
+.eixo {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--texto-p);
+}
+
+/* ---------- por área */
+
+.divisao {
+  display: flex;
+  height: 22px;
+  overflow: hidden;
+  border: var(--borda);
+  border-radius: var(--raio-p);
+}
+
+.divisaoMusica {
+  background: var(--cor-area-musica);
+}
+
+.divisaoFilmes {
+  background: var(--cor-area-filmes);
+  border-left: var(--borda);
+}
+
+.divisaoLegenda {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: var(--texto-p);
+}
+
+.areas {
+  display: grid;
+  gap: var(--espaco-2);
+  margin-top: var(--espaco-4);
+  padding: 0;
+  list-style: none;
+}
+
+.areaLinha {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px var(--espaco-3);
+  align-items: center;
+  font-size: var(--texto-m);
+}
+
+.areaLinha small {
+  grid-column: 2;
+  font-size: var(--texto-p);
+}
+
+/* ---------- atividade e etiquetas */
+
+.eventos {
+  display: grid;
+  gap: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.evento {
+  display: flex;
+  align-items: baseline;
+  gap: var(--espaco-2);
+  padding: var(--espaco-2) 0;
+  border-bottom: 1.5px dashed var(--admin-ponto);
+  font-size: var(--texto-m);
+}
+
+.evento:last-child {
+  border-bottom: 0;
+}
+
+.eventoQuando {
+  margin-left: auto;
+  flex: none;
+  font-size: var(--texto-p);
+  white-space: nowrap;
+}
+
+.etiqueta {
+  display: inline-block;
+  padding: 0 8px;
+  border: var(--espessura-fina) solid var(--cor-tinta);
+  border-radius: var(--raio-pilula);
+  font-size: 13px;
+  font-weight: var(--peso-forte);
+  white-space: nowrap;
+}
+
+.etiquetaMusica {
+  background: var(--cor-area-musica);
+}
+
+.etiquetaFilmes {
+  background: var(--cor-area-filmes);
+  color: var(--cor-papel);
+}
+
+.statusAtiva {
+  background: var(--cor-menta);
+}
+
+.statusBanida {
+  background: var(--cor-rosa);
+}
+
+.statusAdmin {
+  background: var(--cor-tinta);
+  color: var(--cor-papel);
+}
+
+.statusAviso {
+  background: var(--cor-gema);
+}
+
+/* ---------- mensagens */
+
+.aviso {
+  padding: var(--espaco-3) var(--espaco-4);
+  border: var(--borda-fina);
+  border-radius: var(--raio-m);
+  background: var(--cor-menta);
+  font-weight: var(--peso-forte);
+}
+
+.erro {
+  padding: var(--espaco-3) var(--espaco-4);
+  border: var(--borda-fina);
+  border-radius: var(--raio-m);
+  background: var(--cor-papel);
+  color: var(--cor-erro);
+  font-weight: var(--peso-forte);
+}
+
+.vazio {
+  font-weight: var(--peso-forte);
+}
+
+.regerar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espaco-3);
+}
+
+/* ---------- contas */
+
+.busca {
+  display: flex;
+  align-items: end;
+  gap: var(--espaco-3);
+}
+
+.buscaCampo {
+  flex: 1 1 200px;
+  min-width: 0;
+  width: min(380px, 60vw);
+}
+
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabela th {
+  padding: var(--espaco-2) var(--espaco-3);
+  border-bottom: var(--borda);
+  background: var(--cor-lilas-claro);
+  font-size: var(--texto-p);
+  text-align: left;
+}
+
+.tabela td {
+  padding: var(--espaco-2) var(--espaco-3);
+  border-bottom: 1px solid var(--admin-ponto);
+  vertical-align: middle;
+}
+
+.tabela tr:last-child td {
+  border-bottom: 0;
+}
+
+.conta {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-3);
+  min-width: 0;
+}
+
+.inicial {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: var(--borda-fina);
+  border-radius: 50%;
+  background: var(--cor-rosa);
+  font-weight: var(--peso-forte);
+}
+
+.contaTexto {
+  display: grid;
+  min-width: 0;
+}
+
+.contaTexto strong,
+.contaTexto small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contaTexto small {
+  font-size: var(--texto-p);
+}
+
+.motivo {
+  display: block;
+  font-size: var(--texto-p);
+}
+
+.paginacao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espaco-3);
+  margin-top: var(--espaco-4);
+}
+
+.paginacaoBotoes {
+  display: flex;
+  gap: var(--espaco-2);
+}
+
+/* ---------- moderação */
+
+.comentarios {
+  display: grid;
+  gap: var(--espaco-3);
+  padding: 0;
+  list-style: none;
+}
+
+.comentario {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espaco-3);
+  padding: var(--espaco-3) var(--espaco-4);
+  border: var(--borda-fina);
+  border-radius: var(--raio-m);
+  background: var(--cor-lilas-claro);
+}
+
+.comentarioCorpo {
+  display: grid;
+  flex: 1 1 280px;
+  min-width: 0;
+  gap: 2px;
+}
+
+.comentarioTexto {
+  overflow-wrap: anywhere;
+}
+
+.comentarioMeta {
+  font-size: var(--texto-p);
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espaco-2);
+}
+
+/* ---------- janela de banir */
+
+.fundoJanela {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: var(--espaco-4);
+  background: var(--admin-veu);
+}
+
+.janela {
+  display: grid;
+  /* O adesivo não estica na largura toda; o formulário volta a ocupar tudo (regra abaixo). */
+  justify-items: start;
+  gap: var(--espaco-3);
+  width: min(480px, 100%);
+  padding: var(--espaco-6);
+  border: var(--borda);
+  border-radius: var(--raio-card);
+  background: var(--cor-papel);
+  box-shadow: var(--sombra-g);
+}
+
+.janela form {
+  width: 100%;
+}
+
+.janela h2 {
+  font-size: var(--titulo-secao);
+}
+
+@media (max-width: 860px) {
+  .duo {
+    grid-template-columns: 1fr;
+  }
+
+  /* A tabela de contas vira uma lista de cartões. */
+  .tabela,
+  .tabela tbody,
+  .tabela tr,
+  .tabela td {
+    display: block;
+  }
+
+  .tabela thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .tabela tr {
+    padding: var(--espaco-3);
+    border-bottom: var(--borda-fina);
+  }
+
+  .tabela td {
+    padding: var(--espaco-1) 0;
+    border: 0;
+  }
+
+  .tabela td[data-rotulo]::before {
+    content: attr(data-rotulo) ': ';
+    font-weight: var(--peso-forte);
+  }
+}
+
+@media (max-width: 560px) {
+  /* Quatro opções ("Todos Ativos Banidos Admins") precisam caber nos 343px úteis do celular. */
+  .segmentado {
+    max-width: 100%;
+  }
+
+  .segmento {
+    padding: 6px 10px;
+    font-size: var(--texto-m);
+  }
+
+  .metricaValor {
+    font-size: 32px;
+  }
+
+  .barraFim {
+    margin-left: 0;
+  }
+}

@@ -1,0 +1,27 @@
+.page {
+  display: grid;
+  gap: var(--espaco-5);
+}
+
+.loading {
+  font-weight: var(--peso-forte);
+}
+
+.topo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--espaco-4);
+}
+
+.titulos {
+  display: grid;
+  justify-items: start;
+  gap: var(--espaco-2);
+}
+
+.titulo {
+  font-size: var(--titulo-pagina);
+  line-height: 1;
+}

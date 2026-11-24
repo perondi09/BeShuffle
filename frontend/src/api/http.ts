@@ -55,3 +55,13 @@ function sendJson<T>(method: 'POST' | 'PUT', path: string, body: unknown) {
 export const postJson = <T>(path: string, body: unknown) => sendJson<T>('POST', path, body)
 
 export const putJson = <T>(path: string, body: unknown) => sendJson<T>('PUT', path, body)
+
+/** DELETE sem corpo; também leva o token CSRF. */
+export function deleteJson<T = void>(path: string) {
+  const token = xsrfToken()
+  return request<T>(path, {
+    method: 'DELETE',
+    headers: token ? { 'X-XSRF-TOKEN': token } : {},
+    credentials: 'same-origin',
+  })
+}

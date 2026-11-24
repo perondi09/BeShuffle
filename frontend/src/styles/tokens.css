@@ -72,9 +72,18 @@
   --margem-lateral: clamp(16px, 4vw, 40px);
   --largura-max: 1180px;
 
+  /* Tema do admin (neutro, vale para o site todo): docs/DESIGN-SYSTEM.md. Cor de área só nos dados. */
+  --admin-fundo: #f2f0ec;
+  --admin-ponto: #dedad2;
+  --admin-veu: rgb(28 21 48 / 45%);
+  --cor-area-musica: var(--cor-lilas);
+  --cor-area-filmes: #c8283c;
+
   /* Fundo padrão de todas as telas: lilás com bolinhas */
   --fundo-pagina: radial-gradient(var(--cor-lilas-escuro) 1.6px, transparent 1.6px) 0 0 / 22px 22px,
     var(--cor-lilas);
+  /* Fundo do admin: papel neutro com bolinhas cinza */
+  --fundo-admin: radial-gradient(var(--admin-ponto) 1.4px, transparent 1.4px) 0 0 / 22px 22px, var(--admin-fundo);
   /* Superfície de disco de vinil */
   --fundo-vinil: repeating-radial-gradient(circle, var(--cor-vinil-1) 0 3px, var(--cor-vinil-2) 3px 5px);
 

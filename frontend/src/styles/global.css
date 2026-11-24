@@ -21,6 +21,11 @@ body {
   background: var(--fundo-pagina);
 }
 
+/* O painel de admin troca o lilás por um fundo neutro (AdminPage liga e desliga o atributo). */
+body[data-tema='admin'] {
+  background: var(--fundo-admin);
+}
+
 button,
 a,
 input,
