@@ -36,6 +36,25 @@ aws s3 sync "$RAIZ/frontend/dist/assets" "s3://$BUCKET/assets" --delete \
   --cache-control "public,max-age=31536000,immutable"
 aws s3 sync "$RAIZ/frontend/dist" "s3://$BUCKET" --delete --exclude "assets/*" --cache-control "no-cache"
 
+# Atualiza no EC2 os scripts de deploy e o vigia da senha do banco (o Terraform não mexe no user_data de um EC2 que já
+# existe). O vigia reinicia a API quando o RDS troca a senha, a cada 7 dias; sem ele o site cai nessa troca.
+# base64 sem CR: se o checkout no Windows trouxesse CRLF, o bash do servidor Linux não rodaria o script.
+b64() { tr -d '\015' < "$1" | base64 -w0; }
+SCRIPTS="$RAIZ/infra/terraform"
+cat >"$DOCKER_TMP/scripts.json" <<EOF
+{"commands":[
+"echo '$(b64 "$SCRIPTS/deploy.sh")' | base64 -d > /opt/beshuffle/deploy.sh.tmp && chmod 700 /opt/beshuffle/deploy.sh.tmp && mv /opt/beshuffle/deploy.sh.tmp /opt/beshuffle/deploy.sh",
+"echo '$(b64 "$SCRIPTS/vigia-senha-db.sh")' | base64 -d > /opt/beshuffle/vigia-senha-db.sh && chmod 700 /opt/beshuffle/vigia-senha-db.sh",
+"echo '$(b64 "$SCRIPTS/vigia-senha-db.service")' | base64 -d > /etc/systemd/system/vigia-senha-db.service",
+"echo '$(b64 "$SCRIPTS/vigia-senha-db.timer")' | base64 -d > /etc/systemd/system/vigia-senha-db.timer",
+"systemctl daemon-reload && systemctl enable --now vigia-senha-db.timer && systemctl is-active vigia-senha-db.timer"
+]}
+EOF
+SCRIPTS_CMD=$(aws ssm send-command --region "$REGIAO" --instance-ids "$INSTANCIA" \
+  --document-name AWS-RunShellScript --comment "scripts do servidor" \
+  --parameters "file://$(caminho "$DOCKER_TMP/scripts.json")" --query Command.CommandId --output text)
+aws ssm wait command-executed --region "$REGIAO" --command-id "$SCRIPTS_CMD" --instance-id "$INSTANCIA"
+
 COMANDO=$(aws ssm send-command --region "$REGIAO" --instance-ids "$INSTANCIA" \
   --document-name AWS-RunShellScript --comment "deploy $TAG" \
   --parameters "commands=['/opt/beshuffle/deploy.sh $TAG']" --query Command.CommandId --output text)
