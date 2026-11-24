@@ -15,7 +15,7 @@ import perondi.BeShuffle.dtos.admin.AlbumRegerado;
 import perondi.BeShuffle.dtos.admin.BanirRequest;
 import perondi.BeShuffle.dtos.admin.ComentarioAdmin;
 import perondi.BeShuffle.dtos.admin.EventoAdmin;
-import perondi.BeShuffle.dtos.admin.Pagina;
+import perondi.BeShuffle.dtos.Pagina;
 import perondi.BeShuffle.dtos.admin.PainelAdmin;
 import perondi.BeShuffle.dtos.admin.UsuarioAdmin;
 import perondi.BeShuffle.dtos.auth.UsuarioLogado;

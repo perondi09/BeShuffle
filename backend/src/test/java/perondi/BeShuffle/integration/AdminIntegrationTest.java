@@ -252,7 +252,8 @@ class AdminIntegrationTest {
         mvc.perform(delete("/api/admin/comments/{id}", reviewId).session(admin).with(ApiDeTeste.csrf(mvc)))
                 .andExpect(status().isNoContent());
         assertNull(jdbc.queryForObject("SELECT comment FROM reviews WHERE id = ?", String.class, reviewId));
-        assertEquals(2, jdbc.queryForObject("SELECT rating FROM reviews WHERE id = ?", Integer.class, reviewId));
+        // 2 estrelas = 4 meias estrelas; remover o comentário não mexe na nota
+        assertEquals(4, jdbc.queryForObject("SELECT rating_x2 FROM reviews WHERE id = ?", Integer.class, reviewId));
         mvc.perform(get("/api/admin/comments").session(admin)).andExpect(jsonPath("$.total").value(0));
         mvc.perform(delete("/api/admin/comments/{id}", reviewId).session(admin).with(ApiDeTeste.csrf(mvc)))
                 .andExpect(status().isNotFound());

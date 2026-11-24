@@ -55,7 +55,8 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/me", "/api/draws/today", "/api/draws/mine", "/api/reviews/**").authenticated()
+                        .requestMatchers("/api/me", "/api/draws/today", "/api/draws/mine", "/api/reviews/**",
+                                "/api/users/**").authenticated()
                         .anyRequest().permitAll())
                 .securityContext(ctx -> ctx.securityContextRepository(contextRepository))
                 .csrf(csrf -> csrf.spa())

@@ -25,8 +25,9 @@ public class Review {
     @Column(name = "daily_album_id", nullable = false)
     private Long dailyAlbumId;
 
-    @Column(nullable = false)
-    private Integer rating;
+    /** Nota em meias estrelas, de 1 a 10 (2,5 estrelas = 5). A API fala em estrelas; o banco guarda o dobro. */
+    @Column(name = "rating_x2", nullable = false)
+    private Integer ratingX2;
 
     @Column(length = 500)
     private String comment;

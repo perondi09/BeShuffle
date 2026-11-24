@@ -20,6 +20,7 @@ import java.time.LocalDate;
 
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -140,6 +141,61 @@ class ReviewIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON).content(corpo))
                     .andExpect(status().isBadRequest());
         }
+    }
+
+    private static String notaEmEstrelas(String estrelas) {
+        return "{\"rating\":%s}".formatted(estrelas);
+    }
+
+    @Test
+    @DisplayName("Aceita meia estrela (2,5 e 3,5), guarda o dobro no banco e devolve em estrelas; média com uma casa")
+    void meiaEstrela() throws Exception {
+        MockHttpSession ana = ApiDeTeste.logar(mvc, "Ana", "ana@beshuffle.dev");
+        MockHttpSession bia = ApiDeTeste.logar(mvc, "Bia", "bia@beshuffle.dev");
+        mvc.perform(put("/api/reviews/today").session(ana).with(ApiDeTeste.csrf(mvc))
+                        .contentType(MediaType.APPLICATION_JSON).content(notaEmEstrelas("5")))
+                .andExpect(status().isOk());
+        mvc.perform(put("/api/reviews/today").session(bia).with(ApiDeTeste.csrf(mvc))
+                        .contentType(MediaType.APPLICATION_JSON).content(notaEmEstrelas("4.5")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.mine.rating").value(4.5))
+                // (5 + 4,5) / 2 = 4,75 → 4,8
+                .andExpect(jsonPath("$.average").value(4.8));
+        assertEquals(9, jdbc.queryForObject(
+                "SELECT rating_x2 FROM reviews WHERE user_id = (SELECT id FROM users WHERE email = ?)",
+                Integer.class, "bia@beshuffle.dev"));
+
+        mvc.perform(put("/api/reviews/today").session(bia).with(ApiDeTeste.csrf(mvc))
+                        .contentType(MediaType.APPLICATION_JSON).content(notaEmEstrelas("0.5")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.mine.rating").value(0.5));
+        mvc.perform(get("/api/reviews/today").session(ana))
+                .andExpect(jsonPath("$.reviews[?(@.author == 'Bia')].rating").value(0.5));
+    }
+
+    @Test
+    @DisplayName("Nota que não é de meia em meia estrela, ou fora de 0,5 a 5, é 400")
+    void recusaNotaQuebrada() throws Exception {
+        MockHttpSession sessao = ApiDeTeste.logar(mvc, "Ana", "ana@beshuffle.dev");
+        for (String estrelas : new String[]{"0", "0.4", "4.3", "3.75", "5.5", "6", "-1", "null"}) {
+            mvc.perform(put("/api/reviews/today").session(sessao).with(ApiDeTeste.csrf(mvc))
+                            .contentType(MediaType.APPLICATION_JSON).content(notaEmEstrelas(estrelas)))
+                    .andExpect(status().isBadRequest());
+        }
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM reviews", Integer.class));
+    }
+
+    @Test
+    @DisplayName("A lista da comunidade traz o nick e o avatar de quem avaliou, para linkar o perfil")
+    void listaTrazNickEAvatar() throws Exception {
+        MockHttpSession ana = ApiDeTeste.logar(mvc, "Ana Lima", "ana@beshuffle.dev");
+        mvc.perform(put("/api/reviews/today").session(ana).with(ApiDeTeste.csrf(mvc))
+                .contentType(MediaType.APPLICATION_JSON).content(nota(4, "Bom"))).andExpect(status().isOk());
+
+        mvc.perform(get("/api/reviews/today").session(ana))
+                .andExpect(jsonPath("$.reviews[0].author").value("Ana Lima"))
+                .andExpect(jsonPath("$.reviews[0].handle").value("ana_lima"))
+                .andExpect(jsonPath("$.reviews[0].avatar").value("rosa"));
     }
 
     @Test

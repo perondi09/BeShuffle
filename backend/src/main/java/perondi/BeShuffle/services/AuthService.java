@@ -3,7 +3,9 @@ package perondi.BeShuffle.services;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.dao.DataIntegrityViolationException;
 import perondi.BeShuffle.config.AdminEmails;
+import perondi.BeShuffle.dtos.auth.AtualizarPerfilRequest;
 import perondi.BeShuffle.dtos.auth.LoginRequest;
 import perondi.BeShuffle.dtos.auth.RegisterRequest;
 import perondi.BeShuffle.dtos.auth.UsuarioLogado;
@@ -11,6 +13,8 @@ import perondi.BeShuffle.entity.AppUser;
 import perondi.BeShuffle.exceptions.ContaSuspensaException;
 import perondi.BeShuffle.exceptions.CredenciaisInvalidasException;
 import perondi.BeShuffle.exceptions.EmailJaCadastradoException;
+import perondi.BeShuffle.exceptions.LoginNecessarioException;
+import perondi.BeShuffle.exceptions.NickEmUsoException;
 import perondi.BeShuffle.exceptions.ValidationException;
 import perondi.BeShuffle.repository.AppUserRepository;
 
@@ -74,6 +78,7 @@ public class AuthService {
         user.setDisplayName(nome);
         user.setPasswordHash(passwordEncoder.encode(senha));
         user.setCreatedAt(clock.instant());
+        user.setHandle(Nick.unico(nome, repository::existsByHandle));
         if (adminEmails.contem(email)) {
             user.setRole(AppUser.ADMIN);
         }
@@ -106,11 +111,69 @@ public class AuthService {
         return paraLogado(user);
     }
 
+    /** A conta como está no banco (GET /api/me): a sessão pode ter sido gravada antes de campos como o nick existirem. */
+    public UsuarioLogado perfil(Long userId) {
+        return repository.findById(userId)
+                .filter(user -> !user.isBanida())
+                .map(AuthService::paraLogado)
+                .orElseThrow(() -> new LoginNecessarioException("Faça login para continuar"));
+    }
+
+    /** Muda nome, nick e/ou avatar da própria conta; o que vier nulo fica como está. */
+    public UsuarioLogado atualizarPerfil(Long userId, AtualizarPerfilRequest pedido) {
+        AppUser user = repository.findById(userId)
+                .orElseThrow(() -> new LoginNecessarioException("Faça login para continuar"));
+        if (pedido == null) {
+            return paraLogado(user);
+        }
+
+        if (pedido.displayName() != null) {
+            String nome = pedido.displayName().trim();
+            if (nome.length() < MIN_NOME || nome.length() > MAX_NOME) {
+                throw new ValidationException("o nome precisa ter entre " + MIN_NOME + " e " + MAX_NOME + " caracteres", "displayName");
+            }
+            user.setDisplayName(nome);
+        }
+        if (pedido.handle() != null) {
+            String nick = Nick.normalizar(pedido.handle());
+            if (!Nick.formatoValido(nick)) {
+                throw new ValidationException("o nick precisa ter de " + Nick.MIN + " a " + Nick.MAX
+                        + " letras minúsculas, números ou _", "handle");
+            }
+            if (!nick.equals(user.getHandle())) {
+                if (Nick.reservado(nick)) {
+                    throw new ValidationException("esse nick não está disponível", "handle");
+                }
+                if (repository.existsByHandle(nick)) {
+                    throw new NickEmUsoException();
+                }
+                user.setHandle(nick);
+            }
+        }
+        if (pedido.avatar() != null) {
+            String avatar = pedido.avatar().trim().toLowerCase(Locale.ROOT);
+            if (!AppUser.AVATARES.contains(avatar)) {
+                throw new ValidationException("avatar desconhecido", "avatar");
+            }
+            user.setAvatarKey(avatar);
+        }
+
+        try {
+            repository.saveAndFlush(user);
+        } catch (DataIntegrityViolationException doisAoMesmoTempo) {
+            // Outra conta pegou o mesmo nick entre a conferência e a gravação.
+            throw new NickEmUsoException();
+        }
+        log.info("Perfil atualizado: conta {}", userId);
+        return paraLogado(user);
+    }
+
     private static String normalizarEmail(String email) {
         return email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
     }
 
     private static UsuarioLogado paraLogado(AppUser user) {
-        return new UsuarioLogado(user.getId(), user.getEmail(), user.getDisplayName(), user.isAdmin());
+        return new UsuarioLogado(user.getId(), user.getEmail(), user.getDisplayName(), user.isAdmin(),
+                user.getHandle(), user.getAvatarKey());
     }
 }

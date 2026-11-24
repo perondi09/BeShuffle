@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import perondi.BeShuffle.dtos.admin.AlbumRegerado;
 import perondi.BeShuffle.dtos.admin.ComentarioAdmin;
 import perondi.BeShuffle.dtos.admin.EventoAdmin;
-import perondi.BeShuffle.dtos.admin.Pagina;
+import perondi.BeShuffle.dtos.Pagina;
 import perondi.BeShuffle.dtos.admin.PainelAdmin;
 import perondi.BeShuffle.dtos.admin.PainelAdmin.PontoDoDia;
 import perondi.BeShuffle.dtos.admin.PainelAdmin.ResumoArea;

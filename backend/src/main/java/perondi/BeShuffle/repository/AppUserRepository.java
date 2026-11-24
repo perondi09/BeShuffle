@@ -11,6 +11,11 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
 
     boolean existsByEmail(String email);
 
+    /** O nick vem sempre normalizado (minúsculo): ver services/Nick. */
+    Optional<AppUser> findByHandle(String handle);
+
+    boolean existsByHandle(String handle);
+
     /** Usado a cada requisição logada pelo filtro que derruba a sessão de conta banida. */
     boolean existsByIdAndBannedAtIsNotNull(Long id);
 }
