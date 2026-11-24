@@ -28,6 +28,11 @@ export function Header() {
           <TokenBadge />
           {user ? (
             <>
+              {user.admin ? (
+                <Link to="/admin" className={styles.admin}>
+                  Admin
+                </Link>
+              ) : null}
               <Link to="/perfil" className={styles.user}>
                 Oi, {user.displayName}
               </Link>

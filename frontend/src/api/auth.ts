@@ -7,6 +7,8 @@ export interface SessionUser {
   id: number
   email: string
   displayName: string
+  /** Conta de admin (vê o painel /admin). A API sempre manda; ausente é tratado como false. */
+  admin?: boolean
 }
 
 export interface LoginInput {
