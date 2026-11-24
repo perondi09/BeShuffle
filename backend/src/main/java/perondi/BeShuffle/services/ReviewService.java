@@ -55,7 +55,7 @@ public class ReviewService {
             nova.setCreatedAt(agora);
             return nova;
         });
-        review.setRating(nota);
+        review.setRatingX2(nota);
         review.setComment(comentario);
         review.setUpdatedAt(agora);
         reviewRepository.saveAndFlush(review);
@@ -64,7 +64,7 @@ public class ReviewService {
     private NotasDoDia montar(DailyAlbum album, Long userId) {
         ResumoNotas resumo = reviewRepository.resumo(album.getId());
         MinhaNota minha = reviewRepository.findByUserIdAndDailyAlbumId(userId, album.getId())
-                .map(r -> new MinhaNota(r.getRating(), r.getComment(), r.getUpdatedAt()))
+                .map(r -> new MinhaNota(r.getRatingX2() / 2.0, r.getComment(), r.getUpdatedAt()))
                 .orElse(null);
         Double media = resumo.average() == null ? null : Math.round(resumo.average() * 10) / 10.0;
         long total = resumo.count() == null ? 0 : resumo.count();
@@ -73,11 +73,13 @@ public class ReviewService {
                 reviewRepository.recentes(album.getId(), PageRequest.of(0, MAX_NOTAS_LISTADAS)));
     }
 
-    private static int validarNota(NotaRequest pedido) {
-        if (pedido == null || pedido.rating() == null || pedido.rating() < 1 || pedido.rating() > 5) {
-            throw new ValidationException("a nota vai de 1 a 5", "rating");
+    /** A nota chega em estrelas (0,5 a 5, de meia em meia) e é guardada em meias estrelas (1 a 10). */
+    static int validarNota(NotaRequest pedido) {
+        Double estrelas = pedido == null ? null : pedido.rating();
+        if (estrelas == null || estrelas.isNaN() || estrelas < 0.5 || estrelas > 5 || estrelas * 2 != Math.rint(estrelas * 2)) {
+            throw new ValidationException("a nota vai de 0,5 a 5, de meia em meia estrela", "rating");
         }
-        return pedido.rating();
+        return (int) Math.rint(estrelas * 2);
     }
 
     private static String normalizarComentario(String comentario) {

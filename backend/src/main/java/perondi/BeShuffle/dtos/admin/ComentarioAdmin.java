@@ -9,7 +9,7 @@ public record ComentarioAdmin(
         Long userId,
         String displayName,
         String email,
-        int rating,
+        double rating,
         String comment,
         Instant updatedAt,
         String albumName,

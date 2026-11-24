@@ -6,7 +6,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.dao.DataIntegrityViolationException;
 import perondi.BeShuffle.config.AdminEmails;
+import perondi.BeShuffle.dtos.auth.AtualizarPerfilRequest;
 import perondi.BeShuffle.dtos.auth.LoginRequest;
 import perondi.BeShuffle.dtos.auth.RegisterRequest;
 import perondi.BeShuffle.dtos.auth.UsuarioLogado;
@@ -14,6 +16,8 @@ import perondi.BeShuffle.entity.AppUser;
 import perondi.BeShuffle.exceptions.ContaSuspensaException;
 import perondi.BeShuffle.exceptions.CredenciaisInvalidasException;
 import perondi.BeShuffle.exceptions.EmailJaCadastradoException;
+import perondi.BeShuffle.exceptions.LoginNecessarioException;
+import perondi.BeShuffle.exceptions.NickEmUsoException;
 import perondi.BeShuffle.exceptions.ValidationException;
 import perondi.BeShuffle.repository.AppUserRepository;
 
@@ -60,6 +64,7 @@ class AuthServiceTest {
         u.setId(7L);
         u.setEmail(email);
         u.setDisplayName("Ana");
+        u.setHandle("ana");
         u.setPasswordHash(encoder.encode(senha));
         u.setCreatedAt(AGORA);
         return u;
@@ -80,7 +85,8 @@ class AuthServiceTest {
         assertEquals(AGORA, u.getCreatedAt());
         assertNotEquals("senha-forte-1", u.getPasswordHash());
         assertTrue(encoder.matches("senha-forte-1", u.getPasswordHash()));
-        assertEquals(new UsuarioLogado(1L, "ana@exemplo.com", "Ana"), logado);
+        assertEquals(new UsuarioLogado(1L, "ana@exemplo.com", "Ana", false, "ana", "rosa"), logado);
+        assertEquals("ana", u.getHandle());
     }
 
     @Test
@@ -118,7 +124,7 @@ class AuthServiceTest {
 
         UsuarioLogado logado = service.login(new LoginRequest("ANA@exemplo.com ", "senha-forte-1"));
 
-        assertEquals(new UsuarioLogado(7L, "ana@exemplo.com", "Ana"), logado);
+        assertEquals(new UsuarioLogado(7L, "ana@exemplo.com", "Ana", false, "ana", "rosa"), logado);
     }
 
     @Test
@@ -173,5 +179,86 @@ class AuthServiceTest {
 
         when(repository.findByEmail("ana@exemplo.com")).thenReturn(Optional.of(salvo("ana@exemplo.com", "senha-forte-1")));
         assertFalse(service.login(new LoginRequest("ana@exemplo.com", "senha-forte-1")).admin());
+    }
+
+    @Test
+    @DisplayName("Cadastro gera o nick a partir do nome (sem acento, minúsculo) e põe número quando já existe")
+    void geraNick() {
+        when(repository.existsByHandle("marina_wav")).thenReturn(true);
+
+        service.register(new RegisterRequest("Marína Wav", "m@exemplo.com", "senha-forte-1"));
+
+        ArgumentCaptor<AppUser> salvo = ArgumentCaptor.forClass(AppUser.class);
+        verify(repository).save(salvo.capture());
+        assertEquals("marina_wav2", salvo.getValue().getHandle());
+        assertEquals("rosa", salvo.getValue().getAvatarKey());
+    }
+
+    @Test
+    @DisplayName("Atualiza nome, nick e avatar da própria conta, tirando espaços e maiúsculas")
+    void atualizaPerfil() {
+        AppUser conta = salvo("ana@exemplo.com", "senha-forte-1");
+        when(repository.findById(7L)).thenReturn(Optional.of(conta));
+
+        UsuarioLogado novo = service.atualizarPerfil(7L, new AtualizarPerfilRequest("  Ana Lima ", " Ana_Lima ", "Menta"));
+
+        assertEquals(new UsuarioLogado(7L, "ana@exemplo.com", "Ana Lima", false, "ana_lima", "menta"), novo);
+        verify(repository).saveAndFlush(conta);
+    }
+
+    @Test
+    @DisplayName("Campo ausente fica como está e repetir o próprio nick não conta como nick em uso")
+    void atualizaSoUmaParte() {
+        AppUser conta = salvo("ana@exemplo.com", "senha-forte-1");
+        when(repository.findById(7L)).thenReturn(Optional.of(conta));
+
+        UsuarioLogado novo = service.atualizarPerfil(7L, new AtualizarPerfilRequest(null, "ANA", "gema"));
+
+        assertEquals(new UsuarioLogado(7L, "ana@exemplo.com", "Ana", false, "ana", "gema"), novo);
+        verify(repository, never()).existsByHandle(any());
+        assertEquals("Ana", service.atualizarPerfil(7L, null).displayName());
+    }
+
+    @Test
+    @DisplayName("Recusa nick inválido ou reservado, nick de outra conta, avatar desconhecido e nome curto")
+    void recusaPerfilInvalido() {
+        AppUser conta = salvo("ana@exemplo.com", "senha-forte-1");
+        when(repository.findById(7L)).thenReturn(Optional.of(conta));
+        when(repository.existsByHandle("bruno")).thenReturn(true);
+
+        for (String nick : new String[]{"ab", "ana lima", "ana-lima", "ação", "x".repeat(21), "", "admin", "Beshuffle"}) {
+            assertThrows(ValidationException.class,
+                    () -> service.atualizarPerfil(7L, new AtualizarPerfilRequest(null, nick, null)), "nick: " + nick);
+        }
+        NickEmUsoException emUso = assertThrows(NickEmUsoException.class,
+                () -> service.atualizarPerfil(7L, new AtualizarPerfilRequest(null, "Bruno", null)));
+        assertEquals(409, emUso.getHttpStatus());
+        assertThrows(ValidationException.class, () -> service.atualizarPerfil(7L, new AtualizarPerfilRequest(null, null, "roxo")));
+        assertThrows(ValidationException.class, () -> service.atualizarPerfil(7L, new AtualizarPerfilRequest("A", null, null)));
+        verify(repository, never()).saveAndFlush(any());
+        assertEquals("ana", conta.getHandle());
+    }
+
+    @Test
+    @DisplayName("Dois pedidos pelo mesmo nick ao mesmo tempo: o que perde a corrida recebe 409")
+    void nickPegoNaCorrida() {
+        AppUser conta = salvo("ana@exemplo.com", "senha-forte-1");
+        when(repository.findById(7L)).thenReturn(Optional.of(conta));
+        when(repository.saveAndFlush(any(AppUser.class))).thenThrow(new DataIntegrityViolationException("uk_users_handle"));
+
+        assertThrows(NickEmUsoException.class,
+                () -> service.atualizarPerfil(7L, new AtualizarPerfilRequest(null, "ana2", null)));
+    }
+
+    @Test
+    @DisplayName("GET /api/me lê a conta no banco; conta banida ou apagada vira 401")
+    void perfilDoBanco() {
+        AppUser conta = salvo("ana@exemplo.com", "senha-forte-1");
+        when(repository.findById(7L)).thenReturn(Optional.of(conta));
+        assertEquals("ana", service.perfil(7L).handle());
+
+        conta.setBannedAt(AGORA);
+        assertEquals(401, assertThrows(LoginNecessarioException.class, () -> service.perfil(7L)).getHttpStatus());
+        assertThrows(LoginNecessarioException.class, () -> service.perfil(99L));
     }
 }

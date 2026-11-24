@@ -46,7 +46,7 @@ class AcessoServiceTest {
     @Test
     @DisplayName("Conta logada vira u:<id>, com o dia no fuso do site")
     void contaLogada() {
-        service.registrar(new MockHttpServletRequest(), new UsuarioLogado(42L, "a@b.co", "Ana"), AcessoService.MUSICA);
+        service.registrar(new MockHttpServletRequest(), new UsuarioLogado(42L, "a@b.co", "Ana", false, "ana", "rosa"), AcessoService.MUSICA);
         verify(repository).registrar(LocalDate.of(2026, 11, 20), "u:42", "musica", true, false);
     }
 

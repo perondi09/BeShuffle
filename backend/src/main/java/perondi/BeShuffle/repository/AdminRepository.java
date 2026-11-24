@@ -157,7 +157,7 @@ public class AdminRepository {
     // ---------- comentários (moderação)
 
     private static final String SELECT_COMENTARIO = """
-            SELECT r.id, r.user_id, u.display_name, u.email, r.rating, r.comment, r.updated_at,
+            SELECT r.id, r.user_id, u.display_name, u.email, r.rating_x2 / 2.0 AS rating, r.comment, r.updated_at,
                    a.album_name, a.display_date
             FROM reviews r
             JOIN users u ON u.id = r.user_id
@@ -166,7 +166,7 @@ public class AdminRepository {
 
     private static final RowMapper<ComentarioAdmin> COMENTARIO = (rs, i) -> new ComentarioAdmin(
             rs.getLong("id"), rs.getLong("user_id"), rs.getString("display_name"), rs.getString("email"),
-            rs.getInt("rating"), rs.getString("comment"), instante(rs, "updated_at"),
+            rs.getDouble("rating"), rs.getString("comment"), instante(rs, "updated_at"),
             rs.getString("album_name"), rs.getObject("display_date", LocalDate.class), "musica");
 
     public List<ComentarioAdmin> comentarios(int limite, int deslocamento) {

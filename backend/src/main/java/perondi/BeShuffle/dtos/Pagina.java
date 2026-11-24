@@ -1,4 +1,4 @@
-package perondi.BeShuffle.dtos.admin;
+package perondi.BeShuffle.dtos;
 
 import java.util.List;
 

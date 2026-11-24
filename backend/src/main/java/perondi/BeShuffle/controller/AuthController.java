@@ -14,9 +14,11 @@ import org.springframework.security.core.context.SecurityContextHolderStrategy;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import perondi.BeShuffle.dtos.auth.AtualizarPerfilRequest;
 import perondi.BeShuffle.dtos.auth.LoginRequest;
 import perondi.BeShuffle.dtos.auth.RegisterRequest;
 import perondi.BeShuffle.dtos.auth.UsuarioLogado;
@@ -49,9 +51,17 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
+    /** Lê a conta no banco, não na sessão: o nick e o avatar podem ter mudado, e sessões antigas não os têm. */
     @GetMapping("/me")
     public UsuarioLogado me(@AuthenticationPrincipal UsuarioLogado usuario) {
-        return usuario;
+        return authService.perfil(usuario.id());
+    }
+
+    /** Muda nome, nick e avatar da própria conta. 409 quando o nick já é de outra pessoa. */
+    @PutMapping("/me")
+    public UsuarioLogado atualizar(@AuthenticationPrincipal UsuarioLogado usuario,
+                                   @RequestBody AtualizarPerfilRequest body) {
+        return authService.atualizarPerfil(usuario.id(), body);
     }
 
     private void abrirSessao(UsuarioLogado usuario, HttpServletRequest request, HttpServletResponse response) {
